@@ -1,0 +1,702 @@
+{
+  "timestamp": "2026-07-05T17:05:33.649472",
+  "extracted_values": {
+    "location": "AR|100",
+    "start_date": "2006-02-03",
+    "planned_end_date": "2011-07-06",
+    "participating_orgs": "ARGENTINE REPUBLIC, MINISTERIO DE PLANIFICACI\u00d3N FEDERAL, The World Bank",
+    "implementing_org_type": null,
+    "planned_expenditure": 110000000.0,
+    "planned_duration": 5.418206707734429,
+    "gdp_percap": 13858.20398,
+    "cpia_score": null,
+    "governance_composite": -0.31095394096337253,
+    "wgi_any_missing": 0.0
+  },
+  "field_edited": {
+    "start_date": true,
+    "planned_end_date": true,
+    "location": true,
+    "planned_expenditure": true,
+    "sector_increased_food_production": true,
+    "sector_Green_growth_initiatives": true,
+    "sector_Road_safety_improvements": true,
+    "sector_Contingencies": true,
+    "sector_Improved_transport_infrastructure": true,
+    "sector_Capacity_Building_and_Technical_Assistance": true,
+    "sector_increased_managed_forest_land": true,
+    "sector_reduced_PM2.5_air_pollution": true,
+    "sector_Climate_adaptation": true,
+    "sector_Institutional_capacity_building": true,
+    "sector_reduced_CO2_emissions": true,
+    "sector_Project_Management": true,
+    "sector_more_people_with_drinking_water_services": true,
+    "sector_Land_acquisition_and_resettlement": true,
+    "sector_Urban_flood_protection": true,
+    "sector_Financing_charges": true,
+    "gdp_percap": true,
+    "governance_composite": true,
+    "planned_duration": true,
+    "implementer_performance": true,
+    "finance": true,
+    "integratedness": true,
+    "targets": true,
+    "context": true,
+    "risks": true,
+    "complexity": true
+  },
+  "field_locks": {
+    "reporting_org": false,
+    "planned_expenditure": false,
+    "activity_scope": false,
+    "finance_is_loan": false,
+    "location": false,
+    "start_date": false,
+    "planned_end_date": false,
+    "planned_duration": false,
+    "finance": false,
+    "integratedness": false,
+    "implementer_performance": false,
+    "targets": false,
+    "context": false,
+    "risks": false,
+    "complexity": false,
+    "gdp_percap": false,
+    "cpia_score": false,
+    "governance_composite": false,
+    "wgi_any_missing": false,
+    "project_name": false,
+    "sector_Capacity_development_and_institutional_strengtheni": false,
+    "sector_Climate_adaptation_and_resilience": false,
+    "sector_Contingencies": false,
+    "sector_Financing_charges": false,
+    "sector_Improved_transport_infrastructure": false,
+    "sector_Institutional_capacity_building": false,
+    "sector_Interest_during_construction": false,
+    "sector_Other_social_services": false,
+    "sector_Program_administration": false,
+    "sector_Project_Management": false,
+    "sector_Urban_flood_protection": false,
+    "sector_increased_food_production": false,
+    "sector_increased_managed_forest_land": false,
+    "sector_more_people_with_drinking_water_services": false,
+    "sector_reduced_CO2_emissions": false,
+    "sector_reduced_rates_of_open_defecation": false
+  },
+  "features": {
+    "implementer_performance": 28.0,
+    "finance": 25.0,
+    "integratedness": 85.0,
+    "targets": 35.0,
+    "context": 15.0,
+    "risks": 35.0,
+    "complexity": 0.0
+  },
+  "sector_percentages": {
+    "increased_food_production": 0.0,
+    "Green_growth_initiatives": 0.0,
+    "Road_safety_improvements": 0.0,
+    "Contingencies": 0.0,
+    "Improved_transport_infrastructure": 27.8,
+    "Capacity_Building_and_Technical_Assistance": 0.0,
+    "increased_managed_forest_land": 0.0,
+    "reduced_PM2.5_air_pollution": 0.0,
+    "Climate_adaptation": 0.0,
+    "Institutional_capacity_building": 3.5,
+    "reduced_CO2_emissions": 0.0,
+    "Project_Management": 4.0,
+    "more_people_with_drinking_water_services": 37.0,
+    "Land_acquisition_and_resettlement": 0.0,
+    "Urban_flood_protection": 27.7,
+    "Financing_charges": 0.0
+  },
+  "location_countries": [
+    {
+      "code": "AR",
+      "pct": 100
+    }
+  ],
+  "phases_0_3_complete": true,
+  "ready_for_phase_4": false,
+  "confirmed_metadata": {
+    "activity_id": "webapp_038385943901",
+    "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT",
+    "country_location": "AR|100",
+    "participating_orgs": "ARGENTINE REPUBLIC, MINISTERIO DE PLANIFICACI\u00d3N FEDERAL, The World Bank",
+    "planned_start_date": null,
+    "planned_end_date": null,
+    "implementing_org_type": null
+  },
+  "embedding_results": {
+    "sector_distance": 0.49324899911880493,
+    "country_distance": 0.5358214974403381,
+    "umap3_x": 0.5754614472898639,
+    "umap3_y": 0.9886536278426199,
+    "umap3_z": 5.193914076289571,
+    "sector": "Water Supply and Sanitation",
+    "sector_auto_detected": true,
+    "sector_candidates": [
+      [
+        "Water Supply and Sanitation",
+        0.49324899911880493
+      ],
+      [
+        "General Environmental Protection",
+        0.5798627734184265
+      ],
+      [
+        "Energy",
+        0.6010938882827759
+      ]
+    ]
+  },
+  "widget_state": {
+    "input_sector_Financing_charges": 0.0,
+    "input_sector_Contingencies": 0.0,
+    "input_cpia_score": 3.48333333333333,
+    "input_sector_Land_acquisition_and_resettlement": 0.0,
+    "lock_sector_Financing_charges": false,
+    "input_sector_Improved_transport_infrastructure": 27.8,
+    "input_governance_composite": -0.31095394096337253,
+    "input_start_date": "2006-02-03",
+    "lock_activity_scope": false,
+    "lock_planned_end_date": false,
+    "input_implementer_performance": 28.0,
+    "lock_reporting_org": false,
+    "lock_risks": false,
+    "lock_sector_Contingencies": false,
+    "lock_sector_increased_managed_forest_land": false,
+    "input_planned_end_date": "2011-07-06",
+    "input_sector_Project_Management": 4.0,
+    "lock_sector_Road_safety_improvements": false,
+    "lock_sector_reduced_PM2.5_air_pollution": false,
+    "select_reporting_org": "BMZ",
+    "input_activity_scope": 3,
+    "input_sector_Climate_adaptation": 0.0,
+    "input_finance": 25.0,
+    "lock_implementer_performance": false,
+    "input_sector_more_people_with_drinking_water_services": 37.0,
+    "lock_finance": false,
+    "input_integratedness": 85.0,
+    "input_context": 15.0,
+    "lock_sector_Improved_transport_infrastructure": false,
+    "input_sector_Green_growth_initiatives": 0.0,
+    "input_sector_Urban_flood_protection": 27.7,
+    "input_sector_Capacity_Building_and_Technical_Assistance": 0.0,
+    "lock_location_outer": false,
+    "lock_context": false,
+    "lock_sector_increased_food_production": false,
+    "lock_project_name": false,
+    "lock_targets": false,
+    "lock_sector_Capacity_Building_and_Technical_Assistance": false,
+    "lock_sector_reduced_CO2_emissions": false,
+    "input_sector_reduced_CO2_emissions": 0.0,
+    "lock_sector_Institutional_capacity_building": false,
+    "input_complexity": 0.0,
+    "lock_sector_Land_acquisition_and_resettlement": false,
+    "lock_sector_Climate_adaptation": false,
+    "lock_cpia_score": false,
+    "input_planned_duration": 5.418206707734429,
+    "lock_gdp_percap": false,
+    "lock_sector_Green_growth_initiatives": false,
+    "input_sector_increased_food_production": 0.0,
+    "input_targets": 35.0,
+    "input_sector_Road_safety_improvements": 0.0,
+    "lock_integratedness": false,
+    "input_sector_Institutional_capacity_building": 3.5,
+    "lock_start_date": false,
+    "input_planned_expenditure": 110.0,
+    "input_finance_is_loan": 1,
+    "lock_complexity": false,
+    "lock_planned_expenditure": false,
+    "lock_governance_composite": false,
+    "lock_sector_Project_Management": false,
+    "input_sector_reduced_PM2.5_air_pollution": 0.0,
+    "input_sector_increased_managed_forest_land": 0.0,
+    "lock_sector_Urban_flood_protection": false,
+    "lock_sector_more_people_with_drinking_water_services": false,
+    "input_risks": 35.0,
+    "input_gdp_percap": 13858.20398,
+    "lock_finance_is_loan": false
+  },
+  "feature_table": [
+    {
+      "Feature": "finance",
+      "Value": 85.0,
+      "Source": "\ud83d\udfe2 User input (LLM grade)"
+    },
+    {
+      "Feature": "integratedness",
+      "Value": 85.0,
+      "Source": "\ud83d\udfe2 User input (LLM grade)"
+    },
+    {
+      "Feature": "implementer_performance",
+      "Value": 85.0,
+      "Source": "\ud83d\udfe2 User input (LLM grade)"
+    },
+    {
+      "Feature": "targets",
+      "Value": 70.0,
+      "Source": "\ud83d\udfe2 User input (LLM grade)"
+    },
+    {
+      "Feature": "context",
+      "Value": 75.0,
+      "Source": "\ud83d\udfe2 User input (LLM grade)"
+    },
+    {
+      "Feature": "risks",
+      "Value": 70.0,
+      "Source": "\ud83d\udfe2 User input (LLM grade)"
+    },
+    {
+      "Feature": "complexity",
+      "Value": 70.0,
+      "Source": "\ud83d\udfe2 User input (LLM grade)"
+    },
+    {
+      "Feature": "activity_scope",
+      "Value": 3.0,
+      "Source": "\ud83d\udfe2 User input"
+    },
+    {
+      "Feature": "gdp_percap",
+      "Value": 9.536632681374712,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "cpia_score",
+      "Value": 3.48333333333333,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "region_AFE",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "region_AFW",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "region_EAP",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "region_ECA",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "region_LAC",
+      "Value": 1.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "region_MENA",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "region_SAS",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "finance_is_loan",
+      "Value": 1.0,
+      "Source": "\ud83d\udfe2 User input"
+    },
+    {
+      "Feature": "planned_duration",
+      "Value": 5.418206707734429,
+      "Source": "\ud83d\udfe2 User input"
+    },
+    {
+      "Feature": "planned_expenditure",
+      "Value": 110000000.0,
+      "Source": "\ud83d\udfe2 User input"
+    },
+    {
+      "Feature": "rep_org_0",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (org)"
+    },
+    {
+      "Feature": "rep_org_1",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (org)"
+    },
+    {
+      "Feature": "rep_org_2",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (org)"
+    },
+    {
+      "Feature": "umap3_x",
+      "Value": 0.5754614472898639,
+      "Source": "\ud83d\udfe2 Targets embedding"
+    },
+    {
+      "Feature": "umap3_y",
+      "Value": 0.9886536278426199,
+      "Source": "\ud83d\udfe2 Targets embedding"
+    },
+    {
+      "Feature": "umap3_z",
+      "Value": 5.193914076289571,
+      "Source": "\ud83d\udfe2 Targets embedding"
+    },
+    {
+      "Feature": "sector_distance",
+      "Value": 0.49324899911880493,
+      "Source": "\ud83d\udfe2 Targets embedding"
+    },
+    {
+      "Feature": "country_distance",
+      "Value": 0.5358214974403381,
+      "Source": "\ud83d\udfe2 Targets embedding"
+    },
+    {
+      "Feature": "sector_cluster_increased_food_production",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Green_growth_initiatives",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Road_safety_improvements",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Contingencies",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Improved_transport_infrastructure",
+      "Value": 0.278,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Capacity_Building_and_Technical_Assistance",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_increased_managed_forest_land",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_reduced_PM2.5_air_pollution",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Climate_adaptation",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Institutional_capacity_building",
+      "Value": 0.035,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_reduced_CO2_emissions",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Project_Management",
+      "Value": 0.04,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_more_people_with_drinking_water_services",
+      "Value": 0.37,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Land_acquisition_and_resettlement",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Urban_flood_protection",
+      "Value": 0.27699999999999997,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "sector_cluster_Financing_charges",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe2 User input (sector %)"
+    },
+    {
+      "Feature": "llm_features_missing_count",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "llm_features_present_ratio",
+      "Value": 1.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "governance_missing_count",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "feature_completeness_ratio",
+      "Value": 1.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "cpia_missing",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "sector_clusters_missing",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "gdp_percap_missing",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "planned_expenditure_missing",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "planned_duration_missing",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "wgi_any_missing",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "umap_missing",
+      "Value": 0.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "governance_composite",
+      "Value": -0.31095394096337253,
+      "Source": "\ud83d\udfe1 Extracted (location)"
+    },
+    {
+      "Feature": "expenditure_x_complexity",
+      "Value": 7700000000.0,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "expenditure_per_year_log",
+      "Value": 16.826226028784934,
+      "Source": "\ud83d\udfe1 Computed"
+    },
+    {
+      "Feature": "log_planned_expenditure",
+      "Value": 18.51599092375669,
+      "Source": "\ud83d\udfe2 User input"
+    }
+  ],
+  "feature_grades": {
+    "implementer_performance": 28.0,
+    "finance": 25.0,
+    "integratedness": 85.0,
+    "targets": 35.0,
+    "context": 15.0,
+    "risks": 35.0,
+    "complexity": 0.0
+  },
+  "extraction_result": {
+    "activity_id": "webapp_038385943901",
+    "output_dir": "projects/webapp_038385943901",
+    "pdf_path": "projects/webapp_038385943901/uploaded.pdf",
+    "num_pages": 9,
+    "cached": false,
+    "metadata": {
+      "activity_id": "webapp_038385943901",
+      "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT",
+      "country_location": "AR|100",
+      "participating_orgs": "ARGENTINE REPUBLIC, MINISTERIO DE PLANIFICACI\u00d3N FEDERAL, The World Bank",
+      "planned_start_date": null,
+      "planned_end_date": null,
+      "implementing_org_type": null
+    },
+    "page_categories": [
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 1,
+        "page_end": 1,
+        "section": "Baseline",
+        "subcategory_a": "implementation_context_country",
+        "subcategory_b": "contextual_challenges",
+        "score": 9,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 2,
+        "page_end": 2,
+        "section": "Baseline",
+        "subcategory_a": "contextual_challenges",
+        "subcategory_b": "implementation_context_country",
+        "score": 8,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 3,
+        "page_end": 3,
+        "section": "Baseline",
+        "subcategory_a": "broad_objectives",
+        "subcategory_b": "sub_activities_outlined",
+        "score": 9,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 4,
+        "page_end": 4,
+        "section": "Baseline",
+        "subcategory_a": "contextual_challenges",
+        "subcategory_b": "implementation_context_country",
+        "score": 8,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 5,
+        "page_end": 5,
+        "section": "Baseline",
+        "subcategory_a": "broad_objectives",
+        "subcategory_b": "possible_outcomes",
+        "score": 9,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 6,
+        "page_end": 6,
+        "section": "Baseline",
+        "subcategory_a": "quantitative_targets",
+        "subcategory_b": "qualitative_targets",
+        "score": 10,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 7,
+        "page_end": 7,
+        "section": "Baseline",
+        "subcategory_a": "detailed_implementation_plans",
+        "subcategory_b": "sub_activities_outlined",
+        "score": 9,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 8,
+        "page_end": 8,
+        "section": "Baseline",
+        "subcategory_a": "risks_or_dangers_generally",
+        "subcategory_b": "activity_monitoring_details",
+        "score": 8,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      },
+      {
+        "activity_id": "webapp_038385943901",
+        "cached_file": "projects/webapp_038385943901/uploaded.pdf",
+        "page_start": 9,
+        "page_end": 9,
+        "section": "Baseline",
+        "subcategory_a": "financing_details",
+        "subcategory_b": "plans_to_address_key_risks",
+        "score": 8,
+        "scratchpad": "",
+        "title": "ARGENTINA BASIC MUNICIPAL SERVICES PROJECT"
+      }
+    ],
+    "summary": "The ARGENTINA BASIC MUNICIPAL SERVICES PROJECT aims to improve the quality and provision of water supply and sanitation, urban drainage, and roads infrastructure services at the municipal level in a transparent, equitable, and fiscally sustainable manner. This project addresses the challenges faced by approximately 2,150 local governments in Argentina, including municipalities and comunas, which encounter significant institutional and financial constraints in improving municipal services such as basic water and sanitation (including solid waste), local urban transport, drainage, street lighting, parks, cemeteries, and markets. Despite increased provincial and federal fiscal transfers, access to capital financing for municipalities remains highly limited, exacerbating the importance of local and provincial governments in providing basic services to a large proportion of the population under the poverty line.\n\nSpecifically, the project's objectives include improving the coverage, quality, and efficiency of water supply and sanitation services in participating municipalities; enhancing access to urban drainage infrastructure; increasing access to paved roads and reducing logistics costs through investments in urban and productive roads; and improving the operational and commercial performance of municipal basic services. The latter is to be achieved through demand-driven technical assistance for medium-term investment planning, subproject preparation, technical supervision, operations and maintenance, and improved commercial management. Achieving these goals requires a sustained medium-term effort to enhance the public sector's capacity to finance, manage, regulate, and deliver infrastructure services, simultaneously improving investment efficiency and sustainability. The critical path involves municipalities gradually reducing dependence on inter-governmental transfers, increasing their own resources, and fostering financial autonomy, accountability, and market discipline. It also entails using public funds to leverage private capital investment to mitigate poverty and promote sustainable growth, and scaling up capacity building activities linked to broad-based program financing. Capacity building efforts are crucial for enhancing planning and programming within resource constraints, developing technical expertise for investment plans, strengthening monitoring and evaluation of investment expenditures, and mobilizing community participation through transparent management of the investment budget.\n\nForecasting the overall success of this activity requires considering several factors. A significant challenge is that no major reforms are currently underway or foreseen in the municipal sector, and a \"one-size-fits-all\" approach does not align with Argentina's federal system, where provinces need to lead reform. Interventions at the municipal level are complicated by the need for a pro-poor approach to service delivery, coupled with \"reform fatigue\" and the government's decision to fragment the municipal agenda across three sector institutions. While the project intends to introduce incremental yet important changes in institutional arrangements, including a more transparent Project governance structure and modest systemic reforms in governance, eligibility, and prioritization criteria, some broader structural issues, such as rationalizing provincial revenue sharing or changes to fiscal federalism, are outside its scope. The project is designed as an initial stage of investment, representing a relatively small amount compared to the overall demand for municipal investments and institutional reform, though it is noted as the only current source of capital investment for local governments in Argentina. Its success will depend on its ability to effectively target and strengthen municipal and service-provider institutional needs, which have historically been elusive. The project's focus on local-level reform, service providers, and basic municipal management and investment planning tools is critical, with the expectation that this initial operation will be followed by a series of future operations to scale up and consolidate local-level reforms. This implies that while the project lays a foundation, its full impact on overall success is envisioned over a longer programmatic horizon.",
+    "finance": {
+      "total_allocation": {
+        "amount": 110.0,
+        "currency": "million USD"
+      },
+      "quantitative_outcome_allocations": [
+        {
+          "custom_outcome": "Water, sanitation, urban drainage, and roads infrastructure",
+          "outcome": "other",
+          "grant_or_loan": "loan",
+          "amount_allocated": 99.3,
+          "currency": "million USD"
+        },
+        {
+          "custom_outcome": "Municipal institutional development",
+          "outcome": "other",
+          "grant_or_loan": "loan",
+          "amount_allocated": 5.0,
+          "currency": "million USD"
+        },
+        {
+          "custom_outcome": "Program management",
+          "outcome": "other",
+          "grant_or_loan": "loan",
+          "amount_allocated": 5.7,
+          "currency": "million USD"
+        }
+      ],
+      "activity_id": "webapp_038385943901"
+    },
+    "sector_allocation": {
+      "Project_Management": 4.0,
+      "Institutional_capacity_building": 3.5,
+      "more_people_with_drinking_water_services": 37.0,
+      "Urban_flood_protection": 27.7,
+      "Improved_transport_infrastructure": 27.8
+    },
+    "features": {
+      "implementer_performance": "**Implementing Organization's Abilities and Skin-in-the-Game of Key Actors**\n\n**Who would be implementing the activity?**\nThe primary implementing agency at the national level is the **Ministerio de Planificaci\u00f3n Federal** of the Argentine Republic. The activity itself is designed to improve services at the **municipal level**, directly engaging approximately **2,150 local governments (municipalities and comunas)** and provincial basic service providers. These local entities will be the direct implementers of infrastructure and service improvements. The World Bank (International Bank for Reconstruction and Development) is a key financing and technical partner.\n\n**Assessing the Implementing Organization's Abilities:**\n\n*   **Current Weaknesses:**\n    *   **Significant Institutional and Financial Constraints:** Local governments are described as \"highly underdeveloped\" and face \"significant institutional and financial constraints\" and \"myriad institutional and financial constraints\" in improving service delivery.\n    *   **Financial Dependence:** Municipalities are \"highly dependent on transfers from higher levels of government\" and have \"limited revenue raising capacity\" and difficulties in \"managing own-source revenues.\" Municipal tax revenue is very low, and many \"local\" taxes are collected at the provincial level.\n    *   **Inefficiency and Poor Service Delivery:** There are \"persistent inefficiencies in the provision of services at the sub-national level,\" with service quality and coverage not matching expenditure levels, and social indicators lagging.\n    *   **Capacity Gaps:** Municipalities lack sufficient capacity in planning, programming, technical expertise for investment plans, monitoring and evaluation, and mobilizing community participation. The project notes that municipal and service-provider institutional strengthening needs have been \"historically elusive.\"\n    *   **Operational and Commercial Deficiencies:** Current performance is poor in areas such as water loss reduction, billing and collection rates, and effective operations and maintenance (O&M) arrangements, necessitating \"Improvements in basic commercial and operational indicators.\"\n    *   **Implementing Agency Capacity (Ministerio de Planificaci\u00f3n Federal):** The project explicitly states that the core Unit for Execution and Coordination (UEC) staffing needs strengthening in technical specialists (sanitary engineers, roads specialists, economists) and improved capacity in environmental management, procurement, and financial management, indicating existing deficiencies within the direct implementing body.\n*   **Aimed Improvements (Acknowledged Needs):**\n    *   The project aims to significantly enhance the public sector's capacity to finance, manage, regulate, and deliver infrastructure services.\n    *   It will provide targeted technical assistance to municipalities and provincial service providers for improved planning, management, operational capacity, multi-year strategic investment planning, tariff reviews, user cadastre, billing/collection, and commercial management.\n    *   The project also intends to introduce a more transparent Project governance structure and modest systemic reforms in governance, eligibility, and prioritization criteria, recognizing current deficiencies.\n\n**Is the partner organization truly invested in the activity (Skin-in-the-Game of Key Actors)?**\n\n*   **Argentine Republic (Borrower):**\n    *   **Investment Indicated:** The \"Government of Argentina has requested the Bank to support\" the project, which signals a commitment to addressing the identified issues. The project builds on 15 years of World Bank involvement in municipal development in Argentina, suggesting a history of sustained engagement and collaboration from the government's side. The project is designed to support \"the Government's efforts to provide a source of investment resources for fiscally sustainable municipalities.\" As the borrower, the Argentine Republic bears the ultimate financial responsibility for the loan.\n    *   **Commitment Concerns:** However, the document notes \"reform fatigue\" and the government's decision to \"fragment the municipal agenda across three sector institutions,\" which could signify a lack of unified, strong political will or strategic direction, potentially diluting the central government's investment in comprehensive reform.\n*   **Municipalities:**\n    *   **Expected Investment:** The \"critical path\" involves municipalities \"gradually reducing dependence on inter-governmental transfers, increasing their own resources, and fostering financial autonomy, accountability, and market discipline.\" This indicates an expectation of increasing financial and institutional \"skin-in-the-game\" from local governments over time, but their current high dependence on transfers suggests their initial direct financial investment is limited.\n*   **The World Bank:**\n    *   **Significant Investment:** The World Bank is providing substantial financing (US$110 million out of a total US$143.4 million). Furthermore, the project is conceived as an \"initial stage\" that \"would likely be followed by a series of future operations to scale up and consolidate local-level reform.\" This indicates a strong, long-term programmatic commitment and significant financial and technical investment from the Bank's side.\n\n**Whether other relevant stakeholders would be aiding or deteriorating activity outcomes:**\n\n*   **Provinces:**\n    *   **Deteriorating/Complicating Factor:** Provinces are a critical and potentially deteriorating factor. Municipalities are \"entirely dependent on the provinces, which dictate their organization, taxing powers, and basic service delivery responsibilities.\" This high degree of provincial control means that provinces can significantly impede or enable municipal progress. Critically, \"No major reforms have been embarked upon or are foreseen in the municipal sector,\" and \"provinces need to be in the driver's seat as regards this reform agenda.\" This provincial inaction on reform poses a significant systemic hurdle. Major structural issues, such as \"rationalizing provincial revenue sharing or changes to fiscal federalism,\" which directly impact municipal financial autonomy, are \"outside [the project's] scope,\" leaving these significant barriers unaddressed by the project directly.\n*   **Federal Government Institutions (Beyond the Implementing Agency):**\n    *   **Deteriorating Factor:** The \"government's decision to fragment the municipal agenda across three sector institutions poses unique challenges\" for interventions, suggesting a lack of coordinated approach at the federal level that could hinder cohesive reform implementation and outcomes.\n*   **Private Capital Investors:**\n    *   **Potential Aiding Factor:** The project aims to \"use public funds to leverage private capital investment.\" If successful, this could significantly aid outcomes by bringing additional resources and expertise, but their involvement is dependent on the project's ability to attract such investment.\n*   **Community:**\n    *   **Potential Aiding Factor:** Capacity building efforts include the objective to \"mobilize community participation through transparent management of the investment budget.\" A strong focus on \"pro-poor\" service delivery, poverty reduction, and public opinion monitoring suggests that community engagement is seen as essential for transparency and sustainability, potentially aiding activity outcomes.",
+      "targets": "The targeted outcomes of the ARGENTINA BASIC MUNICIPAL SERVICES PROJECT are:\n\n**Targeted Outcomes:**\n\n1.  **Improved Quality and Provision of Services:**\n    *   Enhance the quality and provision of water supply and sanitation, urban drainage, and roads infrastructure services at the municipal level.\n    *   Achieve this in a transparent, equitable, and fiscally sustainable manner.\n\n2.  **Specific Service Improvements:**\n    *   Improve the coverage, quality, and efficiency of water supply and sanitation services in participating municipalities.\n    *   Enhance access to urban drainage infrastructure in participating municipalities.\n    *   Increase access to paved roads and reduce logistics costs through investments in urban and productive roads.\n\n3.  **Operational and Commercial Performance:**\n    *   Improve the operational and commercial performance of municipal basic services. This includes:\n        *   Reduction in losses in water supply.\n        *   Improvement in billing and collection rates.\n        *   Effective arrangements for operations and maintenance.\n        *   Established arrangements and targets for cost recovery for each subproject.\n    *   This is to be achieved through demand-driven technical assistance for medium-term investment planning, subproject preparation, technical supervision, operations and maintenance, and improved commercial management.\n\n4.  **Strengthened Public Sector Capacity and Sustainability:**\n    *   Enhance the public sector's capacity to finance, manage, regulate, and deliver infrastructure services.\n    *   Improve investment efficiency and sustainability.\n    *   Increase the financial autonomy, accountability, and market discipline of municipalities by gradually reducing dependence on inter-governmental transfers and increasing own resources.\n    *   Leverage public funds to access private capital investment to mitigate poverty and promote sustainable growth.\n    *   Scale up capacity building activities linked to broad-based program financing.\n\n5.  **Enhanced Planning and Management:**\n    *   Improve planning and programming capacity within local governments' resource constraints.\n    *   Develop technical expertise for preparing adequate investment plans.\n    *   Strengthen monitoring and evaluation to enhance investment expenditure efficiency.\n    *   Mobilize community participation through transparent management of the investment budget.\n\n6.  **Poverty Reduction and Health Impact:**\n    *   Reduce poverty and increase access to improved basic services, focusing investments disproportionately on currently under-serviced populations.\n    *   Improve health outcomes in Project areas through investments in water supply, sanitation, drainage, and roads, leading to reductions in incidences of water-borne diseases.\n\n**What would be needed to consider the activity an overall success:**\n\n1.  **Effective Institutional Strengthening:** The project's success will depend on its ability to effectively target and strengthen municipal and service-provider institutional needs, which have historically been challenging to achieve. This includes focusing on local-level reform, service providers, and basic municipal management and investment planning tools.\n2.  **Achievement of Key Performance Indicators:** Success will be measured by the achievement of key indicators such as:\n    *   Increased number of new consumers connected to water supply and sanitation networks.\n    *   Construction of new urban drainage kilometers and direct beneficiaries.\n    *   Rehabilitation and paving of urban and productive roads, and increased beneficiaries with access to improved urban roads.\n    *   Establishment and effective implementation of mechanisms for achieving cost recovery for investments and Operations and Management (O&M) costs across all relevant sectors.\n    *   Demonstrable improvements in basic commercial and operational indicators for municipalities and provincial service providers (e.g., reduced water losses, improved billing/collection, effective O&M arrangements, and cost recovery targets).\n3.  **Sustained Medium-Term Effort and Capacity Building:** Success requires a sustained effort to enhance the public sector's capacity to finance, manage, regulate, and deliver infrastructure services, coupled with improved investment efficiency and sustainability. Crucial capacity building efforts for planning, technical expertise, monitoring, and community participation must be realized.\n4.  **Reduced Municipal Dependence and Increased Autonomy:** Municipalities must gradually reduce their dependence on inter-governmental transfers, increase their own resources, and foster greater financial autonomy, accountability, and market discipline.\n5.  **Leveraging Private Capital:** The project needs to successfully use public funds to leverage access to private capital investment for poverty mitigation and sustainable growth.\n6.  **Foundation for Future Operations:** While this project is an initial stage, its overall success is envisioned over a longer programmatic horizon. It is considered successful if it lays a strong foundation for a series of future operations that can scale up and consolidate local-level reforms and investments in a programmatic, province-specific manner.\n7.  **Transparent Governance and Incremental Reforms:** Introducing incremental yet important changes in institutional arrangements, including a more transparent Project governance structure and modest systemic reforms in governance, eligibility, and prioritization criteria, is crucial.",
+      "risks": "The following risks to the activity not achieving overall success are present in the uploaded pages:\n\n*   **Dependence on higher levels of government:** Both provincial and municipal governments remain highly dependent on transfers from higher levels of government and face significant constraints in raising and managing own-source revenues. This vertical imbalance means municipalities are overly dependent on transfers, which can hinder their financial autonomy.\n*   **Limited revenue-raising capacity at sub-national level:** Revenue raising capacity at the sub-national level is limited, with municipal tax revenue being a small percentage of total tax revenue. Many naturally \"local\" taxes, such as property tax, are provincial taxes in Argentina.\n*   **Persistent inefficiencies in service provision:** Provincial and municipal governments continue to face institutional and financial constraints to improved service delivery, particularly for basic services for the poor, despite recent financial improvements. The level and quality of services do not match expenditure levels, and social indicators lag behind.\n*   **Limited access to capital financing:** Access to capital financing for sub-national governments is significantly limited and is likely to remain highly constrained in the medium-term.\n*   **Underdeveloped municipal sector:** The municipal \"sector\" remains highly underdeveloped, with municipalities being creations of the provinces and their responsibilities varying significantly. They account for less than 10 percent of total public sector expenditure and are generally highly reliant on provincial transfers.\n*   **No major reforms underway or foreseen in the municipal sector:** The structuring and management of municipal development lacks major reforms, and a \"one-size-fits-all\" approach does not align with Argentina's federal system, requiring provinces to lead reform.\n*   **Complexity of municipal-level interventions:** Interventions at the municipal level are complicated by the need for a pro-poor approach to service delivery, \"reform fatigue,\" and the government's decision to fragment the municipal agenda across three sector institutions.\n*   **Broader structural issues outside project scope:** Broader structural issues, such as rationalizing provincial revenue sharing or changes to fiscal federalism, are outside the project's scope, limiting its ability to address root causes of dependency.\n*   **Project as initial stage, small compared to overall demand:** The project is designed as an initial investment, representing a relatively small amount compared to the overall demand for municipal investments and institutional reform, implying its full impact is envisioned over a longer programmatic horizon and not fully achievable in this stage.\n*   **Historical difficulty in strengthening municipal and service-provider institutional needs:** The project's success depends on effectively targeting and strengthening municipal and service-provider institutional needs, which have historically been elusive.",
+      "context": "The external context significantly influences the probability of overall success for the ARGENTINA BASIC MUNICIPAL SERVICES PROJECT, presenting a complex interplay of systemic challenges and critical needs:\n\n1.  **Decentralized Structure with Centralized Control and Fiscal Imbalances:** Argentina operates as one of the most administratively decentralized economies, yet municipalities are \"entirely dependent on the provinces\" which dictate their organization, taxing powers, and service delivery responsibilities. This structural dependency means that provincial policies and political will are critical external factors for municipal autonomy and reform. Furthermore, despite considerable expenditure decentralization, revenue-raising capacity at the sub-national level is severely limited. Municipalities are highly reliant on inter-governmental transfers from provinces and the federal government, facing \"significant constraints to raising and managing own-source revenues\" (e.g., many \"local\" taxes like property tax are provincial). This \"vertical imbalance\" restricts the financial autonomy and sustainability of municipal services, making the project's goal of reducing dependence on inter-governmental transfers particularly challenging without broader reforms.\n\n2.  **Absence of Broader Sectoral Reforms and \"Reform Fatigue\":** A major impediment to the project's overall success is that \"no major reforms are currently underway or foreseen in the municipal sector.\" The federal system dictates that provinces need to lead reform, and a \"one-size-fits-all\" approach is unsuitable. This means the project operates within a static or slow-changing policy environment at higher levels of government. Compounding this, there is a perception of \"reform fatigue,\" which could hinder willingness for deeper institutional changes. Moreover, the government's decision to fragment the municipal agenda across three sector institutions creates coordination challenges. Broader structural issues, such as rationalizing provincial revenue sharing or changes to fiscal federalism, are explicitly \"outside [the project's] scope,\" limiting the potential for systemic, long-term impact on municipal financial and institutional sustainability.\n\n3.  **Limited Access to Capital Financing and High Demand:** Access to capital financing for sub-national governments is \"significantly limited and likely to remain highly constrained in the medium-term.\" Despite increased provincial and federal fiscal transfers, municipalities face severe financial constraints for capital investment. The project is noted as the \"only current source of capital investment for local governments in Argentina,\" which highlights its critical importance but also indicates a lack of alternative funding mechanisms. The overall demand for municipal investments and institutional reform is vast (e.g., over US$3 billion for water and sanitation alone), making this project a \"relatively small amount\" compared to the total need.\n\n4.  **Historically Elusive Institutional Strengthening and Governance Challenges:** The success of the project \"will depend on its ability to effectively target and strengthen municipal and service-provider institutional needs, which have historically been elusive.\" This suggests a challenging history of achieving institutional reforms at the local level, indicating entrenched operational and governance issues that might resist change. The political autonomy of provincial governors and legislators further complicates the landscape for driving municipal reforms.\n\n5.  **High Socio-Economic Needs:** A \"large proportion of the population under the poverty line\" necessitates a pro-poor approach to service delivery. Significant gaps in the coverage and quality of basic services persist, particularly for the poorest segments, leading to measurable negative impacts (e.g., a 75% increase in diarrheic diseases in children under 5 since 1992). While this underscores the urgency and relevance of the project, it also highlights the profound scale of socio-economic development challenges that need to be addressed simultaneously.\n\nIn summary, the project faces formidable external challenges including deep-seated structural fiscal dependencies, a lack of broader political will for systemic reforms, historical difficulties in institutional strengthening, and an overwhelming demand for services compared to available resources. While the project is a critical, perhaps sole, source of capital investment, its probability of achieving *overall* transformative success is significantly constrained by these external factors, as it is designed as an \"initial stage\" operation intended to lay a foundation for future, larger-scale interventions.",
+      "finance": "The \"ARGENTINA BASIC MUNICIPAL SERVICES PROJECT\" is budgeted at a total of **US$ 143.4 million**. Of this, **US$ 33.4 million** is financed by the ARGENTINE REPUBLIC (Borrower), and **US$ 110.0 million** is financed by The World Bank (International Bank for Reconstruction and Development).\n\nThe activity is structured into three primary components with their respective budgets and sub-activities:\n\n1.  **Component 1: Basic Investment and Services**\n    *   **Budget:** US$ 132.7 million (including US$ 99.3 million of Bank financing).\n    *   **Specific Sub-activities:** This component finances investments to improve service provision in participating provinces and municipalities. While a specific budget breakdown for each sub-activity within this component is not provided, the funds are allocated for:\n        *   **Basic Water and Sanitation:** Construction and rehabilitation of production infrastructure, primary and secondary water supply networks, sewer network rehabilitation and expansion, water treatment plants, and wastewater treatment and disposal facilities.\n        *   **Urban Drainage and Small Retention Works:** Rehabilitation and expansion of drainage networks and small retention works, including main drainage and secondary networks, manholes, and junctures. These subprojects are typically small and complement parallel flood protection efforts where possible.\n        *   **Urban and Productive Roads:** Pavement and rehabilitation of urban, municipal connector, and productive roads to increase access, improve traffic flows in under-serviced urban neighborhoods, and reduce logistics costs.\n\n2.  **Component 2: Municipal Institutional Development**\n    *   **Budget:** US$ 5.0 million (including US$ 5.0 million of Bank financing).\n    *   **Specific Sub-activities:** This component finances demand-driven technical assistance at the municipal level to improve planning, management, and operational capacity for water, sanitation, sewerage, urban drainage, and road maintenance services. Eligible beneficiaries include municipalities, provincial service providers, regulators, and policymakers. Sub-activities include, but are not limited to:\n        *   Capacity building for the technical, economic, financial, social, and environmental preparation and assessment of subprojects.\n        *   Multi-year strategic investment planning and budgeting.\n        *   Tariff reviews.\n        *   Updating and improving the cadastre of users.\n        *   Improvements in billing, collection, and commercial management.\n        *   Technical exchanges, twinning, and outreach activities.\n        *   Information, communications, and education campaigns in key service sectors.\n        *   Poverty targeting and monitoring mechanisms as part of investment planning.\n        *   Preparation of territorial sector development and urban development plans.\n        *   Business and operational planning for service providers.\n\n3.  **Component 3: Program Management**\n    *   **Budget:** US$ 5.3 million (including US$ 5.3 million of Bank financing).\n    *   **Specific Sub-activities:** This component finances operating expenses for program management, monitoring, evaluation, and supervision. This includes:\n        *   Strengthening core Project Coordinating Unit (UEC) staffing with technical specialists (e.g., sanitary engineers, roads specialist, economist) and improved staffing capacity in environmental management, procurement, and financial management.\n        *   Project preparation assistance.\n        *   Independent technical audit.\n        *   Monitoring of poverty impacts.\n        *   Impact evaluation.\n        *   Public opinion monitoring.\n        *   Dissemination and outreach activities to promote good practices at the local level.\n\n**Aspects Likely to be Under-funded and Financing's Impact on Success:**\n\nThe project explicitly acknowledges several aspects that appear likely to be under-funded or where the financing provided is relatively small compared to the overall need:\n\n*   **Overall Demand vs. Project Scope:** The project is described as an \"initial stage of investment, representing a relatively small amount compared to the overall demand for municipal investments and institutional reform.\" This indicates that while the project is significant, it cannot address the entirety of the municipal infrastructure and institutional challenges in Argentina.\n*   **Water and Sanitation Needs:** Sector investment needs in basic water and sanitation alone (excluding wastewater treatment) are estimated to exceed **US$3 billion**. The project's Component 1, which covers water, sanitation, drainage, and roads, is budgeted at US$132.7 million. This highlights a vast gap, meaning the project will only meet a small fraction of the total demand for these critical services.\n*   **Access to Capital Financing:** Municipalities face \"significant institutional and financial constraints\" and \"access to capital financing... remains highly limited.\" The project, noted as \"the only current source of capital investment for local governments in Argentina,\" steps in to fill this void. However, the systemic issue of limited capital financing for approximately 2,150 local governments suggests that external assistance needs are immense and the project's funding, while vital, is a partial solution.\n*   **Broader Structural Reforms:** The project is designed to introduce \"incremental yet important changes\" but explicitly states that \"some broader structural issues, such as rationalizing provincial revenue sharing or changes to fiscal federalism, are outside its scope.\" The success of municipal services and financial autonomy is deeply tied to these higher-level reforms, which are not funded or directly addressed by this project, thus limiting the potential for a comprehensive, systemic overhaul.\n\n**How well financed the activity would likely be, or how financing may affect activity success:**\n\n*   **Crucial but Insufficient Scale:** While the project's financing is substantial for a single operation and is presented as the \"only current source of capital investment for local governments,\" its \"relatively small amount\" compared to the overall demand for municipal services (e.g., US$132.7 million for water/sanitation/drainage/roads versus US$3 billion estimated for water/sanitation alone) suggests it will only address a fraction of the total needs. This limits its ability to achieve widespread impact in a single phase.\n*   **Foundation for Future Success:** The project is envisioned as an \"initial stage of investment\" to be followed by \"a series of future operations to scale up and consolidate local-level reforms.\" This implies that its immediate success is foundational, laying the groundwork for longer-term programmatic goals, rather than providing a complete solution in itself.\n*   **Leveraging Capacity Building:** The US$5.0 million for Municipal Institutional Development is critical. Enhancing planning, management, and operational capacity, as well as developing cost recovery mechanisms, will improve the efficiency and sustainability of the investments made under Component 1. Without strong institutional capacity, even well-funded infrastructure projects can fail due to poor maintenance or management.\n*   **Dependency on External Transfers:** The reliance of Argentine municipalities on inter-governmental transfers and their limited own-source revenues make external financing from the World Bank particularly crucial. The project aims to reduce this dependency and foster financial autonomy, but this is a long-term goal. The continued need for external funding underscores the financing challenges faced by the municipal sector.\n*   **Risk from \"Reform Fatigue\" and Fragmentation:** The context mentions \"reform fatigue\" and the government's decision to fragment the municipal agenda. This fragmented approach could hinder the coordinated application and sustained impact of the project's financing, potentially diluting its effectiveness despite the allocated funds.\n*   **Targeted Pro-Poor Approach:** The financing is strategically directed towards high-impact basic services, with a specific focus on reaching under-serviced, pro-poor populations. This targeting, if successful, can maximize the social return on investment, even with limited overall funding.",
+      "complexity": "The activity is highly complex due to Argentina's decentralized system, with 2,150 municipalities facing institutional/financial constraints. It involves multi-sector investments (water, sanitation, drainage, roads) and institutional capacity building. Challenges include lack of major sector reforms, a fragmented agenda, and comprehensive environmental/social safeguards compliance.",
+      "integratedness": "The activity is not a standalone program but an initial stage within a broader, medium-term programmatic effort. It directly integrates into the Government's agenda, building on 15 years of Bank involvement. It is expected to be followed by future operations to scale up and consolidate local-level reforms, contributing to a longer programmatic horizon."
+    },
+    "status": "complete"
+  }
+}
