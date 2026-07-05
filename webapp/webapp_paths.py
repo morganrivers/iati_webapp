@@ -13,6 +13,7 @@ whether the app is launched from the repo root (``streamlit run webapp/app.py``)
 or from inside ``webapp/`` (as the test suite does).
 """
 import os
+import sys
 from pathlib import Path
 
 WEBAPP_DIR = Path(__file__).resolve().parent
@@ -32,3 +33,20 @@ EXTRACTED_PDF_DIR = (
 
 MODEL_DIR = DATA_DIR / "rating_model_outputs"
 TRAIN_MEDIANS_PATH = MODEL_DIR / "train_medians.json"
+
+_SRC_UTILS_DIR = REPO_ROOT / "src" / "utils"
+_SRC_EXTRACT_DIR = REPO_ROOT / "src" / "extract_structured_database"
+_SRC_FORECAST_DIR = REPO_ROOT / "src" / "forecast_outcomes"
+
+
+def ensure_src_paths() -> None:
+    """Idempotently add all src/ subtrees and webapp dirs to sys.path."""
+    for p in [
+        str(WEBAPP_DIR),
+        str(WEBAPP_DIR / "modules"),
+        str(_SRC_UTILS_DIR),
+        str(_SRC_EXTRACT_DIR),
+        str(_SRC_FORECAST_DIR),
+    ]:
+        if p not in sys.path:
+            sys.path.insert(0, p)

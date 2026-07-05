@@ -18,9 +18,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-UTILS_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "utils"
-if str(UTILS_DIR) not in sys.path:
-    sys.path.insert(0, str(UTILS_DIR))
+from webapp_paths import ensure_src_paths
+ensure_src_paths()
 
 from extracting_and_grading_helper_functions import loop_over_rows_to_call_model, AIRPLANE_MODE
 from dummy_response_text_generator import DUMMY_GRADE_RESPONSE

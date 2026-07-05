@@ -3,7 +3,7 @@ import logging
 import streamlit as st
 import pandas as pd
 
-from debug_utils import _print_ram
+
 from ui_components import render_histogram
 from rf_predictor import impute_and_run_statistical_model
 from shap_explainer import compute_shap_values
@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 
 def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, start_year_correction, model_metadata, training_data):
-    _print_ram("top of render activity forecasting")
     # Title and description
     st.title("🌍 IATI Activity Success Forecasting")
     st.markdown("""
@@ -50,7 +49,6 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
     # PROJECT SELECTOR
     # ============================================================================
 
-    _print_ram("before proj selector")
     render_project_selector(_llm_running)
 
     # ---- REFACTOR → render_llm_upload_section(_llm_running) ----
@@ -58,14 +56,12 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
     # LLM UPLOAD & EXTRACTION (Moved to top)
     # ============================================================================
     
-    _print_ram("before render llm")
     render_llm_upload_section(_llm_running, model_metadata=model_metadata)
 
     # ---- REFACTOR → poll_extraction_phases_0_3() ----
     # =========================================================================
     # PHASES 0-3 POLLING (runs every rerun; survives page navigation)
     # =========================================================================
-    _print_ram("before poll extraction")
     poll_extraction_phases_0_3()
         # Show persistent processing logs after rerun
     if st.session_state.get('processing_logs'):
@@ -117,7 +113,6 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
 
     project_selected = st.session_state.selected_project_folder is not None
     if project_selected or st.session_state.creating_new_project:
-        _print_ram("before shap lookup")
 
         # Build SHAP lookup once for the whole input section (empty before first forecast)
         _shap_by_feature = {}
@@ -143,7 +138,6 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
         
         st.markdown("---")
 
-        _print_ram("before view or edit activity info")
         with st.expander("Edit or View Activity Information", expanded=False):
 
 
@@ -170,7 +164,6 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
             with col_lock3:
                 st.info("💡 Locked fields won't be overwritten by LLM extraction")
 
-            _print_ram("before render basic info")
             reporting_org, start_date, location_features = render_basic_info_subsection(model_metadata, training_data,  location, _llm_running, _shap, _shap_sum)
 
             planned_expenditure, planned_duration, activity_scope, finance_is_loan, gdp_percap_input, cpia_score_input, governance_composite_input = render_activity_features_subsection(model_metadata, training_data, _llm_running, _shap, _shap_sum, location_features)
@@ -183,7 +176,6 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
             # ---- REFACTOR → render_confirm_and_poll_phase4(_llm_running) ----
             #   (wraps the confirm button, the grading poll, and phase-4 thread launch)
 
-            _print_ram("before umap render")
             if not st.session_state.grading_in_progress:
 
                 umap3_x, umap3_y, umap3_z, sector_distance, country_distance = render_targets_embeddings_subsection(model_metadata, training_data, _shap, start_date)
@@ -238,7 +230,6 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
                 # PREDICTION SECTION
                 # ============================================================================
 
-        _print_ram("before Forecast header")
         st.header("Forecast")
 
         # Show warning for fields using median values
@@ -279,7 +270,6 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
 
         st.caption("After running the forecast, colored arrow badges (↑ green / ↓ red) will appear next to each input field showing how much that input shifts the predicted rating. Hover over a badge to see the exact contribution.")
 
-        _print_ram("before button press predict stat model")
         if st.button("Predict Success Rating (Statistical Model)", type="primary"):
                 
             with st.spinner("Generating forecast..."):
@@ -360,7 +350,5 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
                 st.rerun()
 
 
-        _print_ram("before render analysis page")
         render_analysis_section()
         render_tag_predictions()
-        _print_ram("end of render activity forecasting page")

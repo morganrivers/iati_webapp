@@ -1,6 +1,6 @@
 """RAG Forecast Viewer - shows all intermediate pipeline steps and final forecast."""
 import io
-from debug_utils import _print_ram
+
 
 import json
 import re
@@ -56,9 +56,7 @@ def _run_rag_inprocess(activity_dir: Path, forecast_state: dict):
     sys.stdout is temporarily redirected so all print/[RAM] output is captured in
     forecast_state['logs'] and also echoed to the original terminal stdout.
     """
-    _print_ram("_run_rag_inprocess: before import run_rag_forecast")
     import run_rag_forecast as _rrm  # Python caches in sys.modules after first import
-    _print_ram("_run_rag_inprocess: after import run_rag_forecast (module-level code done)")
 
     def _on_line(line):
         """Parse [STAGE X/Y] markers so the progress bar stays up to date."""
@@ -87,7 +85,6 @@ def _run_rag_inprocess(activity_dir: Path, forecast_state: dict):
         forecast_state['returncode'] = 1
     finally:
         sys.stdout = old_stdout
-        _print_ram("_run_rag_inprocess: complete")
         forecast_state['done'] = True
 
 
@@ -376,9 +373,7 @@ def render_rag_forecast_page():
     if knn_dryrun_rec and knn_dryrun_rec.get("prompt"):
         examples = _parse_examples_from_knn_prompt(knn_dryrun_rec["prompt"])
         neighbor_ids = knn_dryrun_rec.get("knn_neighbor_ids", [])
-        _print_ram("before _load_expost_summaries")
         expost = _load_expost_summaries() if SHOW_EXPOST_SUMMARY else {}
-        _print_ram("after _load_expost_summaries")
         if examples:
             for i, ex in enumerate(examples, 1):
                 with st.expander(f"Example {i}: {ex['title']}", expanded=(i == 1)):

@@ -1,44 +1,33 @@
 #!/usr/bin/env python3
 """Generate embedding features for new webapp activity using saved UMAP models."""
-from debug_utils import _print_ram
-
 import sys
-from pathlib import Path
-import numpy as np
-import pandas as pd
-
-import logging
-
-logger = logging.getLogger(__name__)
-
-_print_ram("before standard targets_embedding_features imports")
 import pickle
 import json
+import logging
+import os
+from pathlib import Path
 from typing import Dict, Optional, List, Tuple
 from collections import Counter
+
+import numpy as np
+import pandas as pd
 from scipy.optimize import curve_fit
 from sklearn.utils import check_random_state
 from google import genai
-import os
-_print_ram("after standard targets_embedding_features imports")
 
-# Import existing utilities
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src/extract_structured_database"))
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src/utils"))
+from webapp_paths import ensure_src_paths
+ensure_src_paths()
 
-_print_ram("before generate_targets_embeddings")
+logger = logging.getLogger(__name__)
+
 from generate_targets_embeddings import normalize_response_text
-_print_ram("before compress_embeddings_umap")
 from compress_embeddings_umap import (
     l2_normalize,
     euclidean_distance,
     parse_country_location
 )
-_print_ram("before helpers_for_ratings_and_final_activity_features")
 from helpers_for_ratings_and_final_activity_features import pick_start_date
-_print_ram("before get_codes_we_like")
 from get_codes_we_like import get_good_bad_and_target_codes, categorize_good_code, parse_dac_codes
-_print_ram("after specifci module imports")
 
 # Paths
 MODEL_PATH = Path(__file__).resolve().parent.parent.parent / "data/trained_umap_models_trainval.pkl"
@@ -181,11 +170,8 @@ def load_models():
     global _MODELS
     if _MODELS is None:
         logger.info(f"Loading models from {MODEL_PATH}...")
-        _print_ram("before pkl load")
-
         with MODEL_PATH.open('rb') as f:
             _MODELS = pickle.load(f)
-        _print_ram("after pkl load")
         logger.info("Loaded: pca, umap3 arrays, centroids")
 
         # Pre-compute and cache a, b UMAP parameters (min_dist=0.1, spread=1.0)

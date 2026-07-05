@@ -5,16 +5,7 @@ Uses generate_preactivity_summaries.py prompts and loop_over_rows_to_call_model(
 """
 
 
-from debug_utils import _print_ram
-
-
 import logging
-
-logger = logging.getLogger(__name__)
-
-_print_ram("before all extracting_and_grading_imports ")
-
-
 import sys
 import json
 import jsonlines
@@ -23,26 +14,17 @@ from pathlib import Path
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 
-# Add batch pipeline and utils to path
-BATCH_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "extract_structured_database"
-UTILS_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "utils"
-if str(BATCH_DIR) not in sys.path:
-    sys.path.insert(0, str(BATCH_DIR))
-if str(UTILS_DIR) not in sys.path:
-    sys.path.insert(0, str(UTILS_DIR))
+from webapp_paths import ensure_src_paths
+ensure_src_paths()
 
-_print_ram("before importing prompts summary ")
-# Import prompt function from G
+logger = logging.getLogger(__name__)
+
 from generate_preactivity_summaries import get_prompts_summary
-_print_ram("after importing prompts summary ")
-
-_print_ram("before importing extracting_and_grading_helper_functions loop_over_rows_to_call_model and consolidate_rows_by_activity")
 from extracting_and_grading_helper_functions import (
     loop_over_rows_to_call_model,
     consolidate_rows_by_activity,
     read_last_success_row,
 )
-_print_ram("after importing extracting_and_grading_helper_functions ")
 
 
 def generate_activity_summary(

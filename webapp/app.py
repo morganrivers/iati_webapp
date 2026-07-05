@@ -1,42 +1,19 @@
 """IATI Activity Success Forecasting Web App"""
-import sys as _sys, traceback as _tb
-
-
 import logging
+import warnings
 
-logger = logging.getLogger(__name__)
-
-class _MatplotlibTracer:
-    """Prints a stack trace the first time anything matplotlib-related is imported."""
-    def find_module(self, name, path=None):
-        if name == 'matplotlib' or name.startswith('matplotlib.'):
-            logger.debug(f"[MATPLOTLIB IMPORT TRACE] module: {name}")
-            _tb.print_stack()
-        return None
-
-_sys.meta_path.insert(0, _MatplotlibTracer())
-
-from debug_utils import _print_ram
 from logging_config import setup_logging
 
 setup_logging()
 
-_print_ram("before imports")
 import streamlit as st
-import sys
-import warnings
-from pathlib import Path
 from dotenv import load_dotenv
-_print_ram("after imports")
 
 warnings.filterwarnings('ignore', message=".*force_all_finite.*", category=FutureWarning)
 load_dotenv()
 
-# Path setup FIRST — before any local imports
-sys.path.insert(0, str(Path(__file__).parent / "modules"))
-sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "extract_structured_database"))
-sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "utils"))
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "forecast_outcomes"))
+from webapp_paths import ensure_src_paths
+ensure_src_paths()
 
 
 st.set_page_config(
@@ -121,30 +98,18 @@ from the [International Aid Transparency Initiative (IATI)](https://iatistandard
             """)
             st.info("⏳ Loading model and data, please wait…")
 
-_print_ram("before further imports")
 from model_loader import load_model_and_data
-_print_ram("after import load_model_and_data")
 from state_manager import initialize_session_state
-_print_ram("after from state_manager import initialize_session_state")
 from pages.page_activity_forecasting import render_activity_forecasting_page
-_print_ram("after from pages.page_activity_forecasting import render_activity_forecasting_page")
 from pages.page_extracted_data import render_extracted_data_page
-_print_ram("after from pages.page_extracted_data import render_extracted_data_page")
 from pages.page_model_performance import render_model_performance_page
-_print_ram("after from pages.page_model_performance import render_model_performance_page")
 from pages.page_rag_forecast import render_rag_forecast_page
-_print_ram("after from pages.page_rag_forecast import render_rag_forecast_page")
 from pages.page_glossary import render_glossary_page
-_print_ram("after from pages.page_glossary import render_glossary_page")
 from pages.page_about import render_about_page
-_print_ram("after from pages.page_about import render_about_page")
 from pages.page_feedback import render_feedback_page
-_print_ram("after from pages.page_feedback import render_feedback_page")
 from project_manager import save_project_state_temp
 
-_print_ram("before load_model_and_data")
 rf_model, extra_model, per_org_baseline, start_year_correction, model_metadata, training_data = load_model_and_data()
-_print_ram("after load_model_and_data")  # ← training_data is likely large
 initialize_session_state()
 st.session_state._app_initialized = True
 _loading_slot.empty()

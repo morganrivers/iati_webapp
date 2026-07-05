@@ -4,14 +4,7 @@ Extract activity metadata from uploaded PDF.
 Uses loop_over_rows_to_call_model() from utils.
 """
 
-from debug_utils import _print_ram
-
-
 import logging
-
-logger = logging.getLogger(__name__)
-
-_print_ram("top of metadata extractor imports")
 import sys
 import json
 import asyncio
@@ -19,19 +12,17 @@ from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-_print_ram("end of standard metadata extractor imports")
 
-# Add utils to path
-UTILS_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "utils"
-if str(UTILS_DIR) not in sys.path:
-    sys.path.insert(0, str(UTILS_DIR))
+from webapp_paths import ensure_src_paths
+ensure_src_paths()
+
+logger = logging.getLogger(__name__)
 
 from extracting_and_grading_helper_functions import (
     loop_over_rows_to_call_model,
     make_executor,
     read_last_success_row,
 )
-_print_ram("end of extracting_and_grading_helper_functions imports")
 
 
 def get_metadata_schema() -> dict:

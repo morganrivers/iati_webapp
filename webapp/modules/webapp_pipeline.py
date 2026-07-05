@@ -13,35 +13,55 @@ Pipeline:
 All outputs saved to: extracted_pdf_data/{activity_id}/
 """
 
-from debug_utils import _print_ram
-
-
 import logging
-
-logger = logging.getLogger(__name__)
-
-_print_ram("before imports webapppipeline")
 import hashlib
 import shutil
 import json
+import jsonlines
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-# Import extraction modules (handle both relative and absolute imports)
-_print_ram("importerror before extract_metadata_from_pdf")
+from pypdf import PdfReader
+from model_loader import get_sector_clusters
 from metadata_extractor import extract_metadata_from_pdf
-_print_ram("importerror before categorize_single_pdf")
 from page_categorizer import categorize_single_pdf
-_print_ram("importerror before generate_activity_summary")
 from summary_generator import generate_activity_summary
-_print_ram("importerror before extract_finance_breakdown")
 from finance_extractor import extract_finance_breakdown
-_print_ram("importerror before extract_sector_allocation")
 from sector_extractor import extract_sector_allocation, parse_sector_allocation
-_print_ram("importerror before extract_baseline_features")
 from feature_extractor import extract_baseline_features
-_print_ram("after imports webapppipeline")
+
+logger = logging.getLogger(__name__)
+
+
+def _parse_finance_raw(raw: dict, activity_id: str) -> dict:
+    if 'response_text' in raw:
+        result = json.loads(raw['response_text'])
+        result['activity_id'] = activity_id
+        return result
+    return raw
+
+
+def _parse_sector_raw(raw: dict) -> dict:
+    if 'response_text' in raw:
+        return json.loads(raw['response_text'])
+    return raw
+
+
+def _parse_misc_data(data: dict) -> tuple:
+    if 'response_text' in data:
+        try:
+            parsed = json.loads(data['response_text'])
+            return parsed.get('complexity_details', ''), parsed.get('how_integrated_description', '')
+        except json.JSONDecodeError:
+            text = data.get('response_text', '')
+            return text, text
+    text = data.get('response', '')
+    return text, text
+
+
+def _parse_feature_text(data: dict) -> str:
+    return data.get('response_text', data.get('response', ''))
 
 
 def generate_activity_id_from_content(pdf_content: bytes) -> str:
@@ -87,7 +107,6 @@ def process_uploaded_pdf(
             'num_pages': int,
         }
     """
-    _print_ram("before process uploaded")
 
     # Define log helper (used throughout)
     def log(msg):
@@ -135,7 +154,6 @@ def process_uploaded_pdf(
             # Validate page_categories has actual content (not just whitespace)
             page_cat_file = output_dir / "page_categories.jsonl"
             try:
-                import jsonlines
                 with jsonlines.open(page_cat_file, 'r') as reader:
                     page_cats = list(reader)
                 if not page_cats:
@@ -188,8 +206,6 @@ def process_uploaded_pdf(
             f.write(pdf_content)
         log(f"✓ PDF saved to {pdf_path}")
 
-    # Get page count for time estimate
-    from pypdf import PdfReader
     reader = PdfReader(pdf_path)
     num_pages = len(reader.pages)
     log(f"🗎 PDF has {num_pages} pages")
@@ -223,7 +239,6 @@ def process_uploaded_pdf(
     try:
         if skip_if_exists and metadata_file.exists():
             log(f"  → Skipping (already exists): {metadata_file}")
-            import json
             with open(metadata_file, 'r') as f:
                 metadata = json.load(f)
         else:
@@ -256,7 +271,6 @@ def process_uploaded_pdf(
     try:
         if skip_if_exists and page_categories_file.exists() and page_categories_file.stat().st_size > 0:
             log(f"  → Loading from cache: {page_categories_file}")
-            import jsonlines
             with jsonlines.open(page_categories_file, 'r') as reader:
                 page_categories = list(reader)
 
@@ -304,7 +318,6 @@ def process_uploaded_pdf(
     try:
         if skip_if_exists and summary_file.exists() and summary_file.stat().st_size > 0:
             log(f"  → Skipping (already exists): {summary_file}")
-            import jsonlines
             with jsonlines.open(summary_file, 'r') as reader:
                 summary_data = list(reader)[0]
                 summary = summary_data.get('chatgpt_description', '')
@@ -341,15 +354,8 @@ def process_uploaded_pdf(
     try:
         if skip_if_exists and finance_file.exists():
             log(f"  → Skipping (already exists): {finance_file}")
-            import jsonlines
             with jsonlines.open(finance_file, 'r') as reader:
-                raw_finance = list(reader)[0]
-                # Parse response_text if structured output was used
-                if 'response_text' in raw_finance:
-                    finance = json.loads(raw_finance['response_text'])
-                    finance['activity_id'] = activity_id  # Preserve activity_id
-                else:
-                    finance = raw_finance
+                finance = _parse_finance_raw(list(reader)[0], activity_id)
         else:
             finance = extract_finance_breakdown(
                 pdf_path=str(pdf_path),
@@ -381,15 +387,10 @@ def process_uploaded_pdf(
     try:
         if skip_if_exists and sector_file.exists():
             log(f"  → Skipping (already exists): {sector_file}")
-            from model_loader import get_sector_clusters
-            import jsonlines
             with jsonlines.open(sector_file, 'r') as reader:
-                raw_sector = list(reader)[0]
-                if 'response_text' in raw_sector:
-                    parsed_sector = json.loads(raw_sector['response_text'])
-                else:
-                    parsed_sector = raw_sector
-            sector_allocation = parse_sector_allocation(parsed_sector, get_sector_clusters())
+                sector_allocation = parse_sector_allocation(
+                    _parse_sector_raw(list(reader)[0]), get_sector_clusters()
+                )
         else:
             sector_allocation = extract_sector_allocation(
                 pdf_path=str(pdf_path),
@@ -438,41 +439,21 @@ def process_uploaded_pdf(
         output_dir / "misc.jsonl",
     ]
     all_exist = all(f.exists() for f in feature_files)
-    _print_ram("random place in process uploaded")
 
     try:
         if skip_if_exists and all_exist:
             log(f"  → Skipping (all feature files already exist)")
-            import jsonlines
             features = {}
             for ffile in feature_files:
-                fname = ffile.stem  # e.g., "implementer_performance", "finance_qualitative", "misc"
-
-                # Handle misc.jsonl specially (structured output)
+                fname = ffile.stem
+                with jsonlines.open(ffile, 'r') as reader:
+                    data = list(reader)[0]
                 if fname == "misc":
-                    with jsonlines.open(ffile, 'r') as reader:
-                        misc_data = list(reader)[0]
-                        if 'response_text' in misc_data:
-                            try:
-                                parsed = json.loads(misc_data['response_text'])
-                                features['complexity'] = parsed.get('complexity_details', '')
-                                features['integratedness'] = parsed.get('how_integrated_description', '')
-                            except json.JSONDecodeError:
-                                features['complexity'] = misc_data.get('response_text', '')
-                                features['integratedness'] = misc_data.get('response_text', '')
-                        else:
-                            features['complexity'] = misc_data.get('response', '')
-                            features['integratedness'] = misc_data.get('response', '')
-                # Handle finance_qualitative -> finance mapping
+                    features['complexity'], features['integratedness'] = _parse_misc_data(data)
                 elif fname == "finance_qualitative":
-                    with jsonlines.open(ffile, 'r') as reader:
-                        data = list(reader)[0]
-                        features['finance'] = data.get('response_text', data.get('response', ''))
-                # Handle regular features
+                    features['finance'] = _parse_feature_text(data)
                 else:
-                    with jsonlines.open(ffile, 'r') as reader:
-                        data = list(reader)[0]
-                        features[fname] = data.get('response_text', data.get('response', ''))
+                    features[fname] = _parse_feature_text(data)
         else:
             features = extract_baseline_features(
                 pdf_path=str(pdf_path),
@@ -516,8 +497,6 @@ def load_cached_results(output_dir: Path, activity_id: str, log_callback: Option
     Returns:
         Complete result dict
     """
-    import jsonlines
-
     result = {
         'activity_id': activity_id,
         'output_dir': output_dir,
@@ -540,7 +519,6 @@ def load_cached_results(output_dir: Path, activity_id: str, log_callback: Option
     if 'page_categories' in result:
         result['num_pages'] = len(result['page_categories'])
     else:
-        from pypdf import PdfReader
         reader = PdfReader(result['pdf_path'])
         result['num_pages'] = len(reader.pages)
 
@@ -565,40 +543,23 @@ def load_cached_results(output_dir: Path, activity_id: str, log_callback: Option
         try:
             with jsonlines.open(finance_file, 'r') as reader:
                 lines = list(reader)
-                if lines:
-                    raw_finance = lines[0]
-                    # Parse response_text if structured output was used
-                    if 'response_text' in raw_finance:
-                        result['finance'] = json.loads(raw_finance['response_text'])
-                        result['finance']['activity_id'] = activity_id  # Preserve activity_id
-                    else:
-                        result['finance'] = raw_finance
-                else:
-                    result['finance'] = {}
+            result['finance'] = _parse_finance_raw(lines[0], activity_id) if lines else {}
         except Exception as e:
-            logger.warning(f"Warning: Failed to load finance from cache: {e}")
+            logger.warning("Failed to load finance from cache: %s", e)
             result['finance'] = {}
 
     # Load sector allocation
     sector_file = output_dir / "sector_allocation.jsonl"
     if sector_file.exists() and sector_file.stat().st_size > 0:
         try:
-            from model_loader import get_sector_clusters
             with jsonlines.open(sector_file, 'r') as reader:
                 lines = list(reader)
-                if lines:
-                    raw_sector = lines[0]
-                    if 'response_text' in raw_sector:
-                        parsed_sector = json.loads(raw_sector['response_text'])
-                    else:
-                        parsed_sector = raw_sector
-                    result['sector_allocation'] = parse_sector_allocation(
-                        parsed_sector, get_sector_clusters()
-                    )
-                else:
-                    result['sector_allocation'] = {}
+            result['sector_allocation'] = (
+                parse_sector_allocation(_parse_sector_raw(lines[0]), get_sector_clusters())
+                if lines else {}
+            )
         except Exception as e:
-            logger.warning(f"Warning: Failed to load sector allocation from cache: {e}")
+            logger.warning("Failed to load sector allocation from cache: %s", e)
             result['sector_allocation'] = {}
 
     # Load features
@@ -609,54 +570,30 @@ def load_cached_results(output_dir: Path, activity_id: str, log_callback: Option
             try:
                 with jsonlines.open(feature_file, 'r') as reader:
                     lines = list(reader)
-                    if lines:
-                        feature_data = lines[0]
-                        # Handle both response_text (new) and response (old) formats
-                        if 'response_text' in feature_data:
-                            features[feature_name] = feature_data.get('response_text', '')
-                        else:
-                            features[feature_name] = feature_data.get('response', '')
+                if lines:
+                    features[feature_name] = _parse_feature_text(lines[0])
             except Exception as e:
-                logger.warning(f"Warning: Failed to load {feature_name} from cache: {e}")
+                logger.warning("Failed to load %s from cache: %s", feature_name, e)
 
-    # Load misc.jsonl for complexity and integratedness (structured output)
     misc_file = output_dir / "misc.jsonl"
     if misc_file.exists() and misc_file.stat().st_size > 0:
         try:
             with jsonlines.open(misc_file, 'r') as reader:
                 lines = list(reader)
-                if lines:
-                    misc_data = lines[0]
-                    # Parse response_text if it's JSON
-                    if 'response_text' in misc_data:
-                        try:
-                            parsed = json.loads(misc_data['response_text'])
-                            features['complexity'] = parsed.get('complexity_details', '')
-                            features['integratedness'] = parsed.get('how_integrated_description', '')
-                        except json.JSONDecodeError:
-                            # Fallback to plain text
-                            features['complexity'] = misc_data.get('response_text', '')
-                            features['integratedness'] = misc_data.get('response_text', '')
-                    else:
-                        features['complexity'] = misc_data.get('response', '')
-                        features['integratedness'] = misc_data.get('response', '')
+            if lines:
+                features['complexity'], features['integratedness'] = _parse_misc_data(lines[0])
         except Exception as e:
-            logger.warning(f"Warning: Failed to load misc features from cache: {e}")
+            logger.warning("Failed to load misc features from cache: %s", e)
 
-    # Load finance_qualitative.jsonl if it exists (different from finance_breakdown)
     finance_qual_file = output_dir / "finance_qualitative.jsonl"
     if finance_qual_file.exists() and finance_qual_file.stat().st_size > 0:
         try:
             with jsonlines.open(finance_qual_file, 'r') as reader:
                 lines = list(reader)
-                if lines:
-                    finance_qual_data = lines[0]
-                    if 'response_text' in finance_qual_data:
-                        features['finance'] = finance_qual_data.get('response_text', '')
-                    else:
-                        features['finance'] = finance_qual_data.get('response', '')
+            if lines:
+                features['finance'] = _parse_feature_text(lines[0])
         except Exception as e:
-            logger.warning(f"Warning: Failed to load finance_qualitative from cache: {e}")
+            logger.warning("Failed to load finance_qualitative from cache: %s", e)
 
     result['features'] = features
 
@@ -666,6 +603,5 @@ def load_cached_results(output_dir: Path, activity_id: str, log_callback: Option
     if log_callback:
         log_callback(f"✓ Loaded cached results: {num_pages} pages, {num_features} features")
     logger.info(f"Loaded cached results: {num_pages} pages, {num_features} features")
-    _print_ram("end of process uploaded")
 
     return result

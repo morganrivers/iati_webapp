@@ -11,13 +11,8 @@ from pathlib import Path
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 
-# Add batch pipeline and utils to path
-BATCH_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "extract_structured_database"
-UTILS_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "utils"
-if str(BATCH_DIR) not in sys.path:
-    sys.path.insert(0, str(BATCH_DIR))
-if str(UTILS_DIR) not in sys.path:
-    sys.path.insert(0, str(UTILS_DIR))
+from webapp_paths import ensure_src_paths
+ensure_src_paths()
 
 # Import from H
 from extract_baseline_features import (

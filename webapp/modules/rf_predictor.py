@@ -70,7 +70,7 @@ def impute_and_run_statistical_model(rf_model, extra_model, per_org_baseline, st
     planned_exp_millions = session_state_values.get('input_planned_expenditure') or 0
     planned_expenditure = planned_exp_millions * 1_000_000
     log_planned_expenditure = np.log(planned_expenditure) if planned_expenditure > 0 else 0
-    print(f"[DEBUG rf_predictor] planned_expenditure (raw USD) = {planned_expenditure:.4g}, log = {log_planned_expenditure:.4f}")
+    logger.debug(f"planned_expenditure (raw USD) = {planned_expenditure:.4g}, log = {log_planned_expenditure:.4f}")
 
     # expenditure_per_year_log: log(raw_USD / duration) when both are meaningful
     planned_duration_raw = session_state_values.get('input_planned_duration', train_medians.get("planned_duration", 3.0))
@@ -78,7 +78,7 @@ def impute_and_run_statistical_model(rf_model, extra_model, per_org_baseline, st
         expenditure_per_year_log = np.log(planned_expenditure / planned_duration_raw)
     else:
         expenditure_per_year_log = train_medians.get("expenditure_per_year_log", 0.0)
-    print(f"[DEBUG rf_predictor] expenditure_per_year_log = {expenditure_per_year_log:.4f}")
+    logger.debug(f"expenditure_per_year_log = {expenditure_per_year_log:.4f}")
 
     # GDP: raw USD passed as explicit param (from input_gdp_percap widget)
     gdp_percap = np.log(gdp_percap_input) if gdp_percap_input and gdp_percap_input > 0 else train_medians["gdp_percap"]
@@ -202,24 +202,18 @@ def impute_and_run_statistical_model(rf_model, extra_model, per_org_baseline, st
     extra_in_all = [f for f in all_features if f not in expected_features]
 
     if missing_from_all:
-        print("!" * 80)
-        print("!!! WARNING: FEATURES MISSING FROM all_features — USING TRAIN MEDIAN FALLBACK !!!")
-        print("!" * 80)
-        for f in missing_from_all:
-            fallback = train_medians.get(f, 0.0)
-            print(f"  !!! MISSING: '{f}'  →  fallback value = {fallback}")
-        print("!" * 80)
-        print(f"!!! {len(missing_from_all)} FEATURE(S) FALLING BACK TO MEDIAN — CHECK rf_predictor.py !!!")
-        print("!" * 80)
+        logger.warning(
+            "FEATURES MISSING FROM all_features — USING TRAIN MEDIAN FALLBACK: %s",
+            {f: train_medians.get(f, 0.0) for f in missing_from_all},
+        )
     else:
-        print("[DEBUG] All expected features are present in all_features. No fallbacks needed.")
+        logger.debug("All expected features present in all_features. No fallbacks needed.")
 
     if extra_in_all:
-        print("~" * 80)
-        print("~~~ NOTE: all_features contains keys NOT used by the model (silently dropped) ~~~")
-        for f in extra_in_all:
-            print(f"  ~~~ DROPPED: '{f}' = {all_features[f]}")
-        print("~" * 80)
+        logger.debug(
+            "all_features contains keys NOT used by the model (silently dropped): %s",
+            {f: all_features[f] for f in extra_in_all},
+        )
 
     # Reorder to match training feature order
     ordered_features = {fname: all_features.get(fname, train_medians.get(fname, 0.0)) for fname in model_metadata['feature_names']}

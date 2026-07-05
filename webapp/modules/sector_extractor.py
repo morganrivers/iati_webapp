@@ -13,13 +13,8 @@ from pathlib import Path
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 
-# Add webapp root and utils to path
-WEBAPP_DIR = Path(__file__).resolve().parent.parent
-UTILS_DIR = Path(__file__).resolve().parent.parent.parent / "src" / "utils"
-if str(WEBAPP_DIR) not in sys.path:
-    sys.path.insert(0, str(WEBAPP_DIR))
-if str(UTILS_DIR) not in sys.path:
-    sys.path.insert(0, str(UTILS_DIR))
+from webapp_paths import ensure_src_paths
+ensure_src_paths()
 
 from model_loader import get_sector_clusters
 
