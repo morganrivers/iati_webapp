@@ -39,17 +39,17 @@ _COUNTRY_OPTIONS = sorted(f"{name} ({code})" for code, name in COUNTRY_NAMES.ite
 
 
 def parse_location_string(loc_str):
-    """Parse 'KE|50|UG|30' or 'KE' into [{"code":"KE","pct":50}, ...]"""
+    """Parse 'KE|50|UG|30' or 'KE' into [{"code":"KE","pct":50.0}, ...]"""
     if not loc_str:
         return []
     parts = [p.strip() for p in loc_str.split("|")]
     if len(parts) == 1:
         code = parts[0].upper()
-        return [{"code": code, "pct": 100}] if code else []
+        return [{"code": code, "pct": 100.0}] if code else []
     result = []
     for i in range(0, len(parts) - 1, 2):
         try:
-            result.append({"code": parts[i].upper(), "pct": int(float(parts[i + 1]))})
+            result.append({"code": parts[i].upper(), "pct": float(parts[i + 1])})
         except (ValueError, IndexError):
             pass
     return result
@@ -82,4 +82,4 @@ def build_location_string(countries):
         return ""
     if len(countries) == 1:
         return countries[0]["code"]
-    return "|".join(f"{c['code']}|{c['pct']}" for c in countries)
+    return "|".join(f"{c['code']}|{float(c['pct']):g}" for c in countries)

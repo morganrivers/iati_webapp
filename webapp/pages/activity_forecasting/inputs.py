@@ -61,8 +61,8 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
                 _countries_changed = True
         with _col_pct:
             _new_pct = st.number_input(
-                "%", min_value=1, max_value=100,
-                value=_entry["pct"],
+                "%", min_value=1.0, max_value=100.0,
+                value=float(_entry["pct"]),
                 key=f"loc_pct_{_loc_nonce}_{_idx}",
                 label_visibility="collapsed",
                 disabled=st.session_state.field_locks.get('location', False)
@@ -117,9 +117,9 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
                     help="Select a country to add to the activity location"
                 )
             with _col_newpct:
-                _remaining = max(1, 100 - sum(c["pct"] for c in st.session_state.location_countries))
+                _remaining = max(1.0, 100.0 - sum(c["pct"] for c in st.session_state.location_countries))
                 _new_pct_val = st.number_input(
-                    "%", min_value=1, max_value=100, value=_remaining,
+                    "%", min_value=1.0, max_value=100.0, value=float(_remaining),
                     key="loc_new_pct", label_visibility="collapsed",
                     help="Percentage of activity in this country"
                 )

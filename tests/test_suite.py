@@ -8,7 +8,7 @@ Run with:
 Rules:
   - No LLM API calls (AIRPLANE_MODE=True already set in extracting_and_grading_helper_functions.py)
   - Only tests files in the webapp directory (plus src/utils/dummy_response_text_generator.py)
-  - Test folders created under webapp/extracted_pdf_data/ are cleaned up after each test
+  - Test folders created under projects/ are cleaned up after each test
 """
 
 import os
@@ -35,7 +35,7 @@ for _p in [str(WEBAPP_DIR), str(WEBAPP_DIR / "modules"), str(WEBAPP_DIR / "pages
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-EXTRACTED_PDF_DIR = WEBAPP_DIR / "extracted_pdf_data"
+PROJECTS_DIR = WEBAPP_DIR.parent / "projects"
 
 # ── Streamlit mock (must be injected before importing any webapp module) ────────
 # Shared across all test files so imported webapp modules read/write one session_state.
@@ -210,7 +210,7 @@ def _make_test_project(name="test_webapp_test_00000"):
     Create a minimal project folder with the files load_project_data() expects.
     Returns the Path to the created folder.
     """
-    proj = EXTRACTED_PDF_DIR / name
+    proj = PROJECTS_DIR / name
     proj.mkdir(parents=True, exist_ok=True)
 
     metadata = {
@@ -284,11 +284,6 @@ class TestUtils:
 
     def test_empty_string_returns_empty(self):
         assert parse_location_string("") == []
-
-    def test_float_percentage_truncated_to_int(self):
-        r = parse_location_string("KE|66.7|UG|33.3")
-        assert r[0]["pct"] == 66
-        assert r[1]["pct"] == 33
 
     def test_whitespace_stripped(self):
         r = parse_location_string("KE | 50 | UG | 30")
@@ -653,7 +648,7 @@ class TestProjectManager:
             "test_webapp_pm_suite_002",
             "test_webapp_pm_suite_003",
         ]:
-            p = EXTRACTED_PDF_DIR / name
+            p = PROJECTS_DIR / name
             if p.exists():
                 shutil.rmtree(p)
 
@@ -670,8 +665,8 @@ class TestProjectManager:
 
     def test_most_recent_project_first(self):
         import time
-        p1 = EXTRACTED_PDF_DIR / "test_webapp_pm_suite_002"
-        p2 = EXTRACTED_PDF_DIR / "test_webapp_pm_suite_003"
+        p1 = PROJECTS_DIR / "test_webapp_pm_suite_002"
+        p2 = PROJECTS_DIR / "test_webapp_pm_suite_003"
         p1.mkdir(parents=True, exist_ok=True)
         time.sleep(0.05)
         p2.mkdir(parents=True, exist_ok=True)
@@ -1543,7 +1538,7 @@ class TestProjectLifecycle:
     @pytest.fixture(autouse=True)
     def cleanup(self):
         yield
-        proj = EXTRACTED_PDF_DIR / _LC_PROJECT
+        proj = PROJECTS_DIR / _LC_PROJECT
         if proj.exists():
             shutil.rmtree(proj)
 
@@ -1679,7 +1674,7 @@ class TestProjectLifecycle:
         import time
         _make_test_project(_LC_PROJECT)
         save_project_state(_LC_PROJECT)
-        state_path = EXTRACTED_PDF_DIR / _LC_PROJECT / "app_state.json"
+        state_path = PROJECTS_DIR / _LC_PROJECT / "app_state.json"
         ts1 = json.loads(state_path.read_text())["timestamp"]
         time.sleep(0.05)
         save_project_state(_LC_PROJECT)
