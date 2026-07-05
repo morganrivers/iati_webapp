@@ -1,0 +1,301 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2049" height="3169" viewBox="86 -70 2049 3169" font-family="Helvetica,Arial,sans-serif">
+<rect x="86" y="-70" width="2049" height="3169" fill="#ffffff"/>
+<rect x="533.0" y="2832.0" width="180.0" height="24.0" rx="10" ry="10" fill="#6b7f96" stroke="none" stroke-width="1" opacity="0.9"/>
+<text x="623.0" y="2848.2" font-size="12.0" fill="#ffffff" text-anchor="middle" font-weight="700">INPUT · app + upload</text>
+<rect x="424.0" y="2088.0" width="315.0" height="24.0" rx="10" ry="10" fill="#5a9367" stroke="none" stroke-width="1" opacity="0.9"/>
+<text x="581.5" y="2104.2" font-size="12.0" fill="#ffffff" text-anchor="middle" font-weight="700">EXTRACT · Gemini pipeline (per PDF)</text>
+<rect x="746.0" y="1762.0" width="297.0" height="24.0" rx="10" ry="10" fill="#8493a4" stroke="none" stroke-width="1" opacity="0.9"/>
+<text x="894.5" y="1778.2" font-size="12.0" fill="#ffffff" text-anchor="middle" font-weight="700">extracted_pdf_data/{activity_id}/</text>
+<rect x="811.0" y="1156.0" width="297.0" height="24.0" rx="10" ry="10" fill="#8a5fb0" stroke="none" stroke-width="1" opacity="0.9"/>
+<text x="959.5" y="1172.2" font-size="12.0" fill="#ffffff" text-anchor="middle" font-weight="700">PREDICT · Random Forest + explain</text>
+<rect x="881.0" y="275.0" width="216.0" height="24.0" rx="10" ry="10" fill="#c17a3a" stroke="none" stroke-width="1" opacity="0.9"/>
+<text x="989.0" y="291.2" font-size="12.0" fill="#ffffff" text-anchor="middle" font-weight="700">NARRATIVE · RAG forecast</text>
+<rect x="941.0" y="-40.0" width="180.0" height="24.0" rx="10" ry="10" fill="#4f9b95" stroke="none" stroke-width="1" opacity="0.9"/>
+<text x="1031.0" y="-23.8" font-size="12.0" fill="#ffffff" text-anchor="middle" font-weight="700">UI · Streamlit pages</text>
+<path d="M853.9,2999.0 L854.0,2985.0 L854.0,2965.0 L854.0,2939.0" fill="none" stroke="#8493a4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="854.0,2939.0 858.0,2948.0 850.0,2948.0" fill="#8493a4"/>
+<path d="M787.0,3007.1 L734.0,2986.0 L656.0,2956.0 L593.3,2931.0" fill="none" stroke="#8493a4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="593.3,2931.0 603.1,2930.6 600.1,2938.0" fill="#8493a4"/>
+<text x="695.0" y="2971.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">startup</text>
+<path d="M584.7,2999.0 L574.0,2982.0 L559.0,2958.0 L542.2,2931.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="542.2,2931.0 550.4,2936.5 543.6,2940.8" fill="#3d72b4"/>
+<path d="M1984.8,2996.0 L1985.0,2977.0 L1985.0,2951.0 L1994.3,2922.0" fill="none" stroke="#9aa6b3" stroke-width="1.4"/>
+<polygon points="1994.3,2922.0 1995.3,2931.8 1987.7,2929.4" fill="#9aa6b3"/>
+<path d="M411.0,3014.0 L430.0,2995.0 L465.0,2962.0 L497.3,2931.0" fill="none" stroke="#8493a4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="497.3,2931.0 493.6,2940.1 488.1,2934.3" fill="#8493a4"/>
+<path d="M460.0,2877.0 L341.0,2828.0 L66.0,2717.0 L66.0,2717.0 L66.0,2717.0 L66.0,2717.0 L66.0,1707.0 L66.0,1707.0 L99.0,1565.0 L99.0,1565.0 L99.0,1565.0 L461.0,1516.0 L666.0,1487.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="666.0,1487.0 657.6,1492.2 656.5,1484.3" fill="#3d72b4"/>
+<text x="66.0" y="2212.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">RF + recency</text>
+<path d="M852.4,2870.0 L851.0,2841.0 L849.0,2794.0 L846.5,2750.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="846.5,2750.0 851.0,2758.8 843.0,2759.2" fill="#2e8b57"/>
+<text x="850.0" y="2817.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">PDF</text>
+<path d="M824.9,2681.0 L817.0,2667.0 L806.0,2648.0 L792.1,2624.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="792.1,2624.0 800.1,2629.8 793.2,2633.8" fill="#2e8b57"/>
+<text x="811.5" y="2657.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">calls in order</text>
+<path d="M745.9,2570.0 L730.0,2556.0 L707.0,2536.0 L681.2,2513.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="681.2,2513.0 690.6,2516.0 685.3,2522.0" fill="#2e8b57"/>
+<path d="M605.6,2459.0 L582.0,2445.0 L546.0,2423.0 L510.8,2402.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="510.8,2402.0 520.6,2403.2 516.5,2410.0" fill="#2e8b57"/>
+<path d="M445.6,2348.0 L436.0,2335.0 L421.0,2315.0 L403.4,2291.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="403.4,2291.0 411.9,2295.9 405.5,2300.6" fill="#2e8b57"/>
+<path d="M367.6,2237.0 L360.0,2224.0 L349.0,2205.0 L334.3,2180.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="334.3,2180.0 342.3,2185.7 335.4,2189.8" fill="#2e8b57"/>
+<path d="M793.5,2570.0 L808.0,2547.0 L832.0,2511.0 L832.0,2511.0 L832.0,2511.0 L856.0,2400.0 L856.0,2400.0 L856.0,2400.0 L859.0,2289.0 L859.0,2289.0 L859.0,2289.0 L859.0,2239.0 L859.0,2239.0 L859.0,2239.0 L822.0,2128.0 L822.0,2128.0 L822.0,2128.0 L714.0,1934.0 L714.0,1934.0 L714.0,1934.0 L671.0,1905.0 L626.1,1875.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="626.1,1875.0 635.8,1876.7 631.4,1883.3" fill="#b98a1e"/>
+<text x="859.0" y="2264.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">metadata.json</text>
+<path d="M649.7,2459.0 L646.0,2384.0 L636.0,2154.0 L636.0,2154.0 L636.0,2154.0 L636.0,2154.0 L636.0,2066.0 L636.0,2066.0 L602.0,1950.0 L580.7,1875.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="580.7,1875.0 587.0,1882.6 579.3,1884.8" fill="#b98a1e"/>
+<text x="636.0" y="2154.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">page_categories.jsonl</text>
+<path d="M487.9,2348.0 L507.0,2325.0 L537.0,2289.0 L537.0,2289.0 L537.0,2289.0 L570.0,2154.0 L570.0,2154.0 L570.0,2154.0 L570.0,2154.0 L570.0,2066.0 L570.0,2066.0 L570.0,1951.0 L570.0,1875.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="570.0,1875.0 574.0,1884.0 566.0,1884.0" fill="#b98a1e"/>
+<text x="570.0" y="2154.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">summary.jsonl</text>
+<path d="M314.6,2237.0 L256.0,2214.0 L165.0,2178.0 L165.0,2178.0 L165.0,2178.0 L165.0,2128.0 L165.0,2128.0 L165.0,2128.0 L431.0,1934.0 L431.0,1934.0 L431.0,1934.0 L472.0,1905.0 L515.6,1875.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="515.6,1875.0 510.4,1883.4 505.9,1876.8" fill="#b98a1e"/>
+<text x="165.0" y="2128.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">finance_breakdown.jsonl</text>
+<path d="M339.8,2126.0 L380.0,2075.0 L481.0,1949.0 L540.1,1875.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="540.1,1875.0 537.6,1884.5 531.3,1879.5" fill="#b98a1e"/>
+<text x="430.5" y="2012.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">6x feature .jsonl</text>
+<path d="M920.0,3002.5 L1050.0,2942.0 L1334.0,2811.0 L1334.0,2811.0 L1334.0,2811.0 L1334.0,2811.0 L1334.0,2066.0 L1334.0,2066.0 L1274.0,1946.0 L1236.8,1872.0" fill="none" stroke="#8493a4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="1236.8,1872.0 1244.4,1878.2 1237.3,1881.8" fill="#8493a4"/>
+<text x="1334.0" y="2811.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">autosave / load</text>
+<path d="M1178.0,1872.0 L1160.0,1887.0 L1129.0,1909.0 L1091.0,1932.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="1091.0,1932.0 1096.6,1923.9 1100.8,1930.8" fill="#b98a1e"/>
+<text x="1144.5" y="1898.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">writes session</text>
+<path d="M1074.6,1932.0 L1094.0,1916.0 L1125.0,1894.0 L1161.8,1872.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="1161.8,1872.0 1156.1,1880.1 1152.0,1873.2" fill="#3d72b4"/>
+<text x="1109.5" y="1905.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">reload</text>
+<path d="M1305.3,1803.0 L1467.0,1738.0 L1835.0,1591.0 L1835.0,1591.0 L1835.0,1591.0 L1835.0,1591.0 L1835.0,341.0 L1835.0,341.0 L1629.0,249.0 L1505.2,193.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1505.2,193.0 1515.1,193.1 1511.8,200.4" fill="#2e8b57"/>
+<text x="1835.0" y="1591.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">restores widgets</text>
+<path d="M493.2,1800.0 L440.0,1774.0 L379.0,1741.0 L379.0,1741.0 L379.0,1741.0 L305.0,1668.0 L264.8,1617.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="264.8,1617.0 273.5,1621.6 267.2,1626.5" fill="#2e8b57"/>
+<text x="379.0" y="1741.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">feature text</text>
+<path d="M630.8,1800.0 L673.0,1774.0 L737.0,1741.0 L737.0,1741.0 L737.0,1741.0 L737.0,1676.0 L737.0,1676.0 L737.0,1676.0 L684.0,1646.0 L642.1,1617.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="642.1,1617.0 651.7,1618.8 647.2,1625.4" fill="#2e8b57"/>
+<text x="737.0" y="1708.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">targets text</text>
+<path d="M276.7,1617.0 L327.0,1658.0 L411.0,1741.0 L411.0,1741.0 L411.0,1741.0 L464.0,1770.0 L511.1,1800.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="511.1,1800.0 501.4,1798.5 505.7,1791.8" fill="#b98a1e"/>
+<text x="411.0" y="1741.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">feature_grades.jsonl</text>
+<path d="M658.6,1617.0 L706.0,1640.0 L769.0,1676.0 L769.0,1676.0 L769.0,1676.0 L769.0,1741.0 L769.0,1741.0 L769.0,1741.0 L713.0,1770.0 L649.4,1800.0" fill="none" stroke="#b98a1e" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="649.4,1800.0 655.9,1792.5 659.3,1799.8" fill="#b98a1e"/>
+<text x="769.0" y="1708.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">targets_embedding_features.jsonl</text>
+<path d="M603.0,1674.0 L603.0,1660.0 L603.0,1642.0 L603.0,1617.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="603.0,1617.0 607.0,1626.0 599.0,1626.0" fill="#3d72b4"/>
+<path d="M1039.1,1437.0 L1039.0,1423.0 L1039.0,1405.0 L1039.2,1380.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="1039.2,1380.0 1043.2,1389.0 1035.2,1389.0" fill="#3d72b4"/>
+<path d="M643.2,1563.0 L667.0,1547.0 L704.0,1522.0 L739.3,1498.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="739.3,1498.0 734.1,1506.4 729.6,1499.8" fill="#2e8b57"/>
+<text x="685.5" y="1534.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">embedding feats</text>
+<path d="M972.7,1563.0 L937.0,1546.0 L883.0,1521.0 L835.2,1498.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="835.2,1498.0 845.0,1498.3 841.5,1505.5" fill="#2e8b57"/>
+<text x="910.0" y="1533.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">location feats</text>
+<path d="M756.5,1444.0 L744.0,1429.0 L725.0,1406.0 L703.2,1380.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="703.2,1380.0 712.0,1384.3 705.9,1389.5" fill="#2e8b57"/>
+<path d="M839.3,1444.0 L875.0,1428.0 L931.0,1402.0 L979.7,1380.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="979.7,1380.0 973.2,1387.3 969.9,1380.1" fill="#2e8b57"/>
+<path d="M884.9,1444.0 L983.0,1419.0 L1143.0,1378.0 L1143.0,1378.0 L1143.0,1378.0 L1396.0,1309.0 L1562.0,1262.9" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1562.0,1262.9 1554.4,1269.2 1552.3,1261.4" fill="#2e8b57"/>
+<text x="1143.0" y="1378.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">rating</text>
+<path d="M780.7,1326.0 L840.0,1310.0 L931.0,1285.0 L1014.0,1262.7" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1014.0,1262.7 1006.3,1268.9 1004.3,1261.2" fill="#2e8b57"/>
+<text x="885.5" y="1297.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">contributions</text>
+<path d="M1118.9,1326.0 L1163.0,1311.0 L1230.0,1289.0 L1290.3,1269.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1290.3,1269.0 1283.1,1275.6 1280.5,1268.0" fill="#2e8b57"/>
+<text x="1196.5" y="1300.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">probabilities</text>
+<path d="M525.1,1800.0 L494.0,1774.0 L453.0,1741.0 L453.0,1741.0 L453.0,1741.0 L420.0,1591.0 L420.0,1591.0 L420.0,1591.0 L420.0,1591.0 L420.0,1470.0 L420.0,1470.0 L382.0,1135.0 L382.0,1135.0 L382.0,1135.0 L382.0,1135.0 L382.0,814.0 L382.0,814.0 L700.0,679.0 L862.4,609.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="862.4,609.0 855.8,616.2 852.6,608.9" fill="#2e8b57"/>
+<text x="420.0" y="1530.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">this activity</text>
+<path d="M930.2,1035.0 L930.0,1024.0 L930.0,1005.0 L930.2,978.0" fill="none" stroke="#8493a4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="930.2,978.0 934.1,987.0 926.1,987.0" fill="#8493a4"/>
+<text x="930.0" y="1014.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">source rows</text>
+<path d="M911.3,909.0 L904.0,896.0 L893.0,877.0 L879.4,852.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="879.4,852.0 887.2,858.0 880.2,861.8" fill="#3d72b4"/>
+<text x="898.5" y="886.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">activity_info + mock_forecasts</text>
+<path d="M721.4,909.0 L742.0,895.0 L772.0,875.0 L805.1,852.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="805.1,852.0 800.0,860.4 795.4,853.9" fill="#3d72b4"/>
+<text x="757.0" y="885.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">embeddings</text>
+<path d="M859.0,777.0 L859.0,764.0 L859.0,745.0 L859.2,720.0" fill="none" stroke="#3d72b4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="859.2,720.0 863.2,729.0 855.2,729.0" fill="#3d72b4"/>
+<path d="M878.1,666.0 L887.0,653.0 L901.0,634.0 L918.4,609.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="918.4,609.0 916.6,618.7 910.0,614.1" fill="#2e8b57"/>
+<text x="894.0" y="643.5" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">BM25 corpus</text>
+<path d="M924.6,666.0 L980.0,643.0 L1066.0,607.0 L1066.0,607.0 L1066.0,607.0 L1086.0,537.0 L1101.0,483.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1101.0,483.0 1102.4,492.7 1094.7,490.6" fill="#2e8b57"/>
+<text x="1066.0" y="607.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">activity info</text>
+<path d="M1581.1,1194.0 L1456.0,1144.0 L1231.0,1056.0 L1231.0,1056.0 L1231.0,1056.0 L1231.0,1056.0 L1231.0,692.0 L1231.0,692.0 L1161.0,542.0 L1161.0,542.0 L1161.0,542.0 L1144.0,515.0 L1124.7,483.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1124.7,483.0 1132.8,488.6 1126.0,492.8" fill="#2e8b57"/>
+<text x="1231.0" y="874.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">reference pt</text>
+<path d="M990.9,540.0 L1012.0,525.0 L1041.0,505.0 L1071.3,483.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1071.3,483.0 1066.4,491.5 1061.7,485.1" fill="#2e8b57"/>
+<text x="1026.5" y="515.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">neighbours</text>
+<path d="M1110.2,429.0 L1111.0,417.0 L1113.0,399.0 L1115.3,373.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1115.3,373.0 1118.5,382.3 1110.5,381.6" fill="#2e8b57"/>
+<path d="M1659.8,1194.0 L1640.0,1145.0 L1604.0,1056.0 L1604.0,1056.0 L1604.0,1056.0 L1604.0,1056.0 L1604.0,341.0 L1604.0,341.0 L1519.0,253.0 L1461.9,193.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1461.9,193.0 1471.0,196.8 1465.2,202.3" fill="#2e8b57"/>
+<text x="1604.0" y="1056.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">renders</text>
+<path d="M1179.9,1194.0 L1245.0,1145.0 L1363.0,1056.0 L1363.0,1056.0 L1363.0,1056.0 L1363.0,1056.0 L1363.0,341.0 L1363.0,341.0 L1394.0,256.0 L1416.6,193.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1416.6,193.0 1417.3,202.8 1409.8,200.1" fill="#2e8b57"/>
+<text x="1363.0" y="1056.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">waterfall</text>
+<path d="M1408.9,1194.0 L1416.0,1145.0 L1429.0,1056.0 L1429.0,1056.0 L1429.0,1056.0 L1429.0,1056.0 L1429.0,341.0 L1429.0,341.0 L1429.0,256.0 L1429.0,193.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1429.0,193.0 1433.0,202.0 1425.0,202.0" fill="#2e8b57"/>
+<text x="1429.0" y="1056.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">tag panel</text>
+<path d="M476.1,1800.0 L411.0,1774.0 L325.0,1741.0 L325.0,1741.0 L325.0,1741.0 L99.0,1615.0 L99.0,1615.0 L99.0,1615.0 L0.0,1472.0 L0.0,1472.0 L0.0,1472.0 L0.0,1472.0 L0.0,341.0 L0.0,341.0 L147.0,251.0 L238.9,193.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="238.9,193.0 233.4,201.2 229.1,194.4" fill="#2e8b57"/>
+<path d="M1119.6,313.0 L1121.0,285.0 L1124.0,237.0 L1126.5,193.0" fill="none" stroke="#2e8b57" stroke-width="1.4"/>
+<polygon points="1126.5,193.0 1130.0,202.2 1122.0,201.8" fill="#2e8b57"/>
+<path d="M905.3,139.0 L899.0,124.0 L887.0,98.0 L873.7,67.0" fill="none" stroke="#8493a4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="873.7,67.0 881.0,73.7 873.6,76.8" fill="#8493a4"/>
+<text x="893.0" y="111.0" font-size="9" fill="#5b6675" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">metrics</text>
+<path d="M920.0,3019.1 L1147.0,2970.0 L1901.0,2811.0 L1901.0,2811.0 L1901.0,2811.0 L1901.0,2811.0 L1901.0,341.0 L1901.0,341.0 L1837.0,254.0 L1793.2,193.0" fill="none" stroke="#8493a4" stroke-width="1.4" stroke-dasharray="5,4"/>
+<polygon points="1793.2,193.0 1801.7,198.0 1795.2,202.6" fill="#8493a4"/>
+<rect x="707.0" y="2872.0" width="294.0" height="65.0" rx="32.5" ry="32.5" fill="#2f7dc4" stroke="#1c4f80" stroke-width="1" opacity="1.0"/>
+<text x="854.0" y="2894.6" font-size="11.0" fill="#ffffff" text-anchor="middle">PDF upload</text>
+<text x="854.0" y="2908.3" font-size="11.0" fill="#ffffff" text-anchor="middle">/ manual entry</text>
+<text x="854.0" y="2922.1" font-size="11.0" fill="#ffffff" text-anchor="middle">webapp/pages/page_activity_forecasting.py</text>
+<rect x="789.0" y="3001.0" width="129.0" height="65.0" rx="10" ry="10" fill="#dfe7ef" stroke="#6b7f96" stroke-width="1" opacity="1.0"/>
+<text x="853.5" y="3023.6" font-size="11.0" fill="#1b2733" text-anchor="middle">app.py</text>
+<text x="853.5" y="3037.3" font-size="11.0" fill="#1b2733" text-anchor="middle">(Streamlit host)</text>
+<text x="853.5" y="3051.1" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp/app.py</text>
+<rect x="441.0" y="2879.0" width="169.0" height="50.0" rx="10" ry="10" fill="#dfe7ef" stroke="#6b7f96" stroke-width="1" opacity="1.0"/>
+<text x="525.5" y="2901.0" font-size="11.0" fill="#1b2733" text-anchor="middle">model_loader</text>
+<text x="525.5" y="2914.7" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp/model_loader.py</text>
+<rect x="486.0" y="3001.0" width="241.0" height="65.0" rx="32.5" ry="32.5" fill="#2f7dc4" stroke="#1c4f80" stroke-width="1" opacity="1.0"/>
+<text x="606.5" y="3023.6" font-size="11.0" fill="#ffffff" text-anchor="middle">RF + recency</text>
+<text x="606.5" y="3037.3" font-size="11.0" fill="#ffffff" text-anchor="middle">model .pkl</text>
+<text x="606.5" y="3051.1" font-size="11.0" fill="#ffffff" text-anchor="middle">data/rating_model_outputs_stable/</text>
+<path d="M1864.0,3005.0 C1864.0,2996.0 2105.0,2996.0 2105.0,3005.0 L2105.0,3062.0 C2105.0,3071.0 1864.0,3071.0 1864.0,3062.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M1864.0,3005.0 C1864.0,3014.0 2105.0,3014.0 2105.0,3005.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="1984.5" y="3023.6" font-size="11.0" fill="#1b2733" text-anchor="middle">training data</text>
+<text x="1984.5" y="3037.3" font-size="11.0" fill="#1b2733" text-anchor="middle">(~1,300 activities)</text>
+<text x="1984.5" y="3051.1" font-size="11.0" fill="#1b2733" text-anchor="middle">data/rating_model_outputs_stable/</text>
+<path d="M1965.0,2888.0 L2021.0,2888.0 L2035.0,2902.0 L2035.0,2920.0 L1965.0,2920.0 Z" fill="#fdf3cf" stroke="#c9a227" stroke-width="1" opacity="1.0" stroke-dasharray="4,3"/>
+<path d="M2021.0,2888.0 L2021.0,2902.0 L2035.0,2902.0" fill="none" stroke="#c9a227" stroke-width="1" opacity="1.0"/>
+<text x="2000.0" y="2908.2" font-size="12.0" fill="#5b4a00" text-anchor="middle">✳</text>
+<rect x="469.0" y="1676.0" width="268.0" height="65.0" rx="32.5" ry="32.5" fill="#2f7dc4" stroke="#1c4f80" stroke-width="1" opacity="1.0"/>
+<text x="603.0" y="1698.6" font-size="11.0" fill="#ffffff" text-anchor="middle">UMAP models</text>
+<text x="603.0" y="1712.3" font-size="11.0" fill="#ffffff" text-anchor="middle">.pkl</text>
+<text x="603.0" y="1726.1" font-size="11.0" fill="#ffffff" text-anchor="middle">data/trained_umap_models_trainval.pkl</text>
+<rect x="922.0" y="1439.0" width="235.0" height="65.0" rx="32.5" ry="32.5" fill="#2f7dc4" stroke="#1c4f80" stroke-width="1" opacity="1.0"/>
+<text x="1039.5" y="1461.6" font-size="11.0" fill="#ffffff" text-anchor="middle">outcome-tag</text>
+<text x="1039.5" y="1475.3" font-size="11.0" fill="#ffffff" text-anchor="middle">models .pkl</text>
+<text x="1039.5" y="1489.1" font-size="11.0" fill="#ffffff" text-anchor="middle">data/outcome_tags/tag_models.pkl</text>
+<rect x="810.0" y="911.0" width="241.0" height="65.0" rx="10" ry="10" fill="#dfe7ef" stroke="#6b7f96" stroke-width="1" opacity="1.0"/>
+<text x="930.5" y="933.6" font-size="11.0" fill="#1b2733" text-anchor="middle">build_webapp_db</text>
+<text x="930.5" y="947.4" font-size="11.0" fill="#1b2733" text-anchor="middle">(offline prep)</text>
+<text x="930.5" y="961.1" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp/scripts/build_webapp_db.py</text>
+<rect x="563.0" y="911.0" width="215.0" height="65.0" rx="10" ry="10" fill="#dfe7ef" stroke="#6b7f96" stroke-width="1" opacity="1.0"/>
+<text x="670.5" y="933.6" font-size="11.0" fill="#1b2733" text-anchor="middle">build_embeddings_db</text>
+<text x="670.5" y="947.4" font-size="11.0" fill="#1b2733" text-anchor="middle">(offline prep)</text>
+<text x="670.5" y="961.1" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp/build_embeddings_db.py</text>
+<path d="M801.0,786.0 C801.0,777.0 917.0,777.0 917.0,786.0 L917.0,843.0 C917.0,852.0 801.0,852.0 801.0,843.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M801.0,786.0 C801.0,795.0 917.0,795.0 917.0,786.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="859.0" y="804.6" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp.db</text>
+<text x="859.0" y="818.4" font-size="11.0" fill="#1b2733" text-anchor="middle">(SQLite)</text>
+<text x="859.0" y="832.1" font-size="11.0" fill="#1b2733" text-anchor="middle">data/webapp.db</text>
+<rect x="742.0" y="668.0" width="235.0" height="50.0" rx="10" ry="10" fill="#f6d9c0" stroke="#c17a3a" stroke-width="1" opacity="1.0"/>
+<text x="859.5" y="690.0" font-size="11.0" fill="#5a3410" text-anchor="middle">sqlite_loaders</text>
+<text x="859.5" y="703.7" font-size="11.0" fill="#5a3410" text-anchor="middle">webapp/modules/sqlite_loaders.py</text>
+<rect x="330.0" y="3016.0" width="123.0" height="35.0" rx="10" ry="10" fill="#eef2f7" stroke="#8493a4" stroke-width="1" opacity="1.0" stroke-dasharray="4,3"/>
+<text x="391.5" y="3036.7" font-size="9.0" fill="#5b6675" text-anchor="middle">training data ✳</text>
+<rect x="869.0" y="1037.0" width="123.0" height="35.0" rx="10" ry="10" fill="#eef2f7" stroke="#8493a4" stroke-width="1" opacity="1.0" stroke-dasharray="4,3"/>
+<text x="930.5" y="1057.7" font-size="9.0" fill="#5b6675" text-anchor="middle">training data ✳</text>
+<rect x="852.0" y="141.0" width="123.0" height="35.0" rx="10" ry="10" fill="#eef2f7" stroke="#8493a4" stroke-width="1" opacity="1.0" stroke-dasharray="4,3"/>
+<text x="913.5" y="161.7" font-size="9.0" fill="#5b6675" text-anchor="middle">training data ✳</text>
+<rect x="724.0" y="2683.0" width="241.0" height="65.0" rx="10" ry="10" fill="#cfe6cf" stroke="#5a9367" stroke-width="1" opacity="1.0"/>
+<text x="844.5" y="2705.6" font-size="11.0" fill="#1e3a24" text-anchor="middle">webapp_pipeline</text>
+<text x="844.5" y="2719.3" font-size="11.0" fill="#1e3a24" text-anchor="middle">(orchestrator)</text>
+<text x="844.5" y="2733.1" font-size="11.0" fill="#1e3a24" text-anchor="middle">webapp/modules/webapp_pipeline.py</text>
+<rect x="636.0" y="2572.0" width="281.0" height="50.0" rx="10" ry="10" fill="#cfe6cf" stroke="#5a9367" stroke-width="1" opacity="1.0"/>
+<text x="776.5" y="2594.0" font-size="11.0" fill="#1e3a24" text-anchor="middle">🤖 metadata_extractor</text>
+<text x="776.5" y="2607.7" font-size="11.0" fill="#1e3a24" text-anchor="middle">webapp/modules/metadata_extractor.py</text>
+<rect x="517.0" y="2461.0" width="268.0" height="50.0" rx="10" ry="10" fill="#cfe6cf" stroke="#5a9367" stroke-width="1" opacity="1.0"/>
+<text x="651.0" y="2483.0" font-size="11.0" fill="#1e3a24" text-anchor="middle">🤖 page_categorizer</text>
+<text x="651.0" y="2496.7" font-size="11.0" fill="#1e3a24" text-anchor="middle">webapp/modules/page_categorizer.py</text>
+<rect x="328.0" y="2350.0" width="275.0" height="50.0" rx="10" ry="10" fill="#cfe6cf" stroke="#5a9367" stroke-width="1" opacity="1.0"/>
+<text x="465.5" y="2372.0" font-size="11.0" fill="#1e3a24" text-anchor="middle">🤖 summary_generator</text>
+<text x="465.5" y="2385.7" font-size="11.0" fill="#1e3a24" text-anchor="middle">webapp/modules/summary_generator.py</text>
+<rect x="246.0" y="2239.0" width="275.0" height="50.0" rx="10" ry="10" fill="#cfe6cf" stroke="#5a9367" stroke-width="1" opacity="1.0"/>
+<text x="383.5" y="2261.0" font-size="11.0" fill="#1e3a24" text-anchor="middle">🤖 finance_extractor</text>
+<text x="383.5" y="2274.7" font-size="11.0" fill="#1e3a24" text-anchor="middle">webapp/modules/finance_extractor.py</text>
+<rect x="181.0" y="2128.0" width="275.0" height="50.0" rx="10" ry="10" fill="#cfe6cf" stroke="#5a9367" stroke-width="1" opacity="1.0"/>
+<text x="318.5" y="2150.0" font-size="11.0" fill="#1e3a24" text-anchor="middle">🤖 feature_extractor</text>
+<text x="318.5" y="2163.7" font-size="11.0" fill="#1e3a24" text-anchor="middle">webapp/modules/feature_extractor.py</text>
+<path d="M426.0,1809.0 C426.0,1800.0 714.0,1800.0 714.0,1809.0 L714.0,1866.0 C714.0,1875.0 426.0,1875.0 426.0,1866.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M426.0,1809.0 C426.0,1818.0 714.0,1818.0 714.0,1809.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="570.0" y="1827.6" font-size="11.0" fill="#1b2733" text-anchor="middle">extraction outputs</text>
+<text x="570.0" y="1841.3" font-size="11.0" fill="#1b2733" text-anchor="middle">(uploaded.pdf + phase .jsonl)</text>
+<text x="570.0" y="1855.1" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp/extracted_pdf_data/{activity_id}/</text>
+<path d="M839.0,1941.0 C839.0,1932.0 1219.0,1932.0 1219.0,1941.0 L1219.0,1998.0 C1219.0,2007.0 839.0,2007.0 839.0,1998.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M839.0,1941.0 C839.0,1950.0 1219.0,1950.0 1219.0,1941.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="1029.0" y="1959.6" font-size="11.0" fill="#1b2733" text-anchor="middle">app_state.json</text>
+<text x="1029.0" y="1973.3" font-size="11.0" fill="#1b2733" text-anchor="middle">(+ project_name.txt)</text>
+<text x="1029.0" y="1987.1" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp/extracted_pdf_data/{activity_id}/app_state.json</text>
+<rect x="1125.0" y="1805.0" width="189.0" height="65.0" rx="10" ry="10" fill="#dfe7ef" stroke="#6b7f96" stroke-width="1" opacity="1.0"/>
+<text x="1219.5" y="1827.6" font-size="11.0" fill="#1b2733" text-anchor="middle">project_manager</text>
+<text x="1219.5" y="1841.3" font-size="11.0" fill="#1b2733" text-anchor="middle">+ state_manager</text>
+<text x="1219.5" y="1855.1" font-size="11.0" fill="#1b2733" text-anchor="middle">webapp/project_manager.py</text>
+<rect x="116.0" y="1565.0" width="255.0" height="50.0" rx="10" ry="10" fill="#e6d6f2" stroke="#8a5fb0" stroke-width="1" opacity="1.0"/>
+<text x="243.5" y="1587.0" font-size="11.0" fill="#3d2757" text-anchor="middle">🤖 feature_grader</text>
+<text x="243.5" y="1600.7" font-size="11.0" fill="#3d2757" text-anchor="middle">webapp/modules/feature_grader.py</text>
+<rect x="469.0" y="1565.0" width="268.0" height="50.0" rx="10" ry="10" fill="#e6d6f2" stroke="#8a5fb0" stroke-width="1" opacity="1.0"/>
+<text x="603.0" y="1587.0" font-size="11.0" fill="#3d2757" text-anchor="middle">🤖 targets_embedder</text>
+<text x="603.0" y="1600.7" font-size="11.0" fill="#3d2757" text-anchor="middle">webapp/modules/targets_embedder.py</text>
+<rect x="902.0" y="1565.0" width="255.0" height="50.0" rx="10" ry="10" fill="#e6d6f2" stroke="#8a5fb0" stroke-width="1" opacity="1.0"/>
+<text x="1029.5" y="1587.0" font-size="11.0" fill="#3d2757" text-anchor="middle">location_features</text>
+<text x="1029.5" y="1600.7" font-size="11.0" fill="#3d2757" text-anchor="middle">webapp/modules/location_features.py</text>
+<rect x="668.0" y="1446.0" width="222.0" height="50.0" rx="10" ry="10" fill="#e6d6f2" stroke="#8a5fb0" stroke-width="1" opacity="1.0"/>
+<text x="779.0" y="1468.0" font-size="11.0" fill="#3d2757" text-anchor="middle">rf_predictor</text>
+<text x="779.0" y="1481.7" font-size="11.0" fill="#3d2757" text-anchor="middle">webapp/modules/rf_predictor.py</text>
+<rect x="952.0" y="1328.0" width="175.0" height="50.0" rx="10" ry="10" fill="#e6d6f2" stroke="#8a5fb0" stroke-width="1" opacity="1.0"/>
+<text x="1039.5" y="1350.0" font-size="11.0" fill="#3d2757" text-anchor="middle">tag_predictor</text>
+<text x="1039.5" y="1363.7" font-size="11.0" fill="#3d2757" text-anchor="middle">webapp/tag_predictor.py</text>
+<rect x="563.0" y="1328.0" width="235.0" height="50.0" rx="10" ry="10" fill="#e6d6f2" stroke="#8a5fb0" stroke-width="1" opacity="1.0"/>
+<text x="680.5" y="1350.0" font-size="11.0" fill="#3d2757" text-anchor="middle">shap_explainer</text>
+<text x="680.5" y="1363.7" font-size="11.0" fill="#3d2757" text-anchor="middle">webapp/modules/shap_explainer.py</text>
+<path d="M1564.0,1203.0 C1564.0,1194.0 1786.0,1194.0 1786.0,1203.0 L1786.0,1260.0 C1786.0,1269.0 1564.0,1269.0 1564.0,1260.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M1564.0,1203.0 C1564.0,1212.0 1786.0,1212.0 1786.0,1203.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="1675.0" y="1221.6" font-size="11.0" fill="#1b2733" text-anchor="middle">session_state</text>
+<text x="1675.0" y="1235.3" font-size="11.0" fill="#1b2733" text-anchor="middle">[&#x27;prediction&#x27;]</text>
+<text x="1675.0" y="1249.1" font-size="11.0" fill="#1b2733" text-anchor="middle">st.session_state[&#x27;prediction&#x27;]</text>
+<path d="M1016.0,1203.0 C1016.0,1194.0 1244.0,1194.0 1244.0,1203.0 L1244.0,1260.0 C1244.0,1269.0 1016.0,1269.0 1016.0,1260.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M1016.0,1203.0 C1016.0,1212.0 1244.0,1212.0 1244.0,1203.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="1130.0" y="1221.6" font-size="11.0" fill="#1b2733" text-anchor="middle">session_state</text>
+<text x="1130.0" y="1235.3" font-size="11.0" fill="#1b2733" text-anchor="middle">[&#x27;shap_result&#x27;]</text>
+<text x="1130.0" y="1249.1" font-size="11.0" fill="#1b2733" text-anchor="middle">st.session_state[&#x27;shap_result&#x27;]</text>
+<path d="M1276.0,1203.0 C1276.0,1194.0 1531.0,1194.0 1531.0,1203.0 L1531.0,1260.0 C1531.0,1269.0 1276.0,1269.0 1276.0,1260.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M1276.0,1203.0 C1276.0,1212.0 1531.0,1212.0 1531.0,1203.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="1403.5" y="1221.6" font-size="11.0" fill="#1b2733" text-anchor="middle">session_state</text>
+<text x="1403.5" y="1235.3" font-size="11.0" fill="#1b2733" text-anchor="middle">[&#x27;tag_predictions&#x27;]</text>
+<text x="1403.5" y="1249.1" font-size="11.0" fill="#1b2733" text-anchor="middle">st.session_state[&#x27;tag_predictions&#x27;]</text>
+<rect x="835.0" y="542.0" width="215.0" height="65.0" rx="10" ry="10" fill="#f6d9c0" stroke="#c17a3a" stroke-width="1" opacity="1.0"/>
+<text x="942.5" y="564.6" font-size="11.0" fill="#5a3410" text-anchor="middle">🤖 rag_bm25</text>
+<text x="942.5" y="578.4" font-size="11.0" fill="#5a3410" text-anchor="middle">(retrieval)</text>
+<text x="942.5" y="592.1" font-size="11.0" fill="#5a3410" text-anchor="middle">webapp/modules/rag_bm25.py</text>
+<rect x="1001.0" y="431.0" width="215.0" height="50.0" rx="10" ry="10" fill="#f6d9c0" stroke="#c17a3a" stroke-width="1" opacity="1.0"/>
+<text x="1108.5" y="453.0" font-size="11.0" fill="#5a3410" text-anchor="middle">🤖 run_rag_forecast</text>
+<text x="1108.5" y="466.7" font-size="11.0" fill="#5a3410" text-anchor="middle">webapp/run_rag_forecast.py</text>
+<path d="M1073.0,322.0 C1073.0,313.0 1163.0,313.0 1163.0,322.0 L1163.0,364.0 C1163.0,373.0 1073.0,373.0 1073.0,364.0 Z" fill="#e6ecf3" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<path d="M1073.0,322.0 C1073.0,331.0 1163.0,331.0 1163.0,322.0" fill="none" stroke="#8493a4" stroke-width="1" opacity="1.0"/>
+<text x="1118.0" y="340.0" font-size="11.0" fill="#1b2733" text-anchor="middle">narrative</text>
+<text x="1118.0" y="353.7" font-size="11.0" fill="#1b2733" text-anchor="middle">forecast</text>
+<rect x="1282.0" y="126.0" width="294.0" height="65.0" rx="10" ry="10" fill="#cfe8e6" stroke="#4f9b95" stroke-width="1" opacity="1.0"/>
+<text x="1429.0" y="148.6" font-size="11.0" fill="#163a37" text-anchor="middle">Activity</text>
+<text x="1429.0" y="162.3" font-size="11.0" fill="#163a37" text-anchor="middle">Forecasting</text>
+<text x="1429.0" y="176.1" font-size="11.0" fill="#163a37" text-anchor="middle">webapp/pages/page_activity_forecasting.py</text>
+<rect x="166.0" y="126.0" width="255.0" height="65.0" rx="10" ry="10" fill="#cfe8e6" stroke="#4f9b95" stroke-width="1" opacity="1.0"/>
+<text x="293.5" y="148.6" font-size="11.0" fill="#163a37" text-anchor="middle">View Extracted</text>
+<text x="293.5" y="162.3" font-size="11.0" fill="#163a37" text-anchor="middle">Data</text>
+<text x="293.5" y="176.1" font-size="11.0" fill="#163a37" text-anchor="middle">webapp/pages/page_extracted_data.py</text>
+<rect x="1008.0" y="126.0" width="241.0" height="65.0" rx="10" ry="10" fill="#cfe8e6" stroke="#4f9b95" stroke-width="1" opacity="1.0"/>
+<text x="1128.5" y="148.6" font-size="11.0" fill="#163a37" text-anchor="middle">Narrative</text>
+<text x="1128.5" y="162.3" font-size="11.0" fill="#163a37" text-anchor="middle">Forecast [beta]</text>
+<text x="1128.5" y="176.1" font-size="11.0" fill="#163a37" text-anchor="middle">webapp/pages/page_rag_forecast.py</text>
+<rect x="722.0" y="0.0" width="274.0" height="65.0" rx="10" ry="10" fill="#cfe8e6" stroke="#4f9b95" stroke-width="1" opacity="1.0"/>
+<text x="859.0" y="22.6" font-size="11.0" fill="#163a37" text-anchor="middle">Model</text>
+<text x="859.0" y="36.4" font-size="11.0" fill="#163a37" text-anchor="middle">Performance</text>
+<text x="859.0" y="50.1" font-size="11.0" fill="#163a37" text-anchor="middle">webapp/pages/page_model_performance.py</text>
+<rect x="1704.0" y="126.0" width="129.0" height="65.0" rx="10" ry="10" fill="#cfe8e6" stroke="#4f9b95" stroke-width="1" opacity="1.0"/>
+<text x="1768.5" y="148.6" font-size="11.0" fill="#163a37" text-anchor="middle">Glossary /</text>
+<text x="1768.5" y="162.3" font-size="11.0" fill="#163a37" text-anchor="middle">About / Feedback</text>
+<text x="1768.5" y="176.1" font-size="11.0" fill="#163a37" text-anchor="middle">webapp/pages/</text>
+</svg>

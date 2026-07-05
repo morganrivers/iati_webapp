@@ -1,0 +1,33 @@
+# Core dependencies for IATI Activity Success Forecasting webapp
+streamlit>=1.30.0
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn==1.6.1  # pinned to the version the shipped model pickles were created with
+plotly>=5.18.0
+python-dotenv>=1.0.0
+jsonlines>=4.0.0
+requests>=2.28.0
+
+# Google Gemini API for LLM features
+google-genai>=0.3.0
+
+# OpenAI-compatible client (used for DeepSeek API calls)
+openai>=1.0.0
+
+# Feature contributions for model explanations
+treeinterpreter>=0.2.3
+setuptools
+
+# BM25 retrieval for RAG
+rank-bm25>=0.2.2
+
+# PDF processing
+pypdf>=4.0.0
+reportlab>=4.0.0
+statsmodels>=0.14.0
+
+# Country data
+pycountry>=23.12.11
+
+# Testing
+pytest>=7.4.0

@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.venv/
+venv/
+*.log
+
+# Exceeds GitHub's 100 MB per-file limit; app boots without it
+data/outcome_tags/tag_models.pkl
+
+# Local scratch
+webapp/extracted_pdf_data/
+webapp/llm_forecasts/
+example_pdfs/
+
+docs/*.png
+docs/*.svg
+**/.obsidian/
+**/planned_but_not_success.txt
