@@ -1,5 +1,9 @@
+import logging
+
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_START_YEAR = 2020
 
@@ -41,9 +45,11 @@ def predict_rating(base, ens_delta, start_year_correction, start_year):
     """Final rating = clip(base + ensemble delta, 0, 5) + start-year drift correction.
 
     Shared by the production path and the test suite so the formula stays single-sourced.
+    Returns (prediction, year_correction).
     """
-    prediction = float(np.clip(base + ens_delta, 0.0, 5.0))
-    return prediction + start_year_correction['intercept'] + start_year_correction['slope'] * start_year
+    clipped = float(np.clip(base + ens_delta, 0.0, 5.0))
+    year_correction = start_year_correction['intercept'] + start_year_correction['slope'] * start_year
+    return clipped + year_correction, year_correction
 
 
 def impute_and_run_statistical_model(rf_model, extra_model, per_org_baseline, start_year_correction,
@@ -225,6 +231,6 @@ def impute_and_run_statistical_model(rf_model, extra_model, per_org_baseline, st
 
     ens_delta = _ensemble_delta(rf_model, extra_model, feature_vector_imputed)
     start_year = _resolve_start_year(session_state_values.get('input_start_date'))
-    prediction = predict_rating(base, ens_delta, start_year_correction, start_year)
+    prediction, year_correction = predict_rating(base, ens_delta, start_year_correction, start_year)
 
-    return feature_vector, feature_vector_imputed, base, ens_delta, prediction
+    return feature_vector, feature_vector_imputed, base, ens_delta, prediction, year_correction

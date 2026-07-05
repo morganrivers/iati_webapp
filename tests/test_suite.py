@@ -196,7 +196,8 @@ def _predict(rf_model, extra_model, per_org_baseline, start_year_correction, fv_
     """
     base = _base_from_fv(per_org_baseline, fv_df)
     ens_delta = _ensemble_delta(rf_model, extra_model, fv_df)
-    return predict_rating(base, ens_delta, start_year_correction, start_year)
+    prediction, _ = predict_rating(base, ens_delta, start_year_correction, start_year)
+    return prediction
 
 
 # Tree ensembles are only approximately monotone in any single feature; this absorbs

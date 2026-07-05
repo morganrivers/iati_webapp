@@ -23,10 +23,11 @@ def render_analysis_section() -> None:
             help="Baseline rating for the reporting organization"
         )
     with col2:
+        _total_adjustment = st.session_state.prediction - st.session_state.base
         st.metric(
             label="Model Adjustment",
-            value=f"{st.session_state.ens_delta:+.2f}",
-            help="Random Forest / ExtraTrees ensemble shift from the baseline"
+            value=f"{_total_adjustment:+.2f}",
+            help="Total shift from the per-org baseline (RF/ExtraTrees ensemble delta + start-year correction)"
         )
     with col3:
         st.metric(
@@ -143,4 +144,10 @@ def render_analysis_section() -> None:
     )
     st.plotly_chart(fig, width='stretch')
 
-    st.info(f"Model adjustment: {st.session_state.ens_delta:+.3f} (ensemble shift from the per-organization baseline)")
+    _ens = st.session_state.ens_delta
+    _year_corr = st.session_state.get("year_correction", 0.0)
+    st.info(
+        f"RF/ExtraTrees delta: {_ens:+.3f} | "
+        f"Start-year correction: {_year_corr:+.3f} | "
+        f"Total adjustment: {st.session_state.prediction - st.session_state.base:+.3f}"
+    )

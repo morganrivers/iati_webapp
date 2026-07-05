@@ -273,7 +273,7 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
         if st.button("Predict Success Rating (Statistical Model)", type="primary"):
                 
             with st.spinner("Generating forecast..."):
-                feature_vector, feature_vector_imputed, base, ens_delta, prediction = impute_and_run_statistical_model(rf_model,extra_model,per_org_baseline,start_year_correction,model_metadata,reporting_org,gdp_percap_input,st.session_state.field_edited,st.session_state,location_features)
+                feature_vector, feature_vector_imputed, base, ens_delta, prediction, year_correction = impute_and_run_statistical_model(rf_model,extra_model,per_org_baseline,start_year_correction,model_metadata,reporting_org,gdp_percap_input,st.session_state.field_edited,st.session_state,location_features)
                 # Compute SHAP values for this prediction
                 shap_result = compute_shap_values(
                     rf_model=rf_model,
@@ -331,6 +331,7 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
                 st.session_state.prediction = prediction
                 st.session_state.base = base
                 st.session_state.ens_delta = ens_delta
+                st.session_state.year_correction = year_correction
                 st.session_state.feature_vector = feature_vector
                 st.session_state.feature_vector_imputed = feature_vector_imputed
                 st.session_state.shap_result = shap_result
