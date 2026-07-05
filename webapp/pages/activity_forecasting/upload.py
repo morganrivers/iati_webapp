@@ -11,7 +11,7 @@ from project_manager import (load_project_name, save_project_name,
                              load_project_state, save_project_state)
 from model_loader import get_sector_clusters
 
-from .common import EXTRACTED_PDF_DIR, _extract_pdf_creation_date, _run_phases_0_3_background
+from .common import PROJECTS_DIR, _extract_pdf_creation_date, _run_phases_0_3_background
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ def render_llm_upload_section(_llm_running: bool, model_metadata: dict = None) -
                 snapshot = {
                     'pdf_bytes': pdf_bytes,
                     'filename': uploaded_file.name,
-                    'output_base_dir': EXTRACTED_PDF_DIR,
+                    'output_base_dir': PROJECTS_DIR,
                 }
                 t = threading.Thread(
                     target=_run_phases_0_3_background,
@@ -310,8 +310,8 @@ def poll_extraction_phases_0_3() -> None:
                     # An existing project is open — merge the new PDF extraction data
                     # into it instead of switching to the new hash-based folder.
                     import shutil as _shutil
-                    _new_dir = os.path.join('extracted_pdf_data', activity_id)
-                    _old_dir = os.path.join('extracted_pdf_data', _prev_folder)
+                    _new_dir = str(PROJECTS_DIR / activity_id)
+                    _old_dir = str(PROJECTS_DIR / _prev_folder)
                     logger.info(f"Merging {_new_dir!r} {_old_dir!r} (keeping existing project)")
                     if os.path.isdir(_new_dir) and os.path.isdir(_old_dir):
                         for _fname in os.listdir(_new_dir):

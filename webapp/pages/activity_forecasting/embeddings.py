@@ -6,7 +6,7 @@ import streamlit as st
 from ui_components import render_histogram, render_shap_annotation
 from targets_embedder import process_new_activity
 
-from .common import EXTRACTED_PDF_DIR
+from .common import PROJECTS_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ def render_targets_embeddings_subsection(model_metadata: dict, training_data, _s
                     actual_start_date=metadata_dict.get('start_date') or start_date,
                     original_planned_start_date=None,
                     txn_first_date=None,
-                    output_dir=EXTRACTED_PDF_DIR / activity_id
+                    output_dir=PROJECTS_DIR / activity_id
                 )
 
                 # Update variables and save to session state

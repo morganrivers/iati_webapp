@@ -3,9 +3,9 @@
 Standalone script: run the full LLM forecast pipeline for a single webapp-extracted activity.
 
 Usage:
-    python run_rag_forecast.py [path/to/extracted_pdf_data/webapp_XXXXXXXX]
+    python run_rag_forecast.py [path/to/projects/webapp_XXXXXXXX]
 
-If no argument given, uses the most recently modified subdirectory of extracted_pdf_data/.
+If no argument given, uses the most recently modified subdirectory of projects/.
 """
 
 # ── KNN similarity backend ────────────────────────────────────────────────────
@@ -387,10 +387,11 @@ def main(activity_dir_override=None):
     elif len(sys.argv) >= 2:
         activity_dir = Path(sys.argv[1]).resolve()
     else:
-        base = WEBAPP_DIR / "extracted_pdf_data"
+        from webapp_paths import PROJECTS_DIR
+        base = PROJECTS_DIR
         candidates = [p for p in base.iterdir() if p.is_dir()]
         if not candidates:
-            raise RuntimeError("no extracted activity directories found under extracted_pdf_data/")
+            raise RuntimeError(f"no extracted activity directories found under {base}")
         activity_dir = max(candidates, key=lambda p: p.stat().st_mtime)
         print(f"No argument given, using most recent: {activity_dir}", flush=True)
 

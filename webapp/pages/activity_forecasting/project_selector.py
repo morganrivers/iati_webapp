@@ -8,7 +8,7 @@ from project_manager import (get_available_projects, load_project_name,
                              create_new_project, delete_project, get_state_hash)
 from state_manager import clear_project_state
 
-from .common import EXTRACTED_PDF_DIR
+from .common import PROJECTS_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -253,7 +253,7 @@ def render_project_selector(_llm_running: bool) -> None:
 
         with col_pdf:
             st.write("")  # vertical spacer to align with status text
-            pdf_path = EXTRACTED_PDF_DIR / st.session_state.selected_project_folder / "uploaded.pdf"
+            pdf_path = PROJECTS_DIR / st.session_state.selected_project_folder / "uploaded.pdf"
             if pdf_path.exists():
                 with open(pdf_path, "rb") as _f:
                     st.download_button(

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 USE_CACHED_PDFS = False
 
-from webapp_paths import EXTRACTED_PDF_DIR
+from webapp_paths import PROJECTS_DIR
 
 # IATI standard activity scope codes
 SCOPE_LABELS = {

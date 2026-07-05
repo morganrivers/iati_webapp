@@ -15,7 +15,7 @@ from utils import notify_telegram, LLM_SESSION_CAP
 WEBAPP_DIR = Path(__file__).resolve().parent.parent
 
 LLM_FORECASTS_DIR = Path(__file__).resolve().parent.parent / "llm_forecasts"
-from webapp_paths import DATA_DIR
+from webapp_paths import DATA_DIR, PROJECTS_DIR
 
 _TAG = "deepseek_val"
 _TAG_S3 = "deepseek_val_forced_rf"
@@ -191,7 +191,7 @@ def render_rag_forecast_page():
     activity_id = st.session_state.selected_project_folder
     st.info(f"**Activity:** {st.session_state.get('project_name', activity_id)}  |  ID: `{activity_id}`")
 
-    activity_dir = WEBAPP_DIR / "extracted_pdf_data" / activity_id
+    activity_dir = PROJECTS_DIR / activity_id
 
     # ── In-progress: lock the page and show live progress ──────────────────────
     if st.session_state.rag_forecast_in_progress:

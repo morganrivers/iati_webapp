@@ -7,7 +7,7 @@ import streamlit as st
 from project_manager import load_project_state, save_project_state
 from ui_components import render_llm_feature_slider
 
-from .common import EXTRACTED_PDF_DIR, _run_phase4_background
+from .common import PROJECTS_DIR, _run_phase4_background
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def render_confirm_and_poll_phase4(_llm_running: bool, model_metadata: dict, tra
         # Check if grades already exist
         if st.session_state.extraction_result:
             activity_id = st.session_state.extraction_result.get('activity_id')
-            grades_file = EXTRACTED_PDF_DIR / activity_id / "feature_grades.jsonl"
+            grades_file = PROJECTS_DIR / activity_id / "feature_grades.jsonl"
             if grades_file.exists():
                 st.success("✅ Feature grades already exist for this activity (loaded from disk)")
                 st.info("💡 Grades were previously generated and loaded. You can proceed to prediction below, or re-run grading with the button.")
@@ -89,7 +89,7 @@ def render_confirm_and_poll_phase4(_llm_running: bool, model_metadata: dict, tra
             logger.info(f"extraction_result.activity_id= {(result or {}).get('activity_id','<None>')!r}")
             logger.info(f"extraction_result.output_dir = {(result or {}).get('output_dir','<None>')!r}")
             import glob as _glob
-            _existing = [p.split('/')[-2] for p in _glob.glob('extracted_pdf_data/*/app_state.json')]
+            _existing = [p.split('/')[-2] for p in _glob.glob(str(PROJECTS_DIR / '*' / 'app_state.json'))]
             logger.info(f"projects-on-disk BEFORE save = {_existing}")
 
             if st.session_state.selected_project_folder:
@@ -105,7 +105,7 @@ def render_confirm_and_poll_phase4(_llm_running: bool, model_metadata: dict, tra
                 logger.info(f"selected_project_folder      = {st.session_state.selected_project_folder!r}")
                 _er_after = st.session_state.extraction_result or {}
                 logger.info(f"extraction_result.activity_id= {_er_after.get('activity_id','<None>')!r}")
-                _existing2 = [p.split('/')[-2] for p in _glob.glob('extracted_pdf_data/*/app_state.json')]
+                _existing2 = [p.split('/')[-2] for p in _glob.glob(str(PROJECTS_DIR / '*' / 'app_state.json'))]
                 logger.info(f"projects-on-disk AFTER  save = {_existing2}")
                 _new_projects = set(_existing2) - set(_existing)
                 if _new_projects:

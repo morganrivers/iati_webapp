@@ -13,7 +13,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from webapp_paths import EXTRACTED_PDF_DIR, TRAIN_MEDIANS_PATH
+from webapp_paths import PROJECTS_DIR, TRAIN_MEDIANS_PATH
 
 
 def get_state_hash() -> str:
@@ -41,7 +41,7 @@ def create_new_project(project_name: str) -> str:
     """
     # Generate unique folder name
     folder_name = f"webapp_{secrets.token_hex(6)}"
-    project_path = EXTRACTED_PDF_DIR / folder_name
+    project_path = PROJECTS_DIR / folder_name
 
     try:
         # Create project directory
@@ -82,8 +82,8 @@ def create_new_project(project_name: str) -> str:
 
 
 def get_available_projects():
-    """Get list of available project folders from extracted_pdf_data/"""
-    data_dir = EXTRACTED_PDF_DIR
+    """Get list of available project folders from projects/"""
+    data_dir = PROJECTS_DIR
     if not data_dir.exists():
         return []
 
@@ -106,7 +106,7 @@ def delete_project(project_folder: str):
     """
     import shutil
 
-    project_path = EXTRACTED_PDF_DIR / project_folder
+    project_path = PROJECTS_DIR / project_folder
     if not project_path.exists():
         st.warning(f"Project folder not found: {project_folder}")
         return False
@@ -135,7 +135,7 @@ def load_project_data(project_folder: str, override_existing: bool = True):
         override_existing: If False, don't override values already in session_state
     """
     logger.info("!!! load project data called")
-    project_path = EXTRACTED_PDF_DIR / project_folder
+    project_path = PROJECTS_DIR / project_folder
     if not project_path.exists():
         logger.error(f"Project folder not found: {project_folder}")
         st.error(f"Project folder not found: {project_folder}")
@@ -319,7 +319,7 @@ def load_project_data(project_folder: str, override_existing: bool = True):
 
 def save_project_name(project_folder: str, new_name: str):
     """Save project name to a metadata file"""
-    project_path = EXTRACTED_PDF_DIR / project_folder
+    project_path = PROJECTS_DIR / project_folder
     name_file = project_path / "project_name.txt"
     try:
         with open(name_file, 'w') as f:
@@ -334,7 +334,7 @@ def save_project_name(project_folder: str, new_name: str):
 
 def load_project_name(project_folder: str) -> str:
     """Load project name from metadata, or generate default"""
-    project_path = EXTRACTED_PDF_DIR / project_folder
+    project_path = PROJECTS_DIR / project_folder
     name_file = project_path / "project_name.txt"
 
     # Try to load saved name from project_name.txt
@@ -379,7 +379,7 @@ def save_project_state_temp(project_folder: str):
     If user refreshes browser, temp state is ignored and last manual save is used.
 
     Only creates temp file if there are unsaved changes compared to permanent save."""
-    project_path = EXTRACTED_PDF_DIR / project_folder
+    project_path = PROJECTS_DIR / project_folder
     temp_file = project_path / "app_state_temp.json"
     state_file = project_path / "app_state.json"
 
@@ -456,7 +456,7 @@ def save_project_state_temp(project_folder: str):
 
 def save_project_state(project_folder: str):
     """Save complete app state to project folder"""
-    project_path = EXTRACTED_PDF_DIR / project_folder
+    project_path = PROJECTS_DIR / project_folder
     state_file = project_path / "app_state.json"
 
     try:
@@ -540,7 +540,7 @@ def save_project_state(project_folder: str):
 
 def load_project_state(project_folder: str):
     """Load complete app state from project folder"""
-    project_path = EXTRACTED_PDF_DIR / project_folder
+    project_path = PROJECTS_DIR / project_folder
     state_file = project_path / "app_state.json"
 
     st.session_state.saved_state_hash = None  # reset; set after successful load

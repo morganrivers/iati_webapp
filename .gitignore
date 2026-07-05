@@ -10,7 +10,9 @@ venv/
 data/outcome_tags/tag_models.pkl
 
 # Local scratch
-webapp/extracted_pdf_data/
+projects/*
+!projects/webapp_038385943901/
+!projects/webapp_39a1625529b1/
 webapp/llm_forecasts/
 example_pdfs/
 

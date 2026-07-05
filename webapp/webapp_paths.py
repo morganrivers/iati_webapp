@@ -2,9 +2,10 @@
 
 Two logical roots the webapp reads and writes:
 
-  DATA_DIR           Model artifacts and reference data: rating_model_outputs/,
-                     the reference CSV/JSONL files, webapp.db, outcome_tags/.
-  EXTRACTED_PDF_DIR  Per-project extracted-PDF folders written at runtime.
+  DATA_DIR      Model artifacts and reference data: rating_model_outputs/,
+                the reference CSV/JSONL files, webapp.db, outcome_tags/.
+  PROJECTS_DIR  Per-project folders written at runtime (PDF extractions plus
+                user edits and app state). Named ``projects/`` at the repo root.
 
 Both honor the ``DATA_DIR`` environment variable, which is set on Render to the
 persistent disk that holds the artifacts and the runtime project folders. Without
@@ -26,9 +27,9 @@ _ENV_DATA_DIR = os.environ.get("DATA_DIR")
 DATA_DIR = Path(_ENV_DATA_DIR).resolve() if _ENV_DATA_DIR else REPO_ROOT / "data"
 
 # On Render the persistent disk (DATA_DIR) also holds the runtime project folders.
-# Locally they live beside the webapp code, not in the repo data/ dir.
-EXTRACTED_PDF_DIR = (
-    DATA_DIR / "extracted_pdf_data" if _ENV_DATA_DIR else WEBAPP_DIR / "extracted_pdf_data"
+# Locally they live at the repo root, not in the repo data/ dir.
+PROJECTS_DIR = (
+    DATA_DIR / "projects" if _ENV_DATA_DIR else REPO_ROOT / "projects"
 )
 
 MODEL_DIR = DATA_DIR / "rating_model_outputs"

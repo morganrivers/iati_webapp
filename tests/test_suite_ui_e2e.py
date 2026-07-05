@@ -35,7 +35,7 @@ for _p in [str(WEBAPP_DIR), str(WEBAPP_DIR / "modules"), str(WEBAPP_DIR / "pages
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-EXTRACTED_PDF_DIR = WEBAPP_DIR / "extracted_pdf_data"
+PROJECTS_DIR = WEBAPP_DIR.parent / "projects"
 
 # Streamlit mock — shared across all test files (single session_state).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -230,7 +230,7 @@ class TestStatePersistence:
     @pytest.fixture(autouse=True)
     def cleanup(self):
         """Clean up test projects."""
-        test_proj = EXTRACTED_PDF_DIR / "test_ui_state_persist"
+        test_proj = PROJECTS_DIR / "test_ui_state_persist"
         if test_proj.exists():
             shutil.rmtree(test_proj)
         yield
@@ -239,7 +239,7 @@ class TestStatePersistence:
 
     def _make_test_project(self):
         """Create minimal test project."""
-        proj = EXTRACTED_PDF_DIR / "test_ui_state_persist"
+        proj = PROJECTS_DIR / "test_ui_state_persist"
         proj.mkdir(parents=True, exist_ok=True)
         (proj / "metadata.json").write_text(json.dumps({
             "title": "Test Project",

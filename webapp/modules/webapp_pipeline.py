@@ -10,7 +10,7 @@ Pipeline:
 3. Extract finance breakdown (sectors, allocations)
 4. Extract baseline features (implementer, targets, risks)
 
-All outputs saved to: extracted_pdf_data/{activity_id}/
+All outputs saved to: projects/{activity_id}/
 """
 
 import logging
@@ -89,7 +89,7 @@ def process_uploaded_pdf(
 
     Args:
         pdf_file: Streamlit UploadedFile object or file path
-        output_base_dir: Base directory for all extracted data (e.g., webapp/extracted_pdf_data)
+        output_base_dir: Base directory for all extracted data (e.g., projects/ at repo root)
         model: Gemini model to use for all extractions
         skip_if_exists: If True, skip steps that already have output files and reuse cached results
 
