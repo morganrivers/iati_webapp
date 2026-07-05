@@ -26,14 +26,10 @@ if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
 
 
-from get_all_pages_within_category import load_and_filter_rows
 from extracting_and_grading_helper_functions import (
     consolidate_rows_by_activity,
     loop_over_rows_to_call_model,
-    load_summaries_from_chatgpt_into_bundles,
-    add_fallback_rows_for_missing_activities_strict_baseline,
 )
-from view_categorization_scores import view_rows_as_pdf
 from repo_paths import DATA_DIR
 
 
@@ -211,95 +207,3 @@ def get_finance_sector_outcomes_prompt(chunked_by_activity_id: list) -> Dict[str
 # --------------------
 # Main
 # --------------------
-def main():
-    from helpers_for_ratings_and_final_activity_features import load_ratings
-
-    ratings = load_ratings(MERGED_OVERALL_RATINGS)
-    rated_ids: Set[str] = set(map(str, ratings.index))
-    print(f"Loaded {len(rated_ids)} rated activity_ids from {MERGED_OVERALL_RATINGS}")
-
-    if PROCESS_OUTCOMES:
-        # Pick pages likely to include finance + sector + schedule + budget/legal framing.
-        # You can widen/adjust these subcategories as you learn where the info tends to live.
-        rows = load_and_filter_rows(
-            section="Outcome",
-            subcategory_a=["expenditures_breakdown"],
-            subcategory_b=["expenditures_breakdown"],
-            min_score=3,
-            top_k_per_activity=10,
-            get_surrounding_if_not_enough=True,
-            get_at_least_top_k=True,
-            csv_path=PDF_SCORES_CSV,
-        )
-        # Ensure at least something for each rated activity (strict baseline fallback)
-        rows = add_fallback_rows_for_missing_activities_strict_outcome(
-            rows,
-            DATA_DIR,
-            max_pages=10,
-            rated_ids=rated_ids,
-        )
-    else:
-        # Pick pages likely to include finance + sector + schedule + budget/legal framing.
-        # You can widen/adjust these subcategories as you learn where the info tends to live.
-        rows = load_and_filter_rows(
-            section="Baseline",
-            subcategory_a=["financing_details", "budget_and_legal"],
-            subcategory_b=[
-                "financing_details",
-                "budget_and_legal",
-                "quantitative_targets",
-                "possible_outcomes",
-                "detailed_implementation_plans",
-            ],
-            min_score=3,
-            top_k_per_activity=10,
-            get_surrounding_if_not_enough=True,
-            get_at_least_top_k=True,
-            csv_path=PDF_SCORES_CSV,
-        )
-        # Ensure at least something for each rated activity (strict baseline fallback)
-        rows = add_fallback_rows_for_missing_activities_strict_baseline(
-            rows,
-            DATA_DIR,
-            max_pages=10,
-            rated_ids=rated_ids,
-        )
-
-
-    # Optional sanity check
-    # view_rows_as_pdf(rows)
-    # quit()
-
-    chunked_by_activity_id = consolidate_rows_by_activity(rows)
-
-    # If you maintain a summaries JSONL, load it in to improve extraction precision.
-    chunked_by_activity_id = load_summaries_from_chatgpt_into_bundles(
-        chunked_by_activity_id,
-        CHATGPT_SUMMARIES_JSONL,
-    )
-
-    prompts = get_finance_sector_outcomes_prompt(chunked_by_activity_id)
-    response_schema = get_finance_sector_outcomes_schema()
-
-    print(f"Activities queued: {len(chunked_by_activity_id)}")
-    print(f"Output JSONL: {OUTPUT_JSONL}")
-    print(f"Model: {MODEL_NAME}")
-
-    execpool = ThreadPoolExecutor(max_workers=CONCURRENCY)
-
-    asyncio.run(
-        loop_over_rows_to_call_model(
-            OUTPUT_JSONL,
-            chunked_by_activity_id,
-            prompts,
-            response_schema,
-            execpool=execpool,
-            model=MODEL_NAME,
-        )
-    )
-
-
-if __name__ == "__main__":
-    _program_start = datetime.now()
-    main()
-    print(f"\n(END PROGRAM): took {(datetime.now() - _program_start).total_seconds():.2f}s\n")

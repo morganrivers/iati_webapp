@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 from extracting_and_grading_helper_functions import (
     loop_over_rows_to_call_model,
-    make_executor,
     read_last_success_row,
 )
 

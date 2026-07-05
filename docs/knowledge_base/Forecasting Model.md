@@ -44,7 +44,7 @@ flowchart TD
 `impute_and_run_statistical_model()` assembles ~50 features from widget state, location features, embeddings, and sector percentages:
 
 - **LLM grades**: finance, integratedness, implementer_performance, targets, context, risks, complexity (from [[Extraction Pipeline]] Phase 4).
-- **Activity metadata**: activity_scope, finance_is_loan, planned_duration, planned_expenditure (raw USD + log), expenditure_per_year_log, expenditure_x_complexity.
+9- **Activity metadata**: activity_scope, finance_is_loan, planned_duration, planned_expenditure (raw USD + log), expenditure_per_year_log, expenditure_x_complexity.
 - **Location**: gdp_percap (log), cpia_score, governance_composite, wgi_any_missing, region one-hots (AFE, AFW, EAP, ECA, LAC, MENA, SAS).
 - **Embeddings / distances**: umap3_x/y/z, country_distance, sector_distance (see [[Narrative Forecast (RAG)|targets embeddings]]).
 - **Sector clusters**: `sector_cluster_*`, sourced from the model artifact so names stay single-sourced with the UI and extractor.

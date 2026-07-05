@@ -199,12 +199,3 @@ ORG_NAME_TO_DUMMY = {
 def get_org_dummies(org_name: str) -> Dict[str, int]:
     return ORG_NAME_TO_DUMMY.get(org_name, {"rep_org_0": 0, "rep_org_1": 0, "rep_org_2": 0})
 
-
-if __name__ == "__main__":
-    print("Testing location feature extraction...")
-    test_locations = ["KE", "BD"]
-    for loc in test_locations:
-        print(f"\n{loc}:")
-        features = extract_features_from_location(loc)
-        for k, v in features.items():
-            print(f"  {k}: {v}")

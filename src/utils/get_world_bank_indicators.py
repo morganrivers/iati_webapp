@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from __future__ import annotations
 
@@ -16,40 +15,7 @@ WGI_PATH = Path(__file__).parent.parent.parent / "data" / "world_bank_indicators
 # simple in-module cache so we only parse the CSV once per process
 _WGI_BY_ISO3: Optional[Dict[str, Dict[str, Dict[int, float]]]] = None
 _WGI_NAME_INDEX: Optional[Dict[str, str]] = None
-"""
-Series  Regulatory Quality: Estimate(RQ.EST)
-Indicator Name  Regulatory Quality: Estimate
-Long definition Regulatory Quality captures perceptions of the ability of the government to formulate and implement sound policies and regulations that permit and promote private sector development. Estimate gives the country's score on the aggregate indicator, in units of a standard normal distribution, i.e. ranging from approximately -2.5 to 2.5.
-Source  Detailed documentation of the WGI, interactive tools for exploring the data, and full access to the underlying source data available at www.govindicators.org.The WGI are produced by Daniel Kaufmann (Natural Resource Governance Institute and Brookings Institution) and Aart Kraay (World Bank Development Research Group). Please cite Kaufmann, Daniel, Aart Kraay and Massimo Mastruzzi (2010). "The Worldwide Governance Indicators: Methodology and Analytical Issues". World Bank Policy Research Working Paper No. 5430 (http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1682130). The WGI do not reflect the official views of the Natural Resource Governance Institute, the Brookings Institution, the World Bank, its Executive Directors, or the countries they represent.
-Periodicity Annual
 
-Control of Corruption: Estimate(CC.EST)
-Indicator Name  Control of Corruption: Estimate
-Long definition Control of Corruption captures perceptions of the extent to which public power is exercised for private gain, including both petty and grand forms of corruption, as well as "capture" of the state by elites and private interests. Estimate gives the country's score on the aggregate indicator, in units of a standard normal distribution, i.e. ranging from approximately -2.5 to 2.5.
-Source  Detailed documentation of the WGI, interactive tools for exploring the data, and full access to the underlying source data available at www.govindicators.org.The WGI are produced by Daniel Kaufmann (Natural Resource Governance Institute and Brookings Institution) and Aart Kraay (World Bank Development Research Group). Please cite Kaufmann, Daniel, Aart Kraay and Massimo Mastruzzi (2010). "The Worldwide Governance Indicators: Methodology and Analytical Issues". World Bank Policy Research Working Paper No. 5430 (http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1682130). The WGI do not reflect the official views of the Natural Resource Governance Institute, the Brookings Institution, the World Bank, its Executive Directors, or the countries they represent.
-Periodicity Annual
-
-Government Effectiveness: Estimate(GE.EST)
-Indicator Name  Government Effectiveness: Estimate
-Long definition Government Effectiveness captures perceptions of the quality of public services, the quality of the civil service and the degree of its independence from political pressures, the quality of policy formulation and implementation, and the credibility of the government's commitment to such policies. Estimate gives the country's score on the aggregate indicator, in units of a standard normal distribution, i.e. ranging from approximately -2.5 to 2.5.
-Source  Detailed documentation of the WGI, interactive tools for exploring the data, and full access to the underlying source data available at www.govindicators.org.The WGI are produced by Daniel Kaufmann (Natural Resource Governance Institute and Brookings Institution) and Aart Kraay (World Bank Development Research Group). Please cite Kaufmann, Daniel, Aart Kraay and Massimo Mastruzzi (2010). "The Worldwide Governance Indicators: Methodology and Analytical Issues". World Bank Policy Research Working Paper No. 5430 (http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1682130). The WGI do not reflect the official views of the Natural Resource Governance Institute, the Brookings Institution, the World Bank, its Executive Directors, or the countries they represent.
-Periodicity Annual
-
-Political Stability and Absence of Violence/Terrorism: Estimate(PV.EST)
-Indicator Name  Political Stability and Absence of Violence/Terrorism: Estimate
-Long definition Political Stability and Absence of Violence/Terrorism measures perceptions of the likelihood of political instability and/or politically-motivated violence, including terrorism. Estimate gives the country's score on the aggregate indicator, in units of a standard normal distribution, i.e. ranging from approximately -2.5 to 2.5.
-Source  Detailed documentation of the WGI, interactive tools for exploring the data, and full access to the underlying source data available at www.govindicators.org.The WGI are produced by Daniel Kaufmann (Natural Resource Governance Institute and Brookings Institution) and Aart Kraay (World Bank Development Research Group). Please cite Kaufmann, Daniel, Aart Kraay and Massimo Mastruzzi (2010). "The Worldwide Governance Indicators: Methodology and Analytical Issues". World Bank Policy Research Working Paper No. 5430 (http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1682130). The WGI do not reflect the official views of the Natural Resource Governance Institute, the Brookings Institution, the World Bank, its Executive Directors, or the countries they represent.
-Periodicity Annual
-
-Rule of Law: Estimate(RL.EST)
-Indicator Name  Rule of Law: Estimate
-Long definition Rule of Law captures perceptions of the extent to which agents have confidence in and abide by the rules of society, and in particular the quality of contract enforcement, property rights, the police, and the courts, as well as the likelihood of crime and violence. Estimate gives the country's score on the aggregate indicator, in units of a standard normal distribution, i.e. ranging from approximately -2.5 to 2.5.
-Source  Detailed documentation of the WGI, interactive tools for exploring the data, and full access to the underlying source data available at www.govindicators.org.The WGI are produced by Daniel Kaufmann (Natural Resource Governance Institute and Brookings Institution) and Aart Kraay (World Bank Development Research Group). Please cite Kaufmann, Daniel, Aart Kraay and Massimo Mastruzzi (2010). "The Worldwide Governance Indicators: Methodology and Analytical Issues". World Bank Policy Research Working Paper No. 5430 (http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1682130). The WGI do not reflect the official views of the Natural Resource Governance Institute, the Brookings Institution, the World Bank, its Executive Directors, or the countries they represent.
-Periodicity Annual
-
-source: https://databank.worldbank.org/source/worldwide-governance-indicators#
-"""
-# Default WGI (Worldwide Governance Indicators) series codes you mentioned
 WGI_SERIES = {
     "CC.EST": "wgi_control_of_corruption_est",
     "GE.EST": "wgi_government_effectiveness_est",
@@ -113,10 +79,9 @@ def load_world_bank_indicators(
     keep = set(keep_series_codes) if keep_series_codes else None
 
     with WGI_PATH.open("r", encoding="utf-8-sig", newline="") as f:
-        rdr = csv.DictReader(f, delimiter=",")  # your sample looks TSV
+        rdr = csv.DictReader(f, delimiter=",")
         headers = rdr.fieldnames or []
 
-        # columns look like: "2005 [YR2005]" etc.
         year_cols: List[Tuple[int, str]] = []
         for h in headers:
             m = re.match(r"(\d{4})", h)
@@ -209,7 +174,6 @@ def get_activity_wgi(
 
     codes = series_codes or list(WGI_SERIES.keys())
 
-    # collect (series_code -> list of (val, pct, year_used))
     collected: Dict[str, List[Tuple[float, Optional[float], int]]] = {c: [] for c in codes}
 
     for entry in rc_entries:

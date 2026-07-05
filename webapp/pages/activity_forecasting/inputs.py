@@ -17,30 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 def render_location_input(_llm_running: bool, _shap_sum) -> str:
-    # Params:
-    #   _llm_running  — widget disabled guard
-    #   _shap_sum     — callable(*feature_names) -> float|None  for SHAP annotation
-    # Returns: location (str) — encoded as "ISO3:pct,ISO3:pct" e.g. "KE:50,TZ:50"
-    # ---- REFACTOR → render_location_input(_llm_running, _shap_sum) -> location ----
-    # ====================================================================
-    # ACTIVITY LOCATION * (required, outside the collapsible section)
-    # ====================================================================
     st.markdown("**Activity Location** *(required — drives GDP, CPIA, governance lookups)*")
 
-    # Sync location_countries from extracted_values if location_countries is empty
-    # but extracted_values has a location (e.g. loaded project)
     _ev_loc = st.session_state.extracted_values.get('location', '')
     if _ev_loc and not st.session_state.location_countries:
         st.session_state.location_countries = parse_location_string(_ev_loc)
 
-    # Location row widget keys are namespaced by a nonce that bumps on every
-    # project switch (see clear_project_state). Without this, deleting a keyed
-    # selectbox's session_state entry and recreating it with the same key leaves
-    # the Streamlit frontend showing the previous project's country even though
-    # the server-side value is correct. A fresh key forces a fresh widget.
     _loc_nonce = st.session_state.get('loc_widget_nonce', 0)
-
-    # Render existing country rows
     _countries_changed = False
     for _idx, _entry in enumerate(list(st.session_state.location_countries)):
         _code = _entry["code"]
@@ -82,7 +65,6 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
 
                 _ensure_project_folder()
 
-                # Save temp state before rerun so changes persist
                 if st.session_state.get('selected_project_folder'):
                     logger.info(f">>> Saving temp state for: {st.session_state.selected_project_folder}")
                     save_project_state_temp(st.session_state.selected_project_folder)
@@ -93,9 +75,7 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
     if _countries_changed:
         _save_and_rerun()
 
-    # Add-country row (with lighter styling to show it's not yet added)
     if not st.session_state.field_locks.get('location', False):
-        # Use container with subtle background to indicate "staging area"
         with st.container():
             st.markdown("""
                 <style>
@@ -142,7 +122,6 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
                             st.session_state.location_countries.append({"code": _add_code, "pct": _new_pct_val})
                             logger.info(f">>> Updated location_countries: {st.session_state.location_countries}")
                             _countries_changed = True
-                            # Clear GDP/CPIA widget keys so they refresh
                             for _wk in ['input_gdp_percap', 'input_cpia_score', 'input_governance_composite']:
                                 st.session_state.pop(_wk, None)
                             _save_and_rerun()
@@ -151,7 +130,6 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
                     else:
                         logger.info(">>> No country selected - button clicked but '— select —' is still selected")
 
-    # Validate total and show feedback
     _total_pct = sum(c["pct"] for c in st.session_state.location_countries)
     if st.session_state.location_countries:
         if _total_pct != 100:
@@ -165,7 +143,6 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
                             'region_LAC', 'region_MENA', 'region_SAS')
     render_shap_annotation(_region_shap, label="Location region (note: contribution is for the region, not the individual country)")
 
-    # If changed, clear GDP/CPIA/governance widget keys
     if _countries_changed:
         logger.info("[LOC-CHANGED] location_countries changed popping widget keys")
         logger.info(f"[LOC-CHANGED] new location_countries = {st.session_state.location_countries!r}")
@@ -178,10 +155,8 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
             ['region_AFE', 'region_AFW', 'region_EAP', 'region_ECA', 'region_LAC', 'region_MENA', 'region_SAS']
         )
 
-    # Derive the location string used throughout the rest of the app
     location = build_location_string(st.session_state.location_countries)
 
-    # Lock checkbox for location
     def on_location_lock_change():
         st.session_state.field_locks['location'] = st.session_state['lock_location_outer']
 
@@ -199,44 +174,23 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
 
 def render_basic_info_subsection(model_metadata: dict, training_data,
                                  location: str, _llm_running: bool, _shap, _shap_sum):
-    # Params:
-    #   model_metadata   — for train medians / widget defaults
-    #   training_data    — for org + region pie charts
-    #   location         — from render_location_input(); drives GDP/CPIA/region lookup
-    #   _llm_running     — widget disabled guard
-    #   _shap            — callable(feature_name) -> float|None
-    #   _shap_sum        — callable(*feature_names) -> float|None
-    # Returns: (reporting_org, start_date, location_features)
-    #   reporting_org    — str  (selected org)
-    #   start_date       — datetime.date
-    #   location_features — dict  (gdp_percap, cpia_score, governance_composite, region_*, ...)
-    # ---- REFACTOR → render_basic_info_subsection(model_metadata, training_data,
-    #         location, _llm_running, _shap, _shap_sum)
-    #         -> (reporting_org, start_date, location_features, activity_scope) ----
-    # ============================================================================
-    # NON-FEATURE INPUTS (no histograms)
-    # ============================================================================
     st.subheader("Basic Information")
     col1, col3 = st.columns(2)
 
     with col1:
-        # Organization selection (restricted to 4 orgs)
         def on_reporting_org_change():
             st.session_state.field_edited['reporting_org'] = True
             st.session_state.shap_stale_fields.update(['rep_org_0', 'rep_org_1', 'rep_org_2'])
-            # Update org dummy variables in features
             selected_org = st.session_state.get('select_reporting_org')
             if selected_org:
                 org_dummies = get_org_dummies(selected_org)
                 st.session_state.features.update(org_dummies)
-                # Mark org features as edited
                 for key in org_dummies.keys():
                     st.session_state.field_edited[key] = True
 
         badge = get_field_indicator('reporting_org') if st.session_state.field_edited.get('reporting_org', False) else ''
         st.markdown(f"<b>Reporting Organization</b> {badge}", unsafe_allow_html=True)
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_reporting_org_lock_change():
@@ -249,8 +203,6 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
                 on_change=on_reporting_org_lock_change
             )
         with col_input:
-            # Restore select_reporting_org if cleared from session state (can happen after page navigation)
-            # Use the org dummy variables in features dict to reconstruct the selected org
             if 'select_reporting_org' not in st.session_state and st.session_state.get('features'):
                 _f = st.session_state.features
                 if _f.get('rep_org_0') == 1:
@@ -259,7 +211,6 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
                     st.session_state['select_reporting_org'] = "Asian Development Bank"
                 elif _f.get('rep_org_2') == 1:
                     st.session_state['select_reporting_org'] = "World Bank"
-                # else: BMZ is the reference category (all zeros) - leave as default
 
             reporting_org = st.selectbox(
                 "Reporting Organization",
@@ -273,7 +224,6 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
         render_shap_annotation(_shap_sum('rep_org_0', 'rep_org_1', 'rep_org_2'), label="Reporting organisation")
 
     with col3:
-        # Use session-state value if present (authoritative), else extracted, else default
         _ss_start_raw = st.session_state.get('input_start_date')
         if _ss_start_raw:
             default_start = _ss_start_raw
@@ -295,7 +245,6 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
                 _dur = (_end - _start).days / 365.25
                 st.session_state.extracted_values['planned_duration'] = _dur
                 st.session_state.field_edited['planned_duration'] = True
-                # Also update the widget key so the UI shows the new value
                 st.session_state['input_planned_duration'] = _dur
 
         def on_start_date_change():
@@ -316,7 +265,6 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
         badge = get_field_indicator('start_date') if st.session_state.field_edited.get('start_date', False) else ''
         st.markdown(f"<b>Planned Start Date</b> {badge}", unsafe_allow_html=True)
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_start_date_lock_change():
@@ -341,12 +289,9 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
                 on_change=on_start_date_change,
                 **_start_kwargs
             )
-        # Keep extracted_values in sync so default_start never goes stale
         if start_date:
             st.session_state.extracted_values['start_date'] = start_date.isoformat()
 
-        # Planned End Date (used to compute planned duration)
-        # Use session-state value if present (it's always authoritative), else fall back
         _ss_end_raw = st.session_state.get('input_planned_end_date')
         if _ss_end_raw:
             default_end = _ss_end_raw
@@ -368,38 +313,9 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
             _recompute_duration_from_dates()
             _save_and_rerun()
 
-        # col_lock, col_label = st.columns([0.15, 0.85])
-        # with col_lock:
-        #     def on_planned_end_date_lock_change():
-        #         st.session_state.field_locks['planned_end_date'] = st.session_state['lock_planned_end_date']
-        #     st.write("")  # ← ADD THIS
-        #     st.checkbox(
-        #         "🔒" if st.session_state.field_locks.get('planned_end_date', False) else "🔓",
-        #         value=st.session_state.field_locks.get('planned_end_date', False),
-        #         key="lock_planned_end_date",
-        #         help="Lock to prevent LLM from changing this value",
-        #         on_change=on_planned_end_date_lock_change
-        #     )
-        # with col_label:
-        #     # Only show badge if field is edited (hide "Using median" badge)
-        #     badge = get_field_indicator('planned_end_date') if st.session_state.field_edited.get('planned_end_date', False) else ''
-        #     st.markdown(f"**Planned End Date** {badge}", unsafe_allow_html=True)
-
-        # _end_kwargs = {} if 'input_planned_end_date' in st.session_state else {"value": default_end}
-        # rendered_end_date = st.date_input(
-        #     "Planned End Date",
-        #     help="Activity end date (used to compute planned duration)",
-        #     label_visibility="collapsed",
-        #     key="input_planned_end_date",
-        #     disabled=st.session_state.field_locks.get('planned_end_date', False),
-        #     on_change=on_end_date_change,
-        #     **_end_kwargs
-        # )
-        # Label row - full width
         badge = get_field_indicator('planned_end_date') if st.session_state.field_edited.get('planned_end_date', False) else ''
         st.markdown(f"<b>Planned End Date</b> {badge}", unsafe_allow_html=True)
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_planned_end_date_lock_change():
@@ -424,20 +340,14 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
                 on_change=on_end_date_change,
                 **_end_kwargs
             )
-        # Keep extracted_values in sync so default_end never goes stale
         if rendered_end_date:
             st.session_state.extracted_values['planned_end_date'] = rendered_end_date.isoformat()
 
-        # Compute live duration and sync — always done here so the
-        # duration widget below is always derived from the current dates.
-        # Use session state directly: authoritative even when widget return value
-        # has a value=/session-state conflict.
         _ss_start = st.session_state.get('input_start_date') or start_date
         _ss_end = st.session_state.get('input_planned_end_date') or rendered_end_date
         if _ss_start and _ss_end:
             _live_dur = (_ss_end - _ss_start).days / 365.25
             st.session_state.extracted_values['planned_duration'] = _live_dur
-            # Always sync the widget key so it reflects current dates
             st.session_state['input_planned_duration'] = max(0.5, min(10.0, _live_dur)) if _live_dur > 0 else 0.5
             if _live_dur <= 0:
                 st.warning(
@@ -446,17 +356,12 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
                     icon="⚠️",
                 )
 
-    # Reporting Organization Distribution Pie Chart
     st.markdown("---")
     st.markdown("### Reporting Organization Distribution")
 
     org_counts = _compute_org_counts(training_data)
     if org_counts:
-
-        # Create pie chart
         fig_org = go.Figure()
-
-        # Highlight user's selected org
         pull_values = [0.1 if org == reporting_org else 0 for org in KEEP_REPORTING_ORGS]
 
         fig_org.add_trace(go.Pie(
@@ -480,23 +385,17 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
         st.plotly_chart(fig_org, width='stretch', key="org_pie_chart")
         st.info(f"**Your selection:** {reporting_org}")
 
-    # Regional Distribution Pie Chart (shows immediately)
     st.markdown("---")
     st.markdown("### Regional Distribution")
 
-    # Calculate region distribution in training data
     region_cols = ['region_AFE', 'region_AFW', 'region_EAP', 'region_ECA',
                   'region_LAC', 'region_MENA', 'region_SAS']
     region_names = ['Africa East', 'Africa West', 'East Asia & Pacific',
                    'Europe & Central Asia', 'Latin America & Caribbean',
                    'Middle East & North Africa', 'South Asia']
 
-    # Pre-computed region sums (cached, never changes)
     region_totals = _compute_region_totals(training_data)
 
-    # Extract features from location early — before Activity Features widgets render,
-    # so extracted values are available as widget defaults on this same render pass.
-    # Also used later by the forecast button (avoids a second extraction).
     if location and start_date:
         logger.info(f"[LOC-FEAT] location string passed to extract_features_from_location: {location!r}")
         logger.info(f"[LOC-FEAT] start_date: {start_date!r}")
@@ -510,26 +409,22 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
             activity_scope=str(activity_scope) if 'activity_scope' in locals() else "1"
         )
         logger.info(f"[LOC-FEAT] extracted gdp_percap={location_features.get('gdp_percap')!r}  cpia={location_features.get('cpia_score')!r}  gov={location_features.get('governance_composite')!r}")
-        # Store into extracted_values so the widgets below read them via value=
         _prev_gdp = st.session_state.extracted_values.get('gdp_percap')
         st.session_state.extracted_values['gdp_percap'] = location_features.get('gdp_percap')
         st.session_state.extracted_values['cpia_score'] = location_features.get('cpia_score')
         st.session_state.extracted_values['governance_composite'] = location_features.get('governance_composite')
         st.session_state.extracted_values['wgi_any_missing'] = location_features.get('wgi_any_missing')
-        # Mark as "set" (not using median) for fields that were actually extracted
         if location_features.get('gdp_percap') is not None:
             st.session_state.field_edited['gdp_percap'] = True
         if location_features.get('cpia_score') is not None:
             st.session_state.field_edited['cpia_score'] = True
         if location_features.get('governance_composite') is not None:
             st.session_state.field_edited['governance_composite'] = True
-        # Get user's region allocation
         user_regions = {
             region_names[i]: location_features.get(region_cols[i], 0.0)
             for i in range(len(region_cols))
         }
     else:
-        # No location set yet — define empty location_features for forecast button
         location_features = {
             'gdp_percap': None, 'cpia_score': None,
             'governance_composite': None, 'wgi_any_missing': None,
@@ -538,10 +433,7 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
         }
         user_regions = {name: 0.0 for name in region_names}
 
-    # Create pie chart
     fig_region = go.Figure()
-
-    # Determine which regions to highlight (user has >0 allocation)
     pull_values = [0.1 if user_regions[name] > 0 else 0 for name in region_names]
 
     fig_region.add_trace(go.Pie(
@@ -565,7 +457,6 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
 
     st.plotly_chart(fig_region, width='stretch', key="region_chart_main")
 
-    # Show user's region allocation
     user_region_str = ", ".join([f"{name} ({val*100:.0f}%)"
                                 for name, val in user_regions.items() if val > 0])
     if user_region_str:
@@ -579,29 +470,11 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
 def render_activity_features_subsection(model_metadata: dict, training_data,
                                         _llm_running: bool, _shap, _shap_sum,
                                         location_features: dict):
-    # Params:
-    #   model_metadata    — for train medians / widget defaults
-    #   training_data     — for distribution histograms
-    #   _llm_running      — widget disabled guard
-    #   _shap / _shap_sum — SHAP annotation callables
-    #   location_features — dict; provides gdp_percap/cpia/governance widget defaults
-    # Returns: (planned_expenditure, planned_duration, activity_scope, finance_is_loan,
-    #           gdp_percap_input, cpia_score_input, governance_composite_input)
-    # ---- REFACTOR → render_activity_features_subsection(model_metadata, training_data,
-    #         _llm_running, _shap, _shap_sum, location_features)
-    #         -> (planned_expenditure, planned_duration, activity_scope,
-    #             finance_is_loan, gdp_percap_input, cpia_score_input,
-    #             governance_composite_input) ----
-    # ============================================================================
-    # FEATURE INPUTS (with histograms)
-    # ============================================================================
     _raw_pe_median = model_metadata["train_medians"]["planned_expenditure"]
     logger.info(f"[DEBUG] train_medians['planned_expenditure'] = {_raw_pe_median:.4g}  (expecting raw USD ~52M, not log ~17)")
     if _raw_pe_median > 1000:
-        # New convention: median is already raw USD
         default_planned_expenditure = _raw_pe_median
     else:
-        # Old convention: median was log(USD)
         logger.warning(f"[DEBUG] WARNING: planned_expenditure median looks like log-USD ({_raw_pe_median:.2f}), doing np.exp()")
         default_planned_expenditure = np.exp(_raw_pe_median)
     logger.info(f"[DEBUG] default_planned_expenditure (USD) = {default_planned_expenditure:.4g}")
@@ -611,7 +484,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
 
     st.subheader("Activity Features")
 
-    # Lock/Unlock buttons for Activity Features
     def _lock_all_features_cb():
         for field in ["planned_expenditure", "planned_duration", "activity_scope", "finance_is_loan"]:
             st.session_state.field_locks[field] = True
@@ -632,7 +504,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
     with col_lock3:
         st.info("💡 Locked features won't be overwritten during extraction")
 
-    # Planned Expenditure with histogram
     col_input, col_hist = st.columns([1, 1])
     with col_input:
         def on_planned_expenditure_change():
@@ -644,7 +515,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
 
         st.markdown(f"<b>Planned Expenditure (millions USD)</b> {get_field_indicator('planned_expenditure')}", unsafe_allow_html=True)
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_planned_expenditure_lock_change():
@@ -658,7 +528,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                 on_change=on_planned_expenditure_lock_change
             )
         with col_input:
-            # DEBUG: Log widget state
             logger.info("DEBUG WIDGET RENDERING - PLANNED_EXPENDITURE")
             logger.info(f"Time: {datetime.now().isoformat()}")
             logger.info(f"'input_planned_expenditure' in session_state: {'input_planned_expenditure' in st.session_state}")
@@ -667,8 +536,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             logger.info(f"extracted_values.get('planned_expenditure'): {st.session_state.extracted_values.get('planned_expenditure', 'NOT_SET')}")
             logger.info(f"default median (from activity database): {default_planned_expenditure}")
 
-            # Ensure input_planned_expenditure is set in session state before rendering widget
-            # Prioritize existing widget state over extracted values to avoid reset after save
             if 'input_planned_expenditure' not in st.session_state:
                 extracted_expenditure = st.session_state.extracted_values.get('planned_expenditure')
                 if extracted_expenditure:
@@ -694,14 +561,11 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                 on_change=on_planned_expenditure_change,
             )
             render_shap_annotation(_shap('log_planned_expenditure'), label="Planned expenditure")
-        planned_expenditure = planned_expenditure_millions * 1_000_000  # Convert to USD
+        planned_expenditure = planned_expenditure_millions * 1_000_000
 
     with col_hist:
-        # Show histogram for planned_expenditure (show log-transformed values directly)
         if "planned_expenditure" in training_data.columns:
             train_exp_log = np.log(training_data["planned_expenditure"].dropna())
-
-            # Show log-transformed values (natural log of USD)
             fig_exp = go.Figure()
 
             fig_exp.add_trace(go.Histogram(
@@ -745,12 +609,8 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
 
             st.plotly_chart(fig_exp, width='stretch', key="hist_planned_expenditure")
 
-    # Planned Duration with histogram
     col_input, col_hist = st.columns([1, 1])
     with col_input:
-        # Duration is always derived from Planned Start / End Date above.
-        # Ensure input_planned_duration is set in session state before rendering widget
-        # Prioritize existing widget state over extracted values to avoid reset after save
         extracted_duration = st.session_state.extracted_values.get('planned_duration')
         if 'input_planned_duration' not in st.session_state:
             if extracted_duration and extracted_duration > 0:
@@ -787,17 +647,14 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             if fig_dur:
                 st.plotly_chart(fig_dur, width='stretch', key="hist_planned_duration")
 
-    # Activity Scope with histogram
     col_input, col_hist = st.columns([1, 1])
     with col_input:
         def on_activity_scope_change():
             st.session_state.field_edited['activity_scope'] = True
             st.session_state.shap_stale_fields.add('activity_scope')
 
-        # Lock checkbox and label
         st.markdown(f"<b>Activity Scope</b> {get_field_indicator('activity_scope')}", unsafe_allow_html=True)
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_activity_scope_lock_change():
@@ -812,8 +669,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             )
         with col_input:
             _scope_options = list(SCOPE_LABELS.keys())
-            # Ensure input_activity_scope is set in session state before rendering widget
-            # Prioritize existing widget state over extracted values to avoid reset after save
             if 'input_activity_scope' not in st.session_state:
                 _scope_val = int(st.session_state.extracted_values.get('activity_scope', default_activity_scope))
                 st.session_state['input_activity_scope'] = _scope_val
@@ -832,7 +687,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
 
     with col_hist:
         if "activity_scope" in training_data.columns:
-            # Custom histogram for activity scope with proper labels
             SCOPE_NAMES = {
                 1: "Global",
                 2: "Regional",
@@ -855,7 +709,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                 xbins=dict(start=0.5, end=8.5, size=1)
             ))
 
-            # Add median marker
             median_scope = np.median(train_scope)
             fig_scope.add_vline(
                 x=median_scope,
@@ -877,7 +730,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                     annotation_position="top"
                 )
 
-            # Set x-axis with custom labels
             fig_scope.update_layout(
                 title="Activity Scope",
                 xaxis_title="",
@@ -895,7 +747,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
 
             st.plotly_chart(fig_scope, width='stretch', key="hist_activity_scope")
 
-    # Finance Type with histogram
     col_input, col_hist = st.columns([1, 1])
     with col_input:
         def on_finance_is_loan_change():
@@ -904,7 +755,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
 
         st.markdown(f"<b>Finance Type</b> {get_field_indicator('finance_is_loan')}", unsafe_allow_html=True)
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_finance_is_loan_lock_change():
@@ -943,7 +793,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             if fig_loan:
                 st.plotly_chart(fig_loan, width='stretch', key="hist_finance_is_loan")
 
-    # ---- Country-level features (auto-extracted from location + date, editable) ----
     st.markdown("**Country Features** *(auto-extracted from location and start date above — edit to override)*")
     _train_median_gdp = np.exp(model_metadata["train_medians"]["gdp_percap"])  # back from log scale
     _train_median_cpia = model_metadata["train_medians"]["cpia_score"]
@@ -953,7 +802,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
     with col_gdp_input:
         st.markdown(f"<b>GDP per Capita (USD)</b> {get_field_indicator('gdp_percap')}", unsafe_allow_html=True)
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_gdp_percap_lock_change():
@@ -967,8 +815,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                 on_change=on_gdp_percap_lock_change
             )
         with col_input:
-            # Ensure input_gdp_percap is set in session state before rendering widget
-            # Prioritize existing widget state over extracted values to avoid reset after save
             if 'input_gdp_percap' not in st.session_state:
                 _extracted_gdp = st.session_state.extracted_values.get('gdp_percap')
                 _default_gdp = float(_extracted_gdp) if _extracted_gdp is not None else float(_train_median_gdp)
@@ -1013,7 +859,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
         st.markdown(f"<b>CPIA Score (1–6)</b> {get_field_indicator('cpia_score')}", unsafe_allow_html=True)
         st.caption("Country Policy & Institutional Assessment. N/A for non-IDA countries.")
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_cpia_score_lock_change():
@@ -1027,8 +872,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                 on_change=on_cpia_score_lock_change
             )
         with col_input:
-            # Ensure input_cpia_score is set in session state before rendering widget
-            # Prioritize existing widget state over extracted values to avoid reset after save
             _extracted_cpia = st.session_state.extracted_values.get('cpia_score')
             if 'input_cpia_score' not in st.session_state:
                 _default_cpia = float(_extracted_cpia) if _extracted_cpia is not None else float(_train_median_cpia)
@@ -1072,7 +915,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
         st.markdown(f"<b>Governance Composite</b> {get_field_indicator('governance_composite')}", unsafe_allow_html=True)
         st.caption("Mean of 5 World Governance Indicators (WGI). Range ~−2.5 to +2.5.")
 
-        # Input row - lock, checkbox, help, input
         col_lock, col_input = st.columns([0.15, 0.85])
         with col_lock:
             def on_governance_composite_lock_change():
@@ -1086,8 +928,6 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                 on_change=on_governance_composite_lock_change
             )
         with col_input:
-            # Ensure input_governance_composite is set in session state before rendering widget
-            # Prioritize existing widget state over extracted values to avoid reset after save
             if 'input_governance_composite' not in st.session_state:
                 _extracted_gov = st.session_state.extracted_values.get('governance_composite')
                 _default_gov = float(_extracted_gov) if _extracted_gov is not None else float(_train_median_gov)
@@ -1127,5 +967,4 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             if fig_gov:
                 st.plotly_chart(fig_gov, width='stretch', key="hist_governance_composite")
 
-    # location_features already computed above (early extraction for widget defaults)
     return planned_expenditure, planned_duration, activity_scope, finance_is_loan, gdp_percap_input, cpia_score_input, governance_composite_input

@@ -12,9 +12,8 @@ def render_extracted_data_page():
 
     already_showed_activity_warning = False
 
-    # Show selected project info
     if st.session_state.selected_project_folder:
-        st.info(f"**Current Activity:** {st.session_state.project_name}") #(ID: `{st.session_state.selected_project_folder}`)")
+        st.info(f"**Current Activity:** {st.session_state.project_name}")
     else:
         already_showed_activity_warning = True
 
@@ -37,9 +36,6 @@ def render_extracted_data_page():
         else:
             st.warning(f"⚠️ Status: {status}")
 
-        # -------------------------------------------------------------------------
-        # Phase 0: Metadata
-        # -------------------------------------------------------------------------
         st.markdown("---")
         st.subheader("📋 Phase 0: Metadata")
 
@@ -66,16 +62,12 @@ def render_extracted_data_page():
         else:
             st.info("⏳ Metadata not yet loaded...")
 
-        # -------------------------------------------------------------------------
-        # Phase 1: Page Categories
-        # -------------------------------------------------------------------------
         st.markdown("---")
         st.subheader("Phase 1: Page Categorization")
 
         page_categories = result.get('page_categories', [])
         if page_categories:
             st.markdown(f"**Total pages:** {len(page_categories)}")
-            # Summary statistics
             col1, col2 = st.columns(2)
             with col1:
                 avg_score = sum(p.get('score', 0) for p in page_categories) / len(page_categories)
@@ -84,7 +76,6 @@ def render_extracted_data_page():
                 high_score_pages = sum(1 for p in page_categories if p.get('score', 0) >= 7)
                 st.metric("High-Score Pages", f"{high_score_pages} (≥7)")
 
-            # Page table
             with st.expander("📊 View all page categories"):
                 page_df = pd.DataFrame([
                     {
@@ -100,9 +91,6 @@ def render_extracted_data_page():
         else:
             st.info("⏳ Page categories not yet loaded...")
 
-        # -------------------------------------------------------------------------
-        # Phase 2: Summary
-        # -------------------------------------------------------------------------
         st.markdown("---")
         st.subheader("Phase 2: Activity Summary")
 
@@ -114,9 +102,6 @@ def render_extracted_data_page():
         else:
             st.info("⏳ Summary not yet loaded...")
 
-        # -------------------------------------------------------------------------
-        # Phase 3: Finance
-        # -------------------------------------------------------------------------
         st.markdown("---")
         st.subheader("💰 Phase 3: Finance Breakdown")
 
@@ -147,9 +132,6 @@ def render_extracted_data_page():
         else:
             st.info("⏳ Finance data not yet loaded...")
 
-        # -------------------------------------------------------------------------
-        # Phase 4: Features
-        # -------------------------------------------------------------------------
         st.markdown("---")
         st.subheader("🔍 Phase 4: Baseline Features")
 
@@ -164,9 +146,6 @@ def render_extracted_data_page():
         else:
             st.info("⏳ Features not yet loaded...")
 
-        # -------------------------------------------------------------------------
-        # Embedding Results
-        # -------------------------------------------------------------------------
         st.markdown("---")
         st.subheader("Embedding Results")
 
@@ -200,9 +179,6 @@ def render_extracted_data_page():
         else:
             st.info("⏳ No embedding results yet. Embeddings are computed from targets text.")
 
-        # -------------------------------------------------------------------------
-        # Phase 5: Grades
-        # -------------------------------------------------------------------------
         st.markdown("---")
         st.subheader("Phase 5: Feature Grades")
 
@@ -210,7 +186,6 @@ def render_extracted_data_page():
         if grades and len(grades) > 0:
             st.markdown("**LLM-generated grades (0-100 scale):**")
 
-            # Display in a nice table format
             grade_data = []
             for feature_name, grade_value in sorted(grades.items()):
                 grade_data.append({
@@ -222,7 +197,6 @@ def render_extracted_data_page():
             grade_df = pd.DataFrame(grade_data)
             st.dataframe(grade_df, width='stretch', hide_index=True)
 
-            # Show distribution
             with st.expander("📊 View grade distribution"):
                 fig = go.Figure()
                 fig.add_trace(go.Bar(

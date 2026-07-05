@@ -687,6 +687,3 @@ def main(activity_dir_override=None):
     finally:
         execpool.shutdown(wait=False, cancel_futures=True)
 
-
-if __name__ == "__main__":
-    main()

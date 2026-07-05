@@ -101,39 +101,51 @@ components.html("""
     }
 
     // ── Expander state persistence ───────────────────────────────────────────
-    // Expanders reset to closed on every st.rerun() because there is no key param.
-    // We save/restore open state via sessionStorage.
+    // Expanders reset to closed on every st.rerun() because there is no key
+    // param, and Streamlit rebuilds the <details> DOM element so per-element
+    // flags are lost. A MutationObserver re-applies saved state whenever the
+    // parent DOM changes; the observer itself is stashed on window.parent so
+    // it survives across reruns without being duplicated.
     var EXPANDER_LABELS = {
         'iati_activity_info_expanded': 'Edit or View Activity Information'
     };
 
-    function setupExpanders() {
+    function applyExpanderState() {
         var summaries = doc.querySelectorAll('details summary');
         Object.keys(EXPANDER_LABELS).forEach(function(storageKey) {
             var labelText = EXPANDER_LABELS[storageKey];
+            var saved = parent.sessionStorage.getItem(storageKey);
             summaries.forEach(function(summary) {
-                if (summary._iatiSetup) return;
                 if (!summary.textContent.includes(labelText)) return;
                 var details = summary.closest('details');
                 if (!details) return;
-                summary._iatiSetup = true;
 
-                // Restore saved state
-                var saved = parent.sessionStorage.getItem(storageKey);
                 if (saved === 'open' && !details.open) {
                     details.open = true;
                 }
 
-                // Save state on user interaction
-                details.addEventListener('toggle', function() {
-                    parent.sessionStorage.setItem(storageKey, details.open ? 'open' : 'closed');
-                });
+                if (!details._iatiToggleListener) {
+                    details.addEventListener('toggle', function() {
+                        parent.sessionStorage.setItem(
+                            storageKey, details.open ? 'open' : 'closed'
+                        );
+                    });
+                    details._iatiToggleListener = true;
+                }
             });
         });
     }
 
-    setupExpanders();
-    setTimeout(setupExpanders, 80);
+    applyExpanderState();
+
+    if (!parent._iatiExpanderObserver) {
+        var observerTarget = doc.querySelector(
+            '[data-testid="stAppViewContainer"]'
+        ) || doc.body;
+        var observer = new MutationObserver(applyExpanderState);
+        observer.observe(observerTarget, { childList: true, subtree: true });
+        parent._iatiExpanderObserver = observer;
+    }
 })();
 </script>
 """, height=0)

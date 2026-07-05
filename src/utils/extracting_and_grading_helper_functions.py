@@ -48,12 +48,9 @@ from prompt_bundle_pdf import open_with_evince
 
 
 from get_all_pages_within_category import load_and_filter_rows
-# from score_page_relevance import load_docs, load_acts_map, load_activity_counts, filter_usable, make_genai_client, activity_title, iter_page_batches, write_pdf_slice, desc, activity_title
 
-# NEW: at top
 from concurrent.futures import ThreadPoolExecutor
 
-# NEW: pass an execpool down (don’t rely on the loop’s default one)
 def make_executor() -> ThreadPoolExecutor:
     return ThreadPoolExecutor(max_workers=CONCURRENCY, thread_name_prefix="genai")
 
@@ -64,40 +61,28 @@ OPEN_UPLOADED_WITH_EVINCE = False
 AIRPLANE_MODE = False
 
 
-# Toggle between live calls and Gemini Batch API
-BATCH_MODE = False  # False when you want live calls
+BATCH_MODE = False
 
 if BATCH_MODE:
     os.makedirs("../../data/batch_requests", exist_ok=True)
 
-# BATCH_JSONL = "../../data/batch_requests/summaries_batch_requests.jsonl"
-
-CONCURRENCY = 5  # run up to 5 activities at once
-# CONCURRENCY = 3  # run up to 5 activities at once
-
+CONCURRENCY = 5
 LOCATION_PDFS = "../../data/iati_all_pdfs"
 MODEL_NAME        = "gemini-2.5-flash"
-# MODEL_NAME        = "gemini-3-pro-preview" # can be overwritten
 TIMEOUT_SECONDS = 300
 
 def get_key(row):
     return row.get("activity_id")
-    # return (obj.get("activity_id"), obj.get("cached_file"), obj.get("page_start"))
 
-# ---------- Gemini client & structured schemas ----------
 def make_genai_client() -> genai.Client:
     api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GOOGLE_API_KEY_GEMINI")
     if not api_key:
         raise RuntimeError("Missing GOOGLE_API_KEY (or GOOGLE_API_KEY_GEMINI).")
     return genai.Client(api_key=api_key)
 
-# Prompt + response schema builders for Gemini structured output.
-# One prompt per CSV row: if both quantitative outcomes and ratings are flagged,
-# we combine into a single prompt & a combined schema.
 def wait_file_active(client, uploaded, *, timeout=60, interval=1.0):
     """Poll the uploaded file until ACTIVE, or raise on FAILED/timeout."""
     t0 = time.time()
-    # Some client versions expose 'name' (e.g., 'files/abc123'), others 'id'
     file_name = getattr(uploaded, "name", None) or getattr(uploaded, "id")
     while True:
         f = client.files.get(name=file_name)  # raises if not found
@@ -718,12 +703,9 @@ async def loop_over_rows_to_call_model(output_jsonl, rows, prompts, response_sch
             if get_key(r) in prompts.keys():
                 prompt_and_row = (prompts[get_key(r)], r)
                 tasks.append(asyncio.create_task(_guard(prompt_and_row)))
-            else:
-                print(f"[DEBUG] no prompt for activity_id={get_key(r)} (skipping row)")
 
         done = load_seen_keys(output_jsonl)  # only successes, by your definition
         missing_done = sorted(planned - done)
-        print(f"[DEBUG] attempt={attempt + 1} planned={len(planned)} success_done={len(done)} missing_success={len(missing_done)}")
         Path("planned_but_not_success.txt").write_text("\n".join(missing_done) + "\n", encoding="utf-8")
         if tasks:
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -1021,10 +1003,8 @@ def _load_final_lookup_by_title(final_csv: Path) -> dict[tuple[str, str, str, st
     return lut
 
 
-from collections import Counter
 
-DEBUG_AID = "44000-P157571"
-debug_miss_reasons = Counter()
+
 
 def _load_top_ranked_doc_by_activity_strict_title_join(
     ranked_csv: Path,
@@ -1081,27 +1061,6 @@ def _load_top_ranked_doc_by_activity_strict_title_join(
             
             if not fr:
                 n_join_miss += 1
-                if aid == DEBUG_AID:
-                    # collect candidates that share (aid, section)
-                    cands = [k for k in lut.keys() if k[0] == aid and k[1] == section]
-
-                    print("\n[DEBUG JOIN MISS] ranked row -> key not found")
-                    print("  aid:", aid)
-                    print("  section:", section)
-                    print("  raw title:", repr(r.get("doc_title") or ""))
-                    print("  title_norm:", repr(title_norm))
-                    print("  raw lang:", repr(r.get("language") or ""))
-                    print("  lang_norm:", repr(lang_norm))
-                    print("  ranked page_count:", repr(r.get("page_count")))
-                    print("  pages int:", pages)
-                    print("  candidates in lut for (aid,section):", len(cands))
-
-                    # show how candidates differ
-                    same_title = [k for k in cands if k[2] == title_norm]
-                    same_lang  = [k for k in cands if k[3] == lang_norm]
-                    same_pages = [k for k in cands if k[4] == pages]
-                    print("  candidates with same title_norm:", len(same_title))
-                    print("  candidates with same lang_norm:", len(same_lang))
                 continue
             n_join_ok += 1
             row = {
@@ -1124,10 +1083,6 @@ def _load_top_ranked_doc_by_activity_strict_title_join(
             if cur is None or rank < cur["assigned_rank"]:
                 target[aid] = row
 
-    print(f"[DEBUG] ranked rows eligible (rank>=1): {n_ranked}")
-    print(f"[DEBUG] join ok: {n_join_ok}")
-    print(f"[DEBUG] join miss: {n_join_miss}")
-    print("[DEBUG] join-miss reasons (for debug aid):", debug_miss_reasons)
 
     # Return Outcome docs (for outcome fallback), not Baseline
     # But allow DE-1 activities to fall back to Baseline if no Outcome exists
@@ -1172,7 +1127,6 @@ def add_fallback_rows_for_missing_activities_strict_baseline(
         final_csv,
         allow_de1_outcome_fallback=True,
     )
-    print(f"[DEBUG] topdoc size: {len(topdoc)}")
 
     page_cats_maps = _load_page_cats_by_cached_file(cats_csv)
 

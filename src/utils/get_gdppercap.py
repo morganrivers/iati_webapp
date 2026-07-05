@@ -378,19 +378,3 @@ def get_gdp_percap_from_location(
 # CLI smoke test
 # ================
 
-if __name__ == "__main__":
-    # Minimal self-test (will return None unless you provide a CSV with values for KE/UG)
-    fake_locs = [
-        {"location-id": [{"@vocabulary": "A4", "@code": "KE"}]},
-        {"name": [{"narrative": [{"text()": "Uganda"}]}]},
-        {"@ref": "TZ-123"},
-    ]
-    fake_rc = [
-        {"@code": "KE", "@percentage": "60"},
-        {"@code": "UG", "@percentage": "40"},
-    ]
-    val = get_gdp_percap_from_location(
-        fake_locs, fake_rc,
-        csv_path=os.environ.get("GDP_PCAP_CSV"),  # set if you want a real number
-    )
-    print(val)

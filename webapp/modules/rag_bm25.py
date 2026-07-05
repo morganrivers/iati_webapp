@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import os
 import re
-import unicodedata
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -47,12 +46,6 @@ def is_de1_activity(activity_id: str) -> bool:
     return s.startswith("DE-1-") or s.startswith("DE-1")
 
 
-def _norm_title(s: str) -> str:
-    s = (s or "").strip().lower()
-    s = unicodedata.normalize("NFKC", s)
-    s = re.sub(r"[^a-z0-9]+", " ", s)
-    s = re.sub(r"\s+", " ", s).strip()
-    return s
 
 
 def _clean_phrase(s: str) -> str:
@@ -75,7 +68,6 @@ def ensure_txt_for_pdf(pdf_path: Path, txt_output_dir: Path, allow_ocr: bool = T
     if activity_id:
         base = f"{activity_id}__{base}"
     txt_path = txt_output_dir / f"{base}.txt"
-    print(f"[DEBUG ensure_txt_for_pdf] pdf_path={pdf_path}  activity_id={activity_id!r}  -> txt_path={txt_path}")
 
     def is_empty(p: Path) -> bool:
         if not p.exists():
@@ -84,10 +76,6 @@ def ensure_txt_for_pdf(pdf_path: Path, txt_output_dir: Path, allow_ocr: bool = T
             return True
         return not p.read_text(encoding="utf-8", errors="ignore").strip()
 
-    if is_empty(txt_path):
-        print(f"[DEBUG ensure_txt_for_pdf] txt is empty/missing, converting PDF -> txt")
-    else:
-        print(f"[DEBUG ensure_txt_for_pdf] reusing existing txt ({txt_path.stat().st_size} bytes)")
     if is_empty(txt_path):
         if txt_path.exists():
             txt_path.unlink()

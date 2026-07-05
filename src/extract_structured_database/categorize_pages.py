@@ -38,13 +38,10 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 import time
 import asyncio
-
-# --- add near other imports ---
 from typing import Set
 
 from pypdf import PdfReader, PdfWriter
 
-# --- Google GenAI (Gemini) ---
 from google import genai
 import pprint
 
@@ -57,12 +54,10 @@ from repo_paths import DATA_DIR
 FINAL_CSV         = str(DATA_DIR / "activity_docs_log_final_restrictive.csv")
 SUBSET_JSON       = str(DATA_DIR / "subset_results.json")
 LOCATION_PDFS     = str(DATA_DIR / "iati_all_pdfs")
-# OUTPUT_CSV        = "../../data/pdf_categories_scores.csv"
 OUTPUT_CSV        = str(DATA_DIR / "pdf_categories_scores_expenditure_breakdown.csv")
 
 EXISTING_CATEGORIES_CSV = str(DATA_DIR / "pdf_categories_scores.csv")
 
-# Restrict to activity IDs from merged ratings file
 RESTRICT_TO_MERGED_RATINGS = True
 MERGED_RATINGS_JSONL = str(DATA_DIR / "merged_overall_ratings.jsonl")
 
@@ -72,10 +67,7 @@ OUTPUT_JSONL_BATCH = str(DATA_DIR / "batch_requests" / "pdf_categories_scores_D.
 RANKS_CSV         = str(DATA_DIR / "ranked_documents.csv")
 
 SEED              = 42
-# N_ACTIVITIES      = 200
 MAX_PICK_PER_SEC  = 3
-# MODEL_NAME        = "gemini-2.5-flash"
-# MODEL_NAME        = "gemini-2.0-flash"
 MODEL_NAME        = "gemini-2.5-flash-lite"
 TIMEOUT_SECONDS = 300
 
@@ -84,9 +76,9 @@ CONCURRENCY = 10  # run up to 5 activities at once
 NUMBER_PAGES_BATCH = 3
 AVG_BYTES_PER_PAGE = 60_000  # ~60kB/page
 
-from score_page_relevance import load_docs, load_acts_map, load_activity_counts, filter_usable, activity_title, iter_page_batches, write_pdf_slice, desc, activity_title
+from score_page_relevance import activity_title, iter_page_batches, desc
 from prompt_bundle_pdf import open_with_evince
-from extracting_and_grading_helper_functions import make_genai_client
+
 from get_codes_we_like import get_activity_to_codes, get_good_bad_and_target_codes
 
 # ---------- Structured JSON schema builders (top-level with scratchpad + pages[1..3]) ----------
@@ -142,7 +134,6 @@ def make_page_schema_for_baseline() -> dict:
             "informativeness": {"type": "integer", "minimum": 0, "maximum": 10},
         },
         "required": ["category", "informativeness"],
-        # "propertyOrdering": ["category_1", "category_2", "evaluation_informativeness"],
     }
 
 
@@ -183,7 +174,6 @@ def make_page_schema_for_outcome() -> dict:
             "informativeness": {"type": "integer", "minimum": 0, "maximum": 10},
         },
         "required": ["category", "informativeness","has_quantitative_targets","has_quantitative_outcomes","has_overall_ratings"],
-        # "propertyOrdering": ["category_1", "category_2", "evaluation_informativeness"],
     }
 
 
@@ -192,9 +182,6 @@ def make_top_schema(section: str, n_items: int) -> dict:
     Top-level: optional scratchpad + pages[] where each page is an array of up to 3 enum strings.
     """
     page_schema = make_page_schema_for_baseline() if section == "Baseline" else make_page_schema_for_outcome()
-    # pprint.pprint("page_schema")
-    # pprint.pprint(page_schema)
-    # quit()
     return {
         "type": "object",
         "properties": {
@@ -574,7 +561,7 @@ def load_merged_ratings_activity_ids(jsonl_path: str) -> set[str]:
     print(f"Loaded {len(activity_ids)} activity IDs from {jsonl_path}")
     return activity_ids
 
-from collections import defaultdict
+
 
 def load_excluded_pages_from_categories(csv_path: str) -> Set[Tuple[str, str, int]]:
     """
@@ -613,9 +600,6 @@ def load_excluded_pages_from_categories(csv_path: str) -> Set[Tuple[str, str, in
 def build_todo_work_items(activities, picked, completed_pages, excluded_pages=None):
     todo = []
     for aid in picked:
-        # if not aid.startswith("XM-DAC"):
-        #     continue
-
         secmap = activities[aid]["sections"]
 
         def rows_for_section(section):
@@ -649,8 +633,6 @@ def build_todo_work_items(activities, picked, completed_pages, excluded_pages=No
             work_list = [("Outcome", sel_outcome)]  # Note the brackets!
         else:
             work_list = [("Baseline", sel_baseline), ("Outcome", sel_outcome)]
-        # print("work_list")
-        # print(work_list)
         for section, rows in work_list:
             docs_used = 0
             pages_used = 0
@@ -691,628 +673,3 @@ def build_todo_work_items(activities, picked, completed_pages, excluded_pages=No
     return todo
 
 # ---------- Main processing ----------
-async def main():
-    # Basic path checks
-    if not os.path.exists(FINAL_CSV):
-        raise SystemExit(f"Missing {FINAL_CSV}")
-    if not os.path.exists(LOCATION_PDFS):
-        raise SystemExit(f"Missing {LOCATION_PDFS}")
-    if not os.path.exists(SUBSET_JSON):
-        print(f"Missing {SUBSET_JSON}; activity descriptions will be empty.")
-        raise SystemExit(f"Missing SUBSET_JSON")
-
-    # Load data
-    activities, order = load_docs(FINAL_CSV)
-    acts_map = load_acts_map(SUBSET_JSON)
-    # activity_counts = load_activity_counts()
-    print("loaded docs and acts_map")
-    # Shuffle activities (seed=42) and pick N with both Baseline and Outcome usable
-    rng = random.Random(SEED)
-    rng.shuffle(order)
-    
-    allowed_aids = allowed_activity_ids_from_ranks(RANKS_CSV)
-    print("restricting to the nice codes we like...")
-    allowed_aids = allowed_activity_ids_with_good_dac_codes(allowed_aids)
-    print("done restricting to the nice codes we like...")
-
-    # Optionally restrict to merged ratings activity IDs
-    if RESTRICT_TO_MERGED_RATINGS:
-        merged_aids = load_merged_ratings_activity_ids(MERGED_RATINGS_JSONL)
-        if merged_aids:
-            allowed_aids = allowed_aids & merged_aids
-            print(f"Restricted to {len(allowed_aids)} activities from merged ratings")
-
-    picked = []
-    for aid in order:
-        secmap = activities[aid]["sections"]
-
-        # --- SPECIAL HANDLING FOR DE-1* ACTIVITIES ---
-        if aid.startswith("DE-1"):
-            # don't filter on ranks / DAC codes; just require at least one doc with a cached file
-            has_any_doc = False
-            for section in ("Baseline", "Outcome"):
-                for d in secmap.get(section, []) or []:
-                    rel_path = (d.get("cached_file", "") or "").strip()
-                    if rel_path:
-                        has_any_doc = True
-                        break
-                if has_any_doc:
-                    break
-
-            if has_any_doc:
-                picked.append(aid)
-            # skip the normal filtering logic for DE-1
-            continue
-
-        # --- ORIGINAL LOGIC FOR NON-DE-1 ACTIVITIES ---
-        if aid not in allowed_aids:
-            continue
-        if filter_usable_fast(secmap.get("Baseline", [])) and filter_usable_fast(secmap.get("Outcome", [])):
-            picked.append(aid)
-
-
-    # picked: List[str] = []
-    # for aid in order:
-    #     secmap = activities[aid]["sections"]
-    #     if filter_usable_fast(secmap.get("Baseline", [])) and filter_usable_fast(secmap.get("Outcome", [])):
-
-    #         picked.append(aid)
-    #     # if len(picked) >= N_ACTIVITIES:
-    #     #     break
-    if not picked:
-        print("No qualifying activities found.")
-        return
-    print("added all the usable activity ids")
-    DEBUG_AID = "XM-DAC-41114-PROJECT-00113842"
-
-    print("\n=== DEBUG picked ===")
-    print("picked count:", len(picked))
-    print("DEBUG_AID in picked?", DEBUG_AID in picked)
-    if DEBUG_AID not in picked:
-        secmap = activities.get(DEBUG_AID, {}).get("sections", {})
-        print("\n=== DEBUG why not picked ===")
-        print("has baseline usable?", bool(filter_usable_fast(secmap.get("Baseline", []))))
-        print("has outcome  usable?", bool(filter_usable_fast(secmap.get("Outcome",  []))))
-
-        allowed_aids_raw = allowed_activity_ids_from_ranks(RANKS_CSV)
-        allowed_aids_good = allowed_activity_ids_with_good_dac_codes(allowed_aids_raw)
-
-        # print("in allowed_aids_raw (rank gate)?", DEBUG_AID in allowed_aids_raw)
-        # print("in allowed_aids_good (dac gate)?", DEBUG_AID in allowed_aids_good)
-
-    # CSV header
-    ensure_csv_header(OUTPUT_CSV)
-    # completed_ids = load_completed_activity_ids(OUTPUT_CSV)
-    print("load_completd_pages...")
-    completed_pages = load_completed_activity_pages(OUTPUT_CSV)
-    # ADD THIS:
-    excluded_pages = set()
-    if RESTRICT_TO_MERGED_RATINGS:
-        excluded_pages = load_excluded_pages_from_categories(EXISTING_CATEGORIES_CSV)
-
-    print("build todo work items...")
-    todo = build_todo_work_items(activities, picked, completed_pages, excluded_pages)
-
-
-
-    # START = ("44000-P171059", "Outcome", "2f243b653d4a__p171059-521f0849-914a-45e9-806c-a229a1667f9a.pdf.pdf", 3)  # page_start=4 -> start_idx=3
-    # skip_n = todo.index(START); print(f"[resume] skipping {skip_n} todo batches; starting at {START}")
-    # todo = todo[skip_n:]
-
-
-
-
-
-    print("todo batches:", len(todo))
-    if not todo:
-        print("Nothing to do.")
-        return
-
-    todo_map = defaultdict(set)
-    for aid, section, rel_path, start_idx in todo:
-        todo_map[aid].add((section, rel_path, start_idx))
-
-    todo_aids = sorted(todo_map.keys())
-    print("\n=== DEBUG planned activity ids ===")
-    print("planned count:", len(todo_aids))
-    print("first 50 planned:", todo_aids[:50])
-
-    print("DEBUG_AID planned?", DEBUG_AID in todo_map)
-
-    aid = "XM-DAC-41114-PROJECT-00113842"
-    print("\n=== DEBUG todo_map for", aid, "===")
-    print("todo_map.keys()")
-    print(todo_map.keys())
-    # items = sorted(todo_map.get(aid, []))
-    # print("total todo items:", len(items))
-    # print("baseline todo items:", sum(1 for x in items if x[0] == "Baseline"))
-    # print("outcome  todo items:", sum(1 for x in items if x[0] == "Outcome"))
-    # quit()
-    total_planned_pages = 0
-    for aid, section, rel_path, start_idx in todo:
-        end_idx = min(start_idx + NUMBER_PAGES_BATCH, 50)
-        total_planned_pages += max(0, end_idx - start_idx)
-
-    est_bytes = total_planned_pages * AVG_BYTES_PER_PAGE
-    est_mb = est_bytes / (1024 * 1024)
-    print(f"Planned upload: {total_planned_pages} pages (~{est_mb:.1f} MB).")
-
-    # total_planned_pages = len(todo) * NUMBER_PAGES_BATCH  # rough
-
-    # # # --- NEW: pre-pass to estimate total pages + upload size ---
-    # # total_planned_pages = compute_total_pages_to_upload(
-    # #     activities=activities,
-    # #     acts_map=acts_map,
-    # #     picked=picked,
-    # #     completed_pages=completed_pages,
-    # # )
-    # if total_planned_pages <= 0:
-    #     print("Nothing new to upload (all relevant pages already processed or skipped).")
-    # else:
-    #     est_bytes = total_planned_pages * AVG_BYTES_PER_PAGE
-    #     est_mb = est_bytes / (1024 * 1024)
-    #     print(
-    #         f"Planned upload: {total_planned_pages} pages "
-    #         f"(~{est_mb:.1f} MB at {AVG_BYTES_PER_PAGE/1024:.1f} kB/page)."
-    #     )
-
-    # shared progress counter
-    pages_uploaded = 0
-
-    # Client and tmpdir
-    client = make_genai_client()
-    tmpdir = tempfile.mkdtemp(prefix="pdf_batches_")
-
-    try:
-        async def _process_activity(aid: str, idx: int):
-            if aid not in todo_map:
-                return
-
-            nonlocal pages_uploaded, total_planned_pages
-            tmpdir = tempfile.mkdtemp(prefix=f"pdf_batches_{aid}_")
-            try:
-                # Crash-safe counter update (skip if beyond threshold)
-                # count_so_far = activity_counts.get(aid, 0) + 1
-                # if count_so_far > MAX_PER_ACTIVITY:
-                #     print(f"[skip: activity seen {count_so_far-1} time(s) already] {aid}\n")
-                #     continue
-                # activity_counts[aid] = count_so_far
-                # persist_activity_counts(activity_counts)
-
-                secmap = activities[aid]["sections"]
-                title_from_csv = activities[aid]["title"] or ""
-                act_obj = acts_map.get(aid, {})
-                act_title = activity_title(act_obj) or title_from_csv
-                act_desc = desc(act_obj) or ""
-
-                is_de1 = aid.startswith("DE-1")
-
-                if is_de1:
-                    # --- SPECIAL HANDLING FOR DE-1* ACTIVITIES ---
-                    raw_base = secmap.get("Baseline", []) or []
-                    raw_out  = secmap.get("Outcome", []) or []
-
-                    def _has_cached(r: dict) -> bool:
-                        return bool((r.get("cached_file", "") or "").strip())
-
-                    # "don't filter, just inject the documents directly (only test is that the cached file exists)"
-                    usable_baseline = [r for r in raw_base if _has_cached(r)]
-                    usable_outcome  = [r for r in raw_out  if _has_cached(r)]
-
-                    # If there is only outcome document, treat it as baseline and run baseline prompt
-                    treat_outcome_as_baseline = False
-                    if not usable_baseline and usable_outcome:
-                        treat_outcome_as_baseline = True
-                        usable_baseline = usable_outcome
-                        usable_outcome = []
-
-                    # For DE-1 we skip the ranked-doc selection
-                    sel_baseline, sel_outcome = usable_baseline, usable_outcome
-
-                else:
-                    # --- ORIGINAL LOGIC FOR NON-DE-1 ACTIVITIES ---
-                    usable_baseline = filter_usable_fast(secmap.get("Baseline", []))
-                    usable_outcome  = filter_usable_fast(secmap.get("Outcome", []))
-
-                    if (len(usable_baseline) == 0) or (len(usable_outcome) == 0):
-                        print("\nWARNING: missing a baseline or outcome, skipping\n")
-                        return
-
-                    sel_baseline, sel_outcome = get_promising_baseline_and_outcomes_ranked(
-                        usable_baseline,
-                        usable_outcome,
-                    )
-                    treat_outcome_as_baseline = False
-
-                # print("\n\n\nsel_baseline[0]")
-                # print(sel_baseline[0])
-                # print("sel_baseline")
-                # print(sel_baseline)
-                # print("sel_outcome[0]")
-                # print(sel_outcome[0])
-                # print("sel_outcome")
-                # print(sel_outcome)
-                # quit()
-                # sel_baseline = pick_desc_first_n(usable_baseline, MAX_PICK_PER_SEC)
-                # sel_outcome  = pick_desc_first_n(usable_outcome,  MAX_PICK_PER_SEC)
-                # print("len(sel_baseline)")
-                # print(len(sel_baseline))
-                # print("len(sel_outcome)")
-                # print(len(sel_outcome))
-                # quit()
-                print(f"\n\n\n[{idx:02d}] New Activity {aid} — {act_title}")
-                # print("sel_baseline")
-                # print(sel_baseline)
-                # print("sel_outcome")
-                # print(sel_outcome)
-                total_qs = 0
-
-                if is_de1 and treat_outcome_as_baseline:
-                    # only run the baseline prompt, using the (former) outcome docs as baseline
-                    section_rows = [("Baseline", sel_baseline)]
-                else:
-                    section_rows = [("Baseline", sel_baseline), ("Outcome", sel_outcome)]
-
-                for section, rows in section_rows:
-
-                    docs_used = 0
-                    pages_used = 0
-
-                    print(f"\n NEW SECTION: {section}")
-                    if section == "Baseline":
-                        document_description = "activity description"
-                        informativeness_text = "forecasting future activity outcomes"
-                    else:
-                        document_description = "activity evaluation"
-                        informativeness_text = "evaluating past activity outcomes"
-                    for d in rows:
-                        if docs_used >= 5 or pages_used >= 500:
-                            break
-
-                        rel_path = (d.get("cached_file", "") or "").strip()
-                        abs_path = os.path.join(LOCATION_PDFS, rel_path)
-                        if not os.path.exists(abs_path):
-                            continue
-                        try:
-                            pages_total = int(d.get("pages", 0))
-                        except Exception:
-                            pages_total = 0
-                        if pages_total <= 0:
-                            continue
-                        if pages_total > 300:
-                            continue
-
-                        remaining = 500 - pages_used
-                        if remaining <= 0:
-                            break
-
-                        effective_pages = min(pages_total, remaining)
-                        if effective_pages <= 0:
-                            continue
-
-                        doc_index = d.get("_doc_index_int", 0)
-                        doc_title = d.get("doc_title", "") or "(untitled)"
-
-                        # Process batches (limited to effective_pages, supports partial last batch)
-                        for start_idx, end_idx in iter_page_batches(effective_pages, NUMBER_PAGES_BATCH):
-                            if (section, rel_path, start_idx) not in todo_map[aid]:
-                                continue
-
-                            # for idx, aid in enumerate(picked, start=1):
-                            if (aid, rel_path, start_idx+1) in completed_pages:
-                                # print(f"[skip: already recorded: {aid} {rel_path}, pages {start_idx+1}")
-                                continue
-                            if start_idx >= 50:
-                                # print("past page 50, we will skip.")
-                                continue
-                            # if aid in completed_ids:
-                            #     # actual_page_num
-                            #     continue
-                            # Make a sliced temp PDF for this batch (file-only upload)
-                            try:
-                                print("writing pdf slice!")
-                                slice_path, n_pdf_pages = await asyncio.wait_for(
-                                    asyncio.to_thread(
-                                        write_pdf_slice,
-                                        abs_path,
-                                        start_idx,
-                                        end_idx,
-                                        tmpdir,
-                                    ),
-                                    timeout=10,  # seconds
-                                )
-                            except asyncio.TimeoutError:
-                                append_error_row(aid, act_title, section, start_idx, end_idx)
-                                print("write_pdf_slice timed out after 10 seconds; recorded error row and continuing.\n")
-                                continue
-                            print("done writing pdf slice.")
-                            # slice_path, n_pdf_pages = "",0#write_pdf_slice(abs_path, start_idx, end_idx, tmpdir)
-
-                            # Build prompt (no extracted text, only metadata + instructions)
-                            prompt_text = build_prompt(
-                                activity_title=act_title,
-                                activity_desc_3000=act_desc,
-                                section=section,
-                                pdf_title=doc_title,
-                                pdf_path=rel_path,
-                                page_start_1based=start_idx + 1,
-                                page_end_1based=start_idx + n_pdf_pages,
-                                pages_total=pages_total,
-                                document_description=document_description,
-                                informativeness_text=informativeness_text,
-                            )
-
-                            # Print the prompt being sent
-                            # print("\n--- PROMPT TO MODEL ---")
-                            # print(prompt_text)
-                            # print("-----------------------\n")
-
-                            # Upload file again for generation (separate lifecycle from counting)
-                            try:
-                                uploaded = await asyncio.to_thread(client.files.upload, file=slice_path)
-                            except Exception:
-                                append_error_row(aid, act_title, section, start_idx, end_idx)
-                                print("upload failed; recorded error row and continuing.\n")
-                                continue
-                            # --- NEW: progress accounting ---
-                            pages_uploaded += n_pdf_pages
-                            if total_planned_pages > 0:
-                                pct = (pages_uploaded / total_planned_pages) * 100.0
-                                print(
-                                    f"[progress] Uploaded {pages_uploaded}/"
-                                    f"{total_planned_pages} pages ({pct:.1f}%)"
-                                )
-                            print(f"n_pages {n_pdf_pages}")
-                            print("slice_path")
-                            print(slice_path)
-                            print("")
-                            # open_with_evince(slice_path)
-                            # Configure structured output schema per section (Baseline vs Outcome)
-                            top_schema = make_top_schema(section, n_pdf_pages)
-
-                            total_qs += 1
-                            print("done uploading, now doing the prompt")
-                            if BATCH_MODE:
-                                # ---- Batch mode: just enqueue a request, no live model call ----
-                                # One line per (activity, section, pdf, starting page)
-                                batch_key = f"{aid}::{section}::{rel_path}::{start_idx+1}"
-
-                                request_obj = build_batch_request(
-                                    prompt_text,
-                                    uploaded_files=[("PAGES:", uploaded)],
-                                    response_schema=top_schema,
-                                )
-
-                                write_batch_request_line(OUTPUT_JSONL_BATCH, batch_key, request_obj)
-                                print(f"Queued batch request {batch_key}")
-                                # In batch mode we don't parse or write CSV here; continue to next batch
-                                continue
-
-                            try:
-                                # Run the synchronous call in a thread; preserve your overall timeout
-                                async def _call():
-                                    return await asyncio.to_thread(
-                                        client.models.generate_content,
-                                        model=MODEL_NAME,
-                                        contents=[prompt_text, uploaded],
-                                        config={
-                                            "response_mime_type": "application/json",
-                                            "response_schema": top_schema,
-                                        },
-                                    )
-                                response = await asyncio.wait_for(_call(), timeout=TIMEOUT_SECONDS)
-                            
-                            except asyncio.exceptions.TimeoutError:
-                                append_error_row(aid, act_title, section, start_idx, end_idx)
-                                print("timeout error 5 minutes. continuing.\n\n")
-                                # append_error_row(csv_path, activity_id, section, -1, "5 minute timer failure.")
-                                print('asyncio.exceptions.TimeoutError')
-                                continue
-                            except asyncio.CancelledError:
-                                append_error_row(aid, act_title, section, start_idx, end_idx)
-                                # If the task was cancelled due to global shutdown or outer timeout
-                                # append_error_row(csv_path, activity_id, section, -1, "Cancelled")
-                                print('asyncio.CancelledError')
-                                continue
-                            print("uploaded!")
-
-                            # Parse strictly; crash if parsing fails
-                            parsed = getattr(response, "parsed", None)
-                            if parsed is None:
-                                # try:
-                                #     parsed = json.loads(response.text)
-                                # except Exception:
-                                #     append_error_row(aid, act_title, section, start_idx, end_idx)
-                                #     print('RuntimeError("Structured output parsing failed (no parsed object and JSON load failed).")')
-                                #     continue
-                                try:
-                                    parsed = json.loads(json_text)
-                                except Exception as e:
-                                    print(
-                                        f"[line {line_no}] JSON parse error for key={key}: {e}\n"
-                                        f"--- JSON head ---\n{json_text[:1000]}\n"
-                                        f"--- JSON tail ---\n{json_text[-1000:]}\n"
-                                        f"--- skipping ---"
-                                    )
-                                    continue
-
-                            if not isinstance(parsed, dict) or "pages" not in parsed or not isinstance(parsed["pages"], list):
-                                append_error_row(aid, act_title, section, start_idx, end_idx)
-                                print('RuntimeError("Structured output parsing failed (missing "pages" array).")')
-                                continue
-
-                            pages_items = parsed["pages"]
-                            if not pages_items:
-                                append_error_row(aid, act_title, section, start_idx, end_idx)
-                                print('RuntimeError("Structured output parsing failed (empty "pages" array).")')
-                                continue
-
-                            # Collect output token count if available
-                            # output_tokens = -1
-                            # usage = getattr(response, "usage_metadata", None)
-                            # # if usage and isinstance(usage, dict):
-                            # #     output_tokens = int(usage.get("output_tokens", -1))
-                            # # else:
-                            # #     output_tokens = -1
-                            # output_tokens = -1
-                            # usage = getattr(response, "usage_metadata", None)
-                            # if usage is not None:
-                            #     # handles both dict-like and attribute objects
-                            #     output_tokens = (
-                            #         usage.get("output_tokens", -1) if hasattr(usage, "get")
-                            #         else getattr(usage, "output_tokens", -1)
-                            #     )
-
-                            # Emit one CSV row per page in this batch.
-                            page_offset_1based = start_idx + 1
-                            # pprint.pprint("\n\npages_items")
-                            # pprint.pprint(pages_items)
-                            # print("printing outputs")
-                            for i, page in enumerate(pages_items):
-                                actual_page_num = page_offset_1based + i
-                                if actual_page_num > pages_total:
-                                    break
-
-                                score_val = int(page.get("informativeness"))
-                                if score_val is None:
-                                    append_error_row(aid, act_title, section, start_idx, end_idx)
-                                    print('RuntimeError("Structured output parsing failed (informativeness not a valid 0-10 integer).")')
-                                    continue
-
-                                row: Dict[str, Any] = {
-                                    "run_timestamp_iso": datetime.utcnow().isoformat(timespec="seconds") + "Z",
-                                    "activity_id": aid,
-                                    "activity_title": act_title,
-                                    "activity_description_truncated_3000": (act_desc or "")[:3000],
-                                    "section": section,
-                                    "doc_index_int": doc_index,
-                                    "doc_title": doc_title,
-                                    "cached_file": rel_path,
-                                    "pdf_pages_total": pages_total,
-                                    "page_start": actual_page_num,
-                                    "page_end": actual_page_num,
-                                    "model_name": MODEL_NAME,
-                                    "input_token_count": -1,
-                                    "output_token_count": -1,
-                                    "scratchpad": one_line(parsed.get("scratchpad", "")),
-                                    "score": score_val,
-                                }
-
-                                # # --- assign row fields from the page's structured output ---
-                                # # page is the current element from parsed["pages"]
-                                # cats = page.get("categories", [])
-                                # if not isinstance(cats, list):
-                                #     cats = []
-
-                                # # take up to 3, pad with empty strings for missing slots
-                                # c1, c2, c3 = (cats + ["", "", ""])[:3]
-
-                                if section == "Baseline":
-                                    c1 = page.get("category")
-                                    c2 = page.get("subcategory_A","")
-                                    c3 = page.get("subcategory_B","")
-                                    row["outcome_category_1"] = ""
-                                    row["outcome_category_2"] = ""
-                                    row["outcome_category_3"] = ""
-
-                                    row["baseline_category_1"] = c1
-                                    row["baseline_category_2"] = c2
-                                    row["baseline_category_3"] = c3
-
-
-                                    row["has_quantitative_targets"] = ""
-                                    row["has_quantitative_outcomes"] = ""
-                                    row["has_overall_ratings"] = ""
-
-
-                                    print(f"baseline_category_1: {c1}")
-                                    print(f"baseline_category_2: {c2}")
-                                    print(f"baseline_category_3: {c3}")
-
-
-                                else:
-                                    c1 = page.get("category")
-                                    c2 = page.get("subcategory_A","")
-                                    c3 = page.get("subcategory_B","")
-                                    hqt = page.get("has_quantitative_targets")
-                                    hqo = page.get("has_quantitative_outcomes")
-                                    hor = page.get("has_overall_ratings")
-
-                                    row["baseline_category_1"] = ""
-                                    row["baseline_category_2"] = ""
-                                    row["baseline_category_3"] = ""
-
-                                    row["outcome_category_1"] = c1
-                                    row["outcome_category_2"] = c2
-                                    row["outcome_category_3"] = c3
-
-                                    row["has_quantitative_targets"] = hqt
-                                    row["has_quantitative_outcomes"] = hqo
-                                    row["has_overall_ratings"] = hor
-
-                                    print(f"outcome_category_1: {c1}")
-                                    print(f"outcome_category_2: {c2}")
-                                    print(f"outcome_category_3: {c3}")
-                                    print(f"has_quantitative_targets: {hqt}")
-                                    print(f"has_quantitative_outcomes: {hqo}")
-                                    print(f"has_overall_ratings: {hor}")
-                                print(f"score {row['score']}")
-                                # print()
-                                # print("")
-                                # pprint.pprint(row)
-                                # print("")
-                                # input("hit enter to add csv row")
-                                # time.sleep(1)
-                                append_csv_row(row)
-
-                        # After finishing this doc (whether full or truncated), update counters
-                        pages_used += effective_pages
-                        docs_used += 1
-                    print("total_qs")
-                    print(total_qs)
-                    # if total_qs >= 100:
-                    #     print('quitting ("we reached 100")')
-                    #     return
-                # print()  # spacing after activity
-            finally:
-                shutil.rmtree(tmpdir, ignore_errors=True)
-        sem = asyncio.Semaphore(CONCURRENCY)
-
-        tasks = []
-
-        async def _guard(aid, idx):
-            async with sem:
-                await _process_activity(aid, idx)
-
-        todo_aids = list(todo_map.keys())
-        for idx, aid in enumerate(todo_aids, start=1):
-            tasks.append(asyncio.create_task(_guard(aid, idx)))
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for r in results:
-            if isinstance(r, Exception):
-                print("Task error:", r)
-
-        # for idx, aid in enumerate(picked, start=1):
-        #     all_aids.add(aid)
-        #     tasks.append(asyncio.create_task(_guard(aid, idx)))
-        # print("len(all_aids)")
-        # print(len(all_aids))
-        # if tasks:
-        #     results = await asyncio.gather(*tasks, return_exceptions=True)
-        #     for r in results:
-        #         if isinstance(r, Exception):
-        #             print("Task error:", r)
-
-
-    finally:
-        pass
-        # shutil.rmtree(tmpdir, ignore_errors=True)
-
-
-# if __name__ == "__main__":
-#     main()
-if __name__ == "__main__":
-    _program_start = datetime.now()  # <-- add this
-    asyncio.run(main())
-    print(f"\n(END PROGRAM): took {(datetime.now() - _program_start).total_seconds():.2f}s\n\n\n\n")  # <-- add this

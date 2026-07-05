@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from __future__ import annotations
 
@@ -8,9 +7,8 @@ import re
 from pathlib import Path
 from datetime import date
 from typing import Dict, List, Tuple, Optional
-import pprint
 import pycountry
-# simple in-module cache so we only parse the CSV once per process
+
 _CPIA_BY_ISO3: Optional[Dict[str, Dict[int, float]]] = None
 _CPIA_NAME_INDEX: Optional[Dict[str, str]] = None
 
@@ -29,7 +27,7 @@ ISO2_TO_ISO3_OVERRIDES: Dict[str, str] = {
     "CZ": "CZE",
     "UK": "GBR",
     "EL": "GRC",
-    "XK": "XKX",  # if CPIA actually uses this; depends on your data
+    "XK": "XKX",
 }
 
 
@@ -46,22 +44,15 @@ def _iso2_to_iso3_guess(
     if iso2 in ISO2_TO_ISO3_OVERRIDES:
         return ISO2_TO_ISO3_OVERRIDES[iso2]
 
-    # heuristic: most ISO3 codes start with the ISO2 letters
-    # candidates = [iso3 for iso3 in cpia_by_iso3.keys() if iso3.startswith(iso2)]
     country = pycountry.countries.get(alpha_2=iso2)
     if country is not None:
         alpha_3 = country.alpha_3
-    # if len(candidates) == 1:
         if alpha_3:
             return alpha_3
-
     else:
-        # heuristic: most ISO3 codes start with the ISO2 letters
         candidates = [iso3 for iso3 in cpia_by_iso3.keys() if iso3.startswith(iso2)]
         if len(candidates) == 1:
             return candidates[0]
-        else:
-            print(f"ERROR! missing iso3 for {iso2}")
 
     return None
 
@@ -85,7 +76,6 @@ def load_cpia_scores() -> Tuple[Dict[str, Dict[int, float]], Dict[str, str]]:
         rdr = csv.DictReader(f)
         headers = rdr.fieldnames or []
 
-        # columns look like: "2005 [YR2005]" etc.
         year_cols: List[Tuple[int, str]] = []
         for h in headers:
             m = re.match(r"(\d{4})", h)
@@ -188,12 +178,8 @@ def get_activity_cpia(
     ref_year = start_date.year
 
     rc_entries = meta_entry.get("recipient_countries") or []
-    if not rc_entries:
-        print("NO RECIPIENTS", meta_entry.get("activity_title"))
-    # rc_entries should be List[Tuple[code, name, pct]]
 
     country_scores: List[Tuple[float, Optional[float], int]] = []
-    # (score, pct, year_used)
 
     for entry in rc_entries:
         if not isinstance(entry, (list, tuple)) or len(entry) != 3:
@@ -201,13 +187,7 @@ def get_activity_cpia(
         code, name, pct = entry
         iso2 = (code or "").strip().upper() or None
 
-        # print("iso2")
-        # print(iso2)
         iso3 = _iso2_to_iso3_guess(iso2, cpia_by_iso3)
-        # print("iso3")
-        # print(iso3)
-        if iso3 is None and iso2 is not None:
-            print(f"WIERD COULDNT FIND ISO3... iso2: {iso2}")
         if not iso3 and name:
             iso3 = cpia_name_index.get(_norm_country_name(name))
 
@@ -223,7 +203,6 @@ def get_activity_cpia(
     if not country_scores:
         return None, None
 
-    # Use % weights if present and positive; otherwise equal weights.
     pos_weights = [pct for _, pct, _ in country_scores if pct is not None and pct > 0]
     if pos_weights:
         total = sum(pos_weights)
@@ -235,7 +214,6 @@ def get_activity_cpia(
         weights = [1.0 / len(country_scores)] * len(country_scores)
 
     weighted_score = sum(score * w for (score, _, _), w in zip(country_scores, weights))
-    # for cpia_year, use the latest year actually used among contributing countries
     cpia_year = max(year_used for _, _, year_used in country_scores)
 
     return weighted_score, cpia_year

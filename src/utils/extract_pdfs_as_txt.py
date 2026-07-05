@@ -44,7 +44,7 @@ def _per_file_timeout_handler(signum, frame):
     raise TimeoutError("per-file timeout (20s)")
 
 import argparse
-import concurrent.futures as futures
+
 import io
 import os
 import re
@@ -462,57 +462,3 @@ def gather_files(root: Path, recursive: bool) -> list[Path]:
         for name in filenames:
             files.append(Path(dirpath) / name)
     return files
-
-def main():
-    parser = argparse.ArgumentParser(description="Extract text from PDFs/DOCX in ./iati_all_pdfs to ./iati_all_pdfs_txt_format as .txt files.")
-    parser.add_argument("--workers", type=int, default=max(1, min(8, (os.cpu_count() or 4))),
-                        help="Number of parallel workers (default: up to 8 based on CPU)")
-    parser.add_argument("--ocr", action="store_true", help="Enable OCR fallback for image-only PDFs (needs tesseract + pdftoppm)")
-    parser.add_argument("--recursive", action="store_true", help="Recurse into subdirectories of input folder")
-    parser.add_argument("--only-newer", action="store_true", help="Skip files whose output exists and is newer than input")
-    parser.add_argument("--progress-every", type=int, default=200, help="Print progress every N files (default 200)")
-    args = parser.parse_args()
-
-    if not INPUT_DIR.exists():
-        print(f"ERROR: Input folder not found: {INPUT_DIR}", file=sys.stderr)
-        sys.exit(1)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    print("=== Extract IATI Texts ===")
-    print(f"Input:   {INPUT_DIR}")
-    print(f"Output:  {OUTPUT_DIR}")
-    print(f"Workers: {args.workers}")
-    print(f"Use OCR: {'yes' if args.ocr else 'no'}")
-    print(f"pdftotext: {'yes' if HAVE_PDFTOTEXT else 'no'} | pdfminer: lazy | pypdf: lazy")
-    print(f"tesseract: {'yes' if HAVE_TESSERACT else 'no'} | pdftoppm: {'yes' if HAVE_PDFTOPPM else 'no'}")
-    print(f"LibreOffice(headless): {'yes' if HAVE_SOFFICE else 'no'}")
-    print("Scanning files...")
-
-    files = gather_files(INPUT_DIR, recursive=args.recursive)
-    total = len(files)
-    print(f"Found {total} files.")
-
-    ok = 0
-    skipped = 0
-    err = 0
-
-    # Use a process pool for mixed CPU/IO tasks; keep it moderate by default
-    with futures.ProcessPoolExecutor(max_workers=args.workers) as pool:
-        # Submit jobs
-        jobs = {pool.submit(process_one, p, OUTPUT_DIR, args.ocr, args.only_newer): p for p in files}
-
-        for i, fut in enumerate(futures.as_completed(jobs), 1):
-            status, msg = fut.result()
-            if status == "OK":
-                ok += 1
-            elif status == "SKIP":
-                skipped += 1
-            else:
-                err += 1
-            if i % max(1, args.progress_every) == 0:
-                print(f"[{i}/{total}] OK={ok} SKIP={skipped} ERR={err}  Last: {msg}")
-
-    print(f"Done. Processed: {total}. OK={ok}, SKIP={skipped}, ERR={err}")
-
-if __name__ == "__main__":
-    main()

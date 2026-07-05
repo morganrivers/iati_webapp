@@ -72,12 +72,6 @@ def categorize_single_pdf(
         })
 
     # For categorization, we process in batches of 3 pages
-    # The batch script handles this internally via iter_page_batches
-    # But we need to consolidate by "batch groups"
-
-    # Actually, let's just pass all pages and let loop_over_rows handle batching
-    # NO - loop_over_rows doesn't batch, it processes whole bundles
-    # We need to manually batch the pages
 
     from extracting_and_grading_helper_functions import consolidate_rows_by_activity
 

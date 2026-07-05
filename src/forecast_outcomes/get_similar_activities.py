@@ -20,59 +20,8 @@ ACTIVITY_SCOPES = {
 }
 CSV_PATH = "../../data/info_for_activity_forecasting.csv"
 EMBEDDINGS_PATH = Path("../../data/activity_text_embeddings_gemini.jsonl")
-# EMBEDDINGS_PATH = Path("../../data/outputs_targets_embeddings.jsonl")
-BM25_SUMMARIES_PATH = Path("../../data/outputs_summaries.jsonl")
+_EMBEDDINGS_CACHE = None
 
-_EMBEDDINGS_CACHE = None  # activity_id -> np.ndarray
-
-_EMBEDDINGS_CACHE = None  # activity_id -> np.ndarray
-
-_BM25_CORPUS_CACHE: dict | None = None  # activity_id -> text
-
-
-def _load_bm25_corpus(summaries_path: Path, csv_path: str) -> dict:
-    """Load activity_id -> (title + summary) text from outputs_summaries.jsonl + CSV titles."""
-    global _BM25_CORPUS_CACHE
-    if _BM25_CORPUS_CACHE is not None:
-        return _BM25_CORPUS_CACHE
-
-    import csv as _csv
-
-    titles: dict[str, str] = {}
-    try:
-        with open(csv_path, newline="", encoding="utf-8") as f:
-            reader = _csv.DictReader(f)
-            for row in reader:
-                aid = str(row.get("activity_id", "")).strip()
-                title = str(row.get("activity_title", "") or "").strip()
-                if aid:
-                    titles[aid] = title
-    except Exception:
-        pass
-
-    corpus: dict[str, str] = {}
-    if summaries_path.exists():
-        with summaries_path.open("r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                aid = obj.get("activity_id")
-                txt = obj.get("response_text", "")
-                if aid and txt:
-                    title = titles.get(str(aid), "")
-                    corpus[str(aid)] = (title + "\n\n" + txt).strip() if title else txt.strip()
-
-    for aid, title in titles.items():
-        if aid not in corpus and title:
-            corpus[aid] = title
-
-    _BM25_CORPUS_CACHE = corpus
-    return corpus
 
 
 def find_similar_activities_bm25(
@@ -83,16 +32,6 @@ def find_similar_activities_bm25(
     top_n: int = 20,
     allowed_ids=None,
 ) -> tuple:
-    """
-    BM25 text similarity over activity summaries.
-    Same return signature as find_similar_activities_semantic:
-        (result_df, query_row_series)
-
-    Args:
-        df: prepared activity dataframe (see add_derived_columns).
-        corpus: activity_id -> summary text for candidate ranking.
-        query_text: text of the query activity to score candidates against.
-    """
     import re
     try:
         from rank_bm25 import BM25Okapi
@@ -238,14 +177,11 @@ def parse_countries(country_location: str) -> Set[str]:
 
     text = country_location
 
-    # Focus on the "Recipient countries:" part if present
     if "Recipient countries:" in text:
         text = text.split("Recipient countries:", 1)[1]
 
-    # Drop everything after a '|' (often used for coordinates, etc.)
     text = text.split("|", 1)[0]
 
-    # Replace obvious separators and split
     tokens = (
         text.replace(",", " ")
         .replace(";", " ")
@@ -277,10 +213,6 @@ def parse_orgs(org_str: str, role_filter: str | None = None) -> Set[str]:
 
     If role_filter is given (e.g. 'Implementing'), only keep entries containing that.
     """
-    # print("org_str")
-    # print(org_str)
-    # print("role_filter")
-    # print(role_filter)
     if not isinstance(org_str, str) or not org_str.strip():
         return set()
 
@@ -291,7 +223,6 @@ def parse_orgs(org_str: str, role_filter: str | None = None) -> Set[str]:
             continue
         if role_filter and f"({role_filter})" not in part:
             continue
-        # Strip role in parentheses if present
         if "(" in part:
             name = part.split("(", 1)[0].strip()
         else:
@@ -320,9 +251,6 @@ def recency_similarity(q_start, cand_end) -> float:
     if pd.isna(q_start) or pd.isna(cand_end):
         return 0.0
     gap_days = (q_start - cand_end).days
-    # If it's after the query start, treat as 0 (shouldn't happen with your filter)
-    # if gap_days < 0:
-    #     return 0.0
     gap_years = abs(gap_days) / 365.25
     return 1.0 / (1.0 + gap_years)
 
@@ -356,7 +284,6 @@ def add_derived_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
 
-    # Normalise and map activity_scope to numeric code
     df["activity_scope_norm"] = (
         df["activity_scope"]
         .astype(str)
@@ -365,7 +292,6 @@ def add_derived_columns(df: pd.DataFrame) -> pd.DataFrame:
     )
     df["scope_code"] = df["activity_scope_norm"].map(ACTIVITY_SCOPES)
 
-    # Parse dates
     date_cols = [
         "original_planned_start_date",
         "original_planned_close_date",
@@ -379,7 +305,6 @@ def add_derived_columns(df: pd.DataFrame) -> pd.DataFrame:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce")
 
-    # Precompute generic start/end date
     df["start_date"] = df.apply(pick_start_date, axis=1)
     df["end_date"] = df.apply(pick_end_date, axis=1)
 
@@ -409,13 +334,11 @@ def print_top_feature_matches(
 
         aid = row.get("activity_id")
 
-        # scope
         s_scope = row.get("scope_code")
         if pd.notna(q_scope) and pd.notna(s_scope):
             scope_sim = 1.0 / (1.0 + abs(int(q_scope) - int(s_scope)))
             top_scope.append((scope_sim, aid, row.get("activity_scope")))
 
-        # countries (pure Jaccard)
         c_countries = parse_countries(row.get("country_location", ""))
         if q_countries and c_countries:
             inter = len(q_countries & c_countries)
@@ -423,19 +346,16 @@ def print_top_feature_matches(
             if union:
                 top_countries.append((inter / union, aid, row.get("country_location")))
 
-        # DAC
         dac_sim = cosine_similarity_sets(q_dac, parse_dac_codes(row.get("dac5", "")))
         if dac_sim > 0:
             top_dac.append((dac_sim, aid, row.get("dac5")))
 
-        # reporting orgs
         rep_sim = cosine_similarity_sets(
             q_report_orgs, parse_orgs(row.get("reporting_orgs", ""))
         )
         if rep_sim > 0:
             top_rep.append((rep_sim, aid, row.get("reporting_orgs")))
 
-        # implementing orgs
         impl_sim = cosine_similarity_sets(
             q_impl_orgs,
             parse_orgs(row.get("participating_orgs", ""), role_filter="Implementing"),
@@ -444,8 +364,6 @@ def print_top_feature_matches(
             top_impl.append((impl_sim, aid, row.get("participating_orgs")))
 
 
-
-        # GDP
         if not pd.isna(q_gdp) and not pd.isna(row.get("gdp_percap")):
             gsim = gdp_similarity(q_gdp, row.get("gdp_percap"))
             if gsim > 0:
@@ -482,7 +400,6 @@ def get_dac_sim(query_dac, cand_dac, hierarchy_param: float = 0.5) -> float:
     IGNORE = {"99810"}
     LOW = {"60062", "60040", "43010", "91010", "99820"}
 
-    # clamp
     try:
         p = float(hierarchy_param)
     except Exception:
@@ -495,9 +412,6 @@ def get_dac_sim(query_dac, cand_dac, hierarchy_param: float = 0.5) -> float:
             return None
         return s[:5]
 
-    # weights per digit, then gated by prefix match
-    # p=0 -> [1,0,0,0,0]
-    # p=1 -> [0, 0.25,0.25,0.25,0.25] (all specificity, but still require prefix)
     w1 = 1.0 - p
     rest = p
     w_rest = rest / 4.0 if rest > 0 else 0.0
@@ -515,7 +429,6 @@ def get_dac_sim(query_dac, cand_dac, hierarchy_param: float = 0.5) -> float:
             return 0.0
 
         score = 0.0
-        # hierarchical: stop as soon as a digit differs
         for i in range(5):
             if sa[i] != sb[i]:
                 break
@@ -547,8 +460,7 @@ def get_dac_sim(query_dac, cand_dac, hierarchy_param: float = 0.5) -> float:
 def passes_quartile_constraint(q_start, q_end, c_start, c_end) -> bool:
     """Return False if candidate 3/4 mark is after query 1/4 mark."""
     if pd.isna(q_start) or pd.isna(q_end) or pd.isna(c_start) or pd.isna(c_end):
-        # print("missing one of the dates!!")
-        return False  # if missing dates, don't enforce
+        return False
     q_25 = q_start + (q_end - q_start) * 0.25
     c_75 = c_start + (c_end - c_start) * 0.75
     return c_75 <= q_25
@@ -560,10 +472,6 @@ def find_similar_activities(activity_id: str,
                             feature_weightings_hyperparams=None) -> pd.DataFrame:
     df = prepare_dataframe(csv_path)
 
-    # print("len(allowed_ids)")
-    # print(len(allowed_ids))
-
-
     if "activity_id" not in df.columns:
         raise ValueError("CSV must contain an 'activity_id' column")
 
@@ -571,8 +479,6 @@ def find_similar_activities(activity_id: str,
         raise ValueError(f"Activity ID '{activity_id}' not found in CSV")
 
     query_row = df[df["activity_id"] == activity_id].iloc[0]
-
-    # print(query_row)
 
     q_scope = query_row.get("scope_code")
     q_countries = parse_countries(query_row.get("country_location", ""))
@@ -583,46 +489,19 @@ def find_similar_activities(activity_id: str,
     q_start = query_row.get("start_date")
     q_end = query_row.get("end_date")
 
-    # pprint.pprint("activity_id")
-    # pprint.pprint(activity_id)
-    # pprint.pprint("q_scope")
-    # pprint.pprint(q_scope)
-    # pprint.pprint("q_countries")
-    # pprint.pprint(q_countries)
-    # pprint.pprint("q_dac")
-    # pprint.pprint(q_dac)
-    # pprint.pprint("q_report_orgs")
-    # pprint.pprint(q_report_orgs)
-    # pprint.pprint("q_impl_orgs")
-    # pprint.pprint(q_impl_orgs)
-    # pprint.pprint("q_gdp")
-    # pprint.pprint(q_gdp)
-    # pprint.pprint("q_start")
-    # pprint.pprint(q_start)
-
-
-    # Candidate pool: exclude the query itself
     search_item = df[df["activity_id"] == activity_id].copy()
     candidates = df
     if allowed_ids is not None:
-        allowed_ids = set(allowed_ids)  # make membership checks fast
+        allowed_ids = set(allowed_ids)
     df_ids = set(df["activity_id"])
-    # print("intersection(candidates, allowed_ids) BEFORE DATE CHECKS:", len(df_ids & allowed_ids))
 
-    # print("len(cand_ids):", len(candidates))
-    # Enforce temporal constraint: candidate end_date <= query start_date
     if pd.notna(q_start):
         candidates_notna = candidates[(pd.notna(candidates["end_date"]))]
         cand_ids = set(candidates_notna["activity_id"])
-        # print("intersection(candidates, allowed_ids) NOT NA:", len(cand_ids & allowed_ids))
         candidates = candidates_notna
-        # candidates = candidates_notna[(candidates_notna["end_date"] <= q_start)]
     else:
         print("ERROR: the query start q_start is invalid!")
-    # print("len(candidates)")
-    # print(len(candidates))
     cand_ids = set(candidates["activity_id"])
-    # print("intersection(candidates, allowed_ids):", len(cand_ids & allowed_ids))
     if VERBOSE:
         print_top_feature_matches(
             candidates,
@@ -639,8 +518,6 @@ def find_similar_activities(activity_id: str,
     scores = []
     total_number = 0
     total_number_checking_score = 0
-    # print("len(allowed_ids)")
-    # print(len(allowed_ids))
     before_the_date_filter = 0
     for idx, row in candidates.iterrows():
         if allowed_ids is not None:
@@ -648,33 +525,22 @@ def find_similar_activities(activity_id: str,
                 continue
 
         before_the_date_filter += 1
-        # enforce 1/2 (candidate) <= 1/2 (query)
         if not passes_quartile_constraint(
             q_start,
             q_end,
             row.get("start_date"),
             row.get("end_date"),
         ):
-            # print("FILTER WORKS!")
             continue
         total_number += 1
-        # Scope similarity
         s_scope = row.get("scope_code")
         if pd.isna(q_scope) or pd.isna(s_scope):
             scope_sim = 0.0
         else:
             diff = abs(int(q_scope) - int(s_scope))
-            # Hard filter if scope is wildly different
-            # if diff > 3:
-            #     continue
-            scope_sim = 1.0 / (1.0 + diff)  # 1.0 if same, 0.5 if diff=1, etc.
+            scope_sim = 1.0 / (1.0 + diff)
 
-        # Locational similarity: Jaccard over country codes, fallback to GDP
         c_countries = parse_countries(row.get("country_location", ""))
-        # print("c_countries")
-        # print(c_countries)
-        # print("q_countries")
-        # print(q_countries)
         if q_countries and c_countries:
             inter = len(q_countries & c_countries)
             union = len(q_countries | c_countries)
@@ -686,66 +552,20 @@ def find_similar_activities(activity_id: str,
             geo_sim = jacc
         else:
             geo_sim = gdp_similarity(q_gdp, row.get("gdp_percap"))
-        # print("geo_sim")
-        # print(geo_sim)
-        # DAC 5-digit codes similarity (cosine over sets)
         dac_sim = get_dac_sim(q_dac,parse_dac_codes(row.get("dac5", "")),0.75)
-        # dac_sim = cosine_similarity_sets(q_dac, parse_dac_codes(row.get("dac5", "")))
 
-
-
-        # Reporting org similarity
         rep_sim = cosine_similarity_sets(
             q_report_orgs,
             parse_orgs(row.get("reporting_orgs", ""))
         )
-        # print('q_report_orgs,')
-        # print(q_report_orgs,)
-        # print('parse_orgs(row.get("reporting_orgs", ""))')
-        # print(parse_orgs(row.get("reporting_orgs", "")))
 
-        # print("rep_sim")
-        # print(rep_sim)
-        # Implementing org similarity (from participating_orgs entries with "(Implementing)")
         impl_sim = cosine_similarity_sets(
             q_impl_orgs,
             parse_orgs(row.get("participating_orgs", ""), role_filter="Implementing")
         )
-        # print('q_impl_orgs,')
-        # print(q_impl_orgs,)
-        # print('parse_orgs(row.get("participating_orgs", ""), role_filter="Implementing")')
-        # print(parse_orgs(row.get("participating_orgs", ""), role_filter="Implementing"))
 
-        # print("impl_sim")
-        # print(impl_sim)
         rec_sim = recency_similarity(q_start, row.get("end_date"))
-        # print("rec_sim")
-        # print(rec_sim)
         if feature_weightings_hyperparams is not None:
-            # feature_weightings_hyperparams={
-            #                         scope: 0.177, #top-20% mean=0.177, overall mean=0.170  (slightly higher)
-            #                         geo: 0.159, #  top-20% mean=0.159, overall mean=0.163  (slightly lower)
-            #                         dac: 0.121, #  top-20% mean=0.121, overall mean=0.168  (noticeably lower)
-            #                         rep: 0.199, #  top-20% mean=0.199, overall mean=0.176  (higher)
-            #                         impl: 0.175, # top-20% mean=0.175, overall mean=0.156  (higher)
-            #                         rec: 0.169, #  top-20% mean=0.169, overall mean=0.167  (basically same, slightly higher)
-            #                     }
-            # === BEST WEIGHT CONFIG (10-NN, averaged over seeds) ===
-            # Best feature_weightings_hyperparams:
-            #   scope: 0.081
-            #   geo: 0.187
-            #   dac: 0.144
-            #   rep: 0.200
-            #   impl: 0.261
-            #   rec: 0.127
-
-            # Best metrics (averaged over seeds):
-            #   RMSE:  0.905
-            #   R^2:   -0.064
-            #   Brier: 0.191
-            #   Side accuracy (@2.5): 0.809
-            #   Combined score: -0.2451
-
             score = (
                 feature_weightings_hyperparams["scope"] * scope_sim +
                 feature_weightings_hyperparams["geo"] * geo_sim +
@@ -755,47 +575,18 @@ def find_similar_activities(activity_id: str,
                 feature_weightings_hyperparams["rec"] * rec_sim
             )
         else:
-            # Combine into a single score (tune weights as needed)
-            # score = (
-            #     0.177 * scope_sim + #0.30 * scope_sim +
-            #     0.159 * geo_sim + #0.25 * geo_sim +
-            #     0.121 * dac_sim + #0.20 * dac_sim +
-            #     0.199 * rep_sim + #0.15 * rep_sim +
-            #     0.175 * impl_sim + #0.30 * impl_sim +
-            #     0.169 * rec_sim  #0.05 * rec_sim
-            # )
-
             score = (
-                0.081* scope_sim + 
-                0.187* geo_sim + 
-                0.144* dac_sim + 
-                0.200* rep_sim + 
-                0.261* impl_sim + 
+                0.081* scope_sim +
+                0.187* geo_sim +
+                0.144* dac_sim +
+                0.200* rep_sim +
+                0.261* impl_sim +
                 0.127* rec_sim
             )
 
-            # score = (
-                # 0.30 * scope_sim +
-                # 0.25 * geo_sim +
-                # 0.20 * dac_sim +
-                # 0.15 * rep_sim +
-                # 0.30 * impl_sim +
-                # 0.05 * rec_sim
-            # )
         total_number_checking_score += 1
-        # You can drop zero-score activities if you want a tighter list
         if score > 0:
             scores.append((idx, score))
-        # print("")
-        # print("")
-    # print("N non zero: len(scores)")
-    # print(len(scores))
-    # print("total number before date filter")
-    # print(before_the_date_filter)
-    # print("total number after date filter")
-    # print(total_number)
-    # print("total number even checking score")
-    # print(total_number_checking_score)
     if not scores:
         return pd.DataFrame(columns=list(df.columns) + ["similarity"])
 
@@ -804,7 +595,6 @@ def find_similar_activities(activity_id: str,
     result["similarity"] = sim_vals
     result = result.sort_values("similarity", ascending=False)
 
-    # Return top_n with some handy columns first
     cols_front = [
         "activity_id",
         "similarity",
@@ -820,36 +610,6 @@ def find_similar_activities(activity_id: str,
     ]
     cols_front = [c for c in cols_front if c in result.columns]
     other_cols = [c for c in result.columns if c not in cols_front]
-
-
-    # print("\n\n\nTop 5 results vs query:")
-
-    if not scores:
-        return pd.DataFrame(columns=list(df.columns) + ["similarity"])
-
-    idxs, sim_vals = zip(*scores)
-    result = candidates.loc[list(idxs)].copy()
-    result["similarity"] = sim_vals
-    result = result.sort_values("similarity", ascending=False)
-
-    # Return top_n with some handy columns first
-    cols_front = [
-        "activity_id",
-        "similarity",
-        "activity_title",
-        "activity_scope",
-        "country_location",
-        "gdp_percap",
-        "dac5",
-        "reporting_orgs",
-        "participating_orgs",
-        "start_date",
-        "end_date",
-    ]
-    cols_front = [c for c in cols_front if c in result.columns]
-    other_cols = [c for c in result.columns if c not in cols_front]
-
-    # print("\n\n\nTop 5 results vs query:")
 
     def describe_scope_code(code):
         for name, val in ACTIVITY_SCOPES.items():
@@ -860,7 +620,6 @@ def find_similar_activities(activity_id: str,
     top5 = result.head(5)
 
     if VERBOSE:
-        # Query summary
         print("\nQuery activity:", activity_id)
         print("  title     :", str(query_row.get("activity_title", ""))[:120])
         print("  scope_code:", q_scope, "->", describe_scope_code(q_scope))
@@ -880,7 +639,6 @@ def find_similar_activities(activity_id: str,
         c_impl = parse_orgs(row.get("participating_orgs", ""), role_filter="Implementing")
         c_gdp = row.get("gdp_percap")
 
-        # recompute feature-level similarities like in the scoring
         if pd.isna(q_scope) or pd.isna(c_scope):
             scope_sim = 0.0
         else:
@@ -918,10 +676,6 @@ def find_similar_activities(activity_id: str,
                   f"(sim={impl_sim:.3f})")
             print("  gdp_pc    :", c_gdp, f"(sim={gdp_sim:.3f})")
             print("  start/end :", row.get("start_date"), "->", row.get("end_date"))
-    # print(result)
-    # print(result[cols_front + other_cols].head(top_n))
-    # print("search_item")
-    # print(search_item)
     return result[cols_front + other_cols].head(top_n), search_item
 
 
@@ -934,29 +688,11 @@ def find_similar_activities_semantic(
     top_n: int = 20,
     allowed_ids=None,
 ):
-    """
-    Semantic similarity search based on Gemini text embeddings (title+description).
-
-    Args:
-        activity_id: query activity_id (must exist in embeddings).
-        df: prepared activity dataframe (see add_derived_columns) for metadata join.
-        embeddings: activity_id -> L2-normalised embedding vector.
-        top_n: number of most similar activities to return.
-        allowed_ids: optional set/list of activity_ids allowed as neighbors
-                     (e.g., restrict to training set). If None, use all.
-
-    Returns:
-        (result_df, query_row)
-        - result_df: DataFrame with metadata + 'similarity' column, sorted desc.
-        - query_row: single-row DataFrame (the query activity row).
-    """
-    # query item from metadata
     query_row = df[df["activity_id"] == activity_id].iloc[0]
 
     if "activity_id" not in df.columns:
         raise ValueError("dataframe must contain an 'activity_id' column")
 
-    # Map activity_id -> row index for quick lookups
     aid_to_idx = {}
     for idx, row in df.iterrows():
         aid = row.get("activity_id")
@@ -972,15 +708,6 @@ def find_similar_activities_semantic(
         raise ValueError(f"Activity ID '{activity_id}' not found in provided embeddings")
 
     q_vec = embs[activity_id]
-
-    # # Build candidate pool of ids that have embeddings AND metadata
-    # if allowed_ids is not None:
-    #     allowed_ids = set(str(a) for a in allowed_ids)
-    #     candidate_ids = [aid for aid in embs.keys()
-    #                      if aid != activity_id and aid in allowed_ids and aid in aid_to_idx]
-    # else:
-    #     candidate_ids = [aid for aid in embs.keys()
-    #                      if aid != activity_id and aid in aid_to_idx]
 
     q_start = query_row.get("start_date")
     q_end = query_row.get("end_date")
@@ -1008,45 +735,35 @@ def find_similar_activities_semantic(
             if aid not in allowed_ids:
                 continue
 
-        # enforce 1/2 (candidate) <= 1/2 (query)
         if not passes_quartile_constraint(
             q_start,
             q_end,
             row.get("start_date"),
             row.get("end_date"),
         ):
-            # print("FILTER WORKS!")
             continue
 
         candidate_ids.append(aid)
 
 
     if not candidate_ids:
-        # return an empty dataframe if no candidate ids
         return (
             pd.DataFrame(columns=list(df.columns) + ["similarity"]),
             df[df["activity_id"] == activity_id].copy(),
         )
 
-    # Precompute candidate matrix for speed
-    cand_vecs = np.stack([embs[aid] for aid in candidate_ids], axis=0)  # (N, d)
-
-    # cosine similarity = dot product because we normalised
-    sims = cand_vecs @ q_vec  # (N,)
-
-    # sort by similarity desc
+    cand_vecs = np.stack([embs[aid] for aid in candidate_ids], axis=0)
+    sims = cand_vecs @ q_vec
     order = np.argsort(-sims)
     order = order[:top_n]
 
     top_ids = [candidate_ids[i] for i in order]
     top_sims = sims[order]
 
-    # build result DataFrame
     idxs = [aid_to_idx[aid] for aid in top_ids]
     result = df.loc[idxs].copy()
     result["similarity"] = top_sims
 
-    # reorder columns: handy ones first
     cols_front = [
         "activity_id",
         "similarity",
@@ -1070,7 +787,6 @@ def find_similar_activities_semantic(
 def main(activity_id: str):
     print("\nFIRST, FEATURE BASED:\n\n")
     df_sim, search_item = find_similar_activities(activity_id)
-    # Print as CSV to stdout
     pprint.pprint(df_sim.to_csv(index=False))
     pprint.pprint("df_sim")
     pprint.pprint(df_sim)
@@ -1085,19 +801,9 @@ def main(activity_id: str):
         df=prepare_dataframe(CSV_PATH),
         embeddings=load_activity_embeddings(),
     )
-    # Print as CSV to stdout
     pprint.pprint(df_sim.to_csv(index=False))
     pprint.pprint("df_sim")
     pprint.pprint(df_sim)
     pprint.pprint("search_item")
     pprint.pprint(search_item)
 
-
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        main(sys.argv[1])
-    if len(sys.argv) == 1:
-        activity_id = "44000-P087912"
-        main(activity_id)
-    else:
-        raise SystemExit("Usage: python similar_activities.py <activity_id>, or with no argument")

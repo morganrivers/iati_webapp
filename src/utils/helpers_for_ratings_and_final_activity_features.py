@@ -24,11 +24,6 @@ ACTIVITY_SCOPES = {
 
 VERBOSE = False
 
-# --------------------------------------------------------------------
-# RATINGS
-# --------------------------------------------------------------------
-
-# Convert 6-category scale to numeric
 RATING_MAP = {
     'Highly Unsatisfactory': 0,
     'Unsatisfactory': 1,
@@ -38,18 +33,6 @@ RATING_MAP = {
     'Highly Satisfactory': 5
 }
 RATING_MAP_LOWER = {k.lower(): v for k, v in RATING_MAP.items()}
-
-# INVALID_TOKENS = {"na", "n/a", "nan", "none", "null", "", "-", "—"}
-
-# def _is_number(value: Any) -> bool:
-#     if value is None or isinstance(value, bool):
-#         return False
-#     s = str(value).strip()
-#     if s.lower() in INVALID_TOKENS:
-#         return False
-#     if isinstance(value, (int, float)):
-#         return not (s.lower() in {"nan", "inf", "-inf"})
-#     return bool(re.fullmatch(r"[+-]?(?:\d+(?:\.\d+)?|\.\d+)", s))
 
 RATING_MAP_INVERSE = {v: k for k, v in RATING_MAP.items()}
 
@@ -62,27 +45,6 @@ def get_success_measure_from_rating_value(rating_value, min_rating=None, max_rat
         'satisfactory': 4,
         'highly satisfactory': 5,
     }
-    # RATING_MAP_GRADES = {
-    #     'a++': 5,
-    #     'a+': 5,
-    #     'a': 5/13*12,
-    #     'a-': 5/13*11,
-    #     'b+': 5/13*10,
-    #     'b': 5/13*9,
-    #     'b-': 5/13*8,
-    #     'c+': 5/13*7,
-    #     'c': 5/13*6,
-    #     'c-': 5/13*5,
-    #     'd+': 5/13*4,
-    #     'd': 5/13*3,
-    #     'd-': 5/13*2,
-    #     'e+': 5/13*1,
-    #     'e': 0,
-    #     'e-': 0,
-    #     'f+': 0,
-    #     'f': 0,
-    #     'f-': 0,
-    # }
 
     SIMPLE_THREE_GRADES = {
         "high": 4,
@@ -114,10 +76,6 @@ def get_success_measure_from_rating_value(rating_value, min_rating=None, max_rat
     numeric_rating = RATING_MAP_LOCAL.get(v)
     if numeric_rating is not None:
         return numeric_rating
-
-    # rating_value_grade = RATING_MAP_GRADES.get(v)
-    # if rating_value_grade is not None:
-    #     return rating_value_grade
 
     simple_three = SIMPLE_THREE_GRADES.get(v)
     if simple_three is not None:
@@ -156,17 +114,7 @@ def get_success_measure_from_rating_value(rating_value, min_rating=None, max_rat
     if "low performance" in v:
         return 1
 
-
-    # if str(activity_id).startswith("DE-1"):
-        # print(f"error: de-1 was not processed! Got {rating_value}, min  {min_rating}, max {max_rating}")
-
-
     return None
-
-
-# --------------------------------------------------------------------
-# EXTRA MAPPINGS 
-# --------------------------------------------------------------------
 
 
 _CANON_LABEL_TO_0_5 = {
@@ -186,15 +134,10 @@ def _norm_text(x) -> str:
     s = _strip_accents(s).lower().strip()
     s = s.replace("–", "-").replace("—", "-")
     s = re.sub(r"\s+", " ", s)
-    # drop parenthetical abbreviations like "(ms)" "(satisfactory)"
     s = re.sub(r"\([^)]*\)", "", s).strip()
-    # normalize common punctuation
     s = s.strip(" .,:;*_\"'`")
     return s
 _ALIAS_TO_CANON = {
-    # -------------------------
-    # abbreviations / shorthands
-    # -------------------------
     "hs": "highly satisfactory",
     "s": "satisfactory",
     "ms": "moderately satisfactory",
@@ -202,7 +145,6 @@ _ALIAS_TO_CANON = {
     "u": "unsatisfactory",
     "hu": "highly unsatisfactory",
 
-    # common alt abbreviations
     "highly sat": "highly satisfactory",
     "highly satisf.": "highly satisfactory",
     "mod sat": "moderately satisfactory",
@@ -212,9 +154,6 @@ _ALIAS_TO_CANON = {
     "unsat": "unsatisfactory",
     "unsatisf.": "unsatisfactory",
 
-    # -------------------------
-    # French (after accent stripping)
-    # -------------------------
     "tres satisfaisant": "highly satisfactory",
     "tres satisfaisante": "highly satisfactory",
     "tres insatisfaisant": "highly unsatisfactory",
@@ -253,9 +192,6 @@ _ALIAS_TO_CANON = {
     "non atteint": "unsatisfactory",
     "non atteinte": "unsatisfactory",
 
-    # -------------------------
-    # Spanish (after accent stripping)
-    # -------------------------
     "altamente satisfactoria": "highly satisfactory",
     "altamente satisfactorio": "highly satisfactory",
     "muy satisfactorio": "highly satisfactory",
@@ -299,9 +235,6 @@ _ALIAS_TO_CANON = {
     "no alcanzado": "unsatisfactory",
     "no alcanzada": "unsatisfactory",
 
-    # -------------------------
-    # Portuguese (after accent stripping)
-    # -------------------------
     "muito satisfatorio": "highly satisfactory",
     "muito satisfatoria": "highly satisfactory",
     "altamente satisfatorio": "highly satisfactory",
@@ -339,9 +272,6 @@ _ALIAS_TO_CANON = {
     "nao alcancado": "unsatisfactory",
     "nao alcancada": "unsatisfactory",
 
-    # -------------------------
-    # German (after accent stripping)
-    # -------------------------
     "sehr gut": "highly satisfactory",
     "ausgezeichnet": "highly satisfactory",
     "exzellent": "highly satisfactory",
@@ -371,9 +301,6 @@ _ALIAS_TO_CANON = {
     "erfolgreich": "satisfactory",
     "nicht erfolgreich": "unsatisfactory",
 
-    # -------------------------
-    # Expectations language (your rule)
-    # -------------------------
     "significantly exceeded expectations": "highly satisfactory",
     "substantially exceeded expectations": "highly satisfactory",
     "far exceeded expectations": "highly satisfactory",
@@ -394,9 +321,6 @@ _ALIAS_TO_CANON = {
     "achieved objective": "satisfactory",
     "did not achieve objective": "unsatisfactory",
 
-    # -------------------------
-    # Status lights / tracking
-    # -------------------------
     "green": "satisfactory",
     "amber": "moderately satisfactory",
     "yellow": "moderately satisfactory",
@@ -412,19 +336,13 @@ _ALIAS_TO_CANON = {
     "delayed": "moderately unsatisfactory",
     "behind schedule": "moderately unsatisfactory",
 
-    # -------------------------
-    # Binary-ish / polarity words
-    # -------------------------
     "achieved": "satisfactory",
     "not achieved": "unsatisfactory",
     "positive": "satisfactory",
     "negative": "unsatisfactory",
-    "overall successful": "satisfactory", # usually from XM-DAC binary prompt
-    "overall unsuccessful": "moderately unsatisfactory", # usually from XM-DAC binary prompt
+    "overall successful": "satisfactory",
+    "overall unsuccessful": "moderately unsatisfactory",
 
-    # -------------------------
-    # Free-text performance (your rule: no neutral middle)
-    # -------------------------
     "mixed performance": "moderately satisfactory",
     "some improvements": "moderately satisfactory",
     "moderately successful": "moderately satisfactory",
@@ -484,8 +402,6 @@ _ALIAS_TO_CANON = {
 
 }
 
-# keep a pointer to the original (base) function so we can override safely
-
 _DFID_GRADE_TO_0_5 = {
     "a++": 5.0,  # substantially exceeded expectations
     "a+":  4.5,  # exceeded expectations
@@ -520,7 +436,6 @@ def _is_dfid_grade_family(v: str, mn: str, mx: str, activity_id=None) -> bool:
     return aid.startswith("GB-") and g in _DFID_GRADE_TO_0_5  # catches GB-GOV-*, etc.
 
 
-# add a few missing aliases (exact-match)
 _ALIAS_TO_CANON.update({
     "inadequate": "unsatisfactory",
     "acceptable": "moderately satisfactory",
@@ -539,7 +454,6 @@ _ALIAS_TO_CANON.update({
 })
 
 def get_from_number(rating_value, max_rating, min_rating, activity_id):
-    # handle "XX/YY" (arbitrary denominator) -> 0..5
     s = "" if rating_value is None else str(rating_value).strip()
     m = re.match(r"^\s*([0-9]+(?:[.,][0-9]+)?)\s*/\s*([0-9]+(?:[.,][0-9]+)?)\s*$", s)
     if m:
@@ -591,12 +505,10 @@ def get_success_measure_from_rating_value_wrapped(rating_value, min_rating=None,
             if 0 <= x <= 16:
                 return 5 * (x / 16)
 
-        # replace things like "level 4: satisfactory"
         m = re.match(r"level\s+.\s*:\s*(.+?)\s*$", v, flags=re.IGNORECASE)
         if m:
             v = m.group(1).strip()
 
-        # replace things like "nivel 4: satisfactorio"
         m = re.match(r"nivel\s+.\s*:\s*(.+?)\s*$", v, flags=re.IGNORECASE)
         if m:
             v = m.group(1).strip()
@@ -607,13 +519,6 @@ def get_success_measure_from_rating_value_wrapped(rating_value, min_rating=None,
         hi = _coerce_num(max_rating)
         nums = _extract_numbers(v)
 
-        # if lo is not None and hi is not None and nums:
-        #     in_range = [x for x in nums if min(lo, hi) <= x <= max(lo, hi)]
-        #     use = in_range if in_range else nums
-        #     val = float(np.mean(use))
-        #     return get_success_measure_from_rating_value(str(val), str(lo), str(hi), activity_id=activity_id)
-
-
     pct = _parse_percent(v)
     if pct is not None:
         judged_percent_multiplied_by_5 = 5.0 * max(0.0, min(100.0, pct)) / 100.0
@@ -622,7 +527,6 @@ def get_success_measure_from_rating_value_wrapped(rating_value, min_rating=None,
 
         return judged_percent_multiplied_by_5
 
-    # 2) Normalize DFID-ish letter variants like "a-plus" -> "a+"
     v = v.replace("a-plus", "a+").replace("a plus", "a+").replace("a–", "a-").replace("a -", "a-")
     v = v.replace("b-plus", "b+").replace("b plus", "b+").replace("b–", "b-").replace("b -", "b-")
     v = v.replace("c-plus", "c+").replace("c plus", "c+").replace("c–", "c-").replace("c -", "c-")
@@ -633,22 +537,12 @@ def get_success_measure_from_rating_value_wrapped(rating_value, min_rating=None,
     if v.startswith("a+") and "exceed" in v:
         v = "a+"
 
-    # 0) DFID/FCDO Annual Review grade family FIRST (so it overrides base letter-grade mapping)
     if _is_dfid_grade_family(v, mn, mx, activity_id=activity_id):
         g = v.split()[0]  # handles e.g. "a - meets expectations" -> "a"
         if g in _DFID_GRADE_TO_0_5:
             rating = _DFID_GRADE_TO_0_5[g]
-            # print(f"Rating: {rating} from {rating_value}| Min: {min_rating} | Max: {max_rating} | GB-1")
             return rating
 
-    ### only thing i change
-    # v_no_parens = re.sub(r"\s*\(.*?\)\s*", " ", v).strip()
-    # m = re.search(r"\(([^()]*)\)", v)
-    # v_inside_parens = m.group(1).strip() if m else v
-
-
-    # for attempt in (v, v_no_parens, v_inside_parens):
-    ### end only thing i change
     raw = "" if rating_value is None else str(rating_value)
 
     cand_raw = raw
@@ -695,39 +589,19 @@ def get_success_measure_from_rating_value_wrapped(rating_value, min_rating=None,
             if result is not None:
                 return result
 
-        # 4) Handle known aliases/translations/free-text
         canon = _ALIAS_TO_CANON.get(attempt)
         if canon is not None:
             rating = float(_CANON_LABEL_TO_0_5[canon])
-            # print(f"Rating: {rating} from {rating_value}| Min: {min_rating} | Max: {max_rating} | canonical")
             return rating
 
 
-    for cand in (cand_raw, cand_no_parens, cand_in_parens, cand_before_split, cand_after_split):        
+    for cand in (cand_raw, cand_no_parens, cand_in_parens, cand_before_split, cand_after_split):
         if not cand:
             continue
         attempt = _norm_text(cand)
-        # # 5) Handle strings like "3 - tentative evidence..." with Level 1..5 endpoints
-        # lead = _maybe_parse_leading_int(v)
-        # if lead is not None:
-        #     # try to extract numeric endpoints from min/max like "Level 1"
-        #     mn_n = _maybe_parse_leading_int(mn) or (int(re.search(r"\d+", mn).group()) if re.search(r"\d+", mn) else None)
-        #     mx_n = _maybe_parse_leading_int(mx) or (int(re.search(r"\d+", mx).group()) if re.search(r"\d+", mx) else None)
-        #     if mn_n is not None and mx_n is not None and mx_n != mn_n:
-        #         # map lead linearly into 0..5, then bucketish
-        #         score = 5 * (lead - mn_n) / (mx_n - mn_n)
-        #         return float(max(0.0, min(5.0, score)))
-        #     # no endpoints: treat "3" as your common “mixed” bin
-        #     if lead == 3:
-        #         return 3.0
-        # 1) Try first try logic  (covers known verbal scales + numeric min/max)
         v0 = get_success_measure_from_rating_value(attempt, min_rating, max_rating, activity_id=activity_id)
         if v0 is not None:
-            # print(f"Rating: {v0} from {rating_value}| Min: {min_rating} | Max: {max_rating}")
             return v0
-
-
-        # now let's try some backups "contains"
 
         if "highly successful" in attempt:
             return 5
@@ -758,34 +632,11 @@ def get_success_measure_from_rating_value_wrapped(rating_value, min_rating=None,
             if VERBOSE:
                 print(f"Rating as number: {number_parsed} from {rating_value}, min: {mn}, max: {mx}, act: {activity_id}")
             return number_parsed
-    # # now we really are not confident anymore so we just use numbers...
-
-    # for cand in (cand_raw, cand_no_parens, cand_in_parens, cand_strip_leadnum):
-    #     if not cand:
-    #         continue
-    #     attempt = _norm_text(cand)
-
-    #     # plain numeric already 0..5
-    #     if re.fullmatch(r"[+-]?\d+(?:\.\d+)?", attempt):
-    #         x = float(attempt)
-    #         if 0.0 <= x <= 5.0:
-    #             return x
-
-    #     # "3 - Tentative evidence ..." etc.
-    #     lead = _maybe_parse_leading_int(attempt)
-    #     if lead is not None and 0 <= lead <= 5:
-    #         return float(lead)
-
-    #     if "satisfactorily" in attempt:
-    #         return 4.0
 
     if v.endswith("; successful"):
         return 4
     if v.endswith(", successful"):
         return 4
-
-    # print(f"ERROR: no rating for {activity_id[:10]}: {rating_value}, min {mn}, max {mx}")
-
 
     return None
 
@@ -803,8 +654,6 @@ def pick_start_date(row: pd.Series):
     return pd.NaT
 
 def get_text_to_describe_rating_distribution(aid,ratings,rating_stats, num_options):
-    # rating_stats is now the bundle:
-    #   {"overall": {...}, "by_prefix": {"44000-": {...} or None, "DE-1": {...} or None}}
     aid = str(aid)
 
     stats = None
@@ -819,19 +668,10 @@ def get_text_to_describe_rating_distribution(aid,ratings,rating_stats, num_optio
             stats = rating_stats["overall"]
     else:
         print("WARNING: USING BACKWARD COMPATIBLE INDEPENDENT OF ACTIVITY")
-        # backward-compatible: if you passed the old single-dict stats
         stats = rating_stats
 
-    # then continue exactly as you already do,
-    # replacing all uses of `rating_stats` with `stats`
     prompt_lines = []
 
-
-    # Decide which distribution we talk about in the prompt:
-    # - If there are exactly 6 scale options -> talk about 6 bins
-    # - Otherwise:
-    #     - odd num_options (3,5,...) -> thirds
-    #     - even num_options -> quartiles
     use_six = isinstance(num_options, int) and num_options == 6
     use_thirds = False
     use_quartiles = False
@@ -842,10 +682,8 @@ def get_text_to_describe_rating_distribution(aid,ratings,rating_stats, num_optio
             use_quartiles = True
 
     prompt_lines = []
-    # Inject global training-set distribution text
     if stats:
         if use_six and stats.get("six_percents"):
-            # 6 bins: 1=worst end of scale, 6=best end (by fraction)
             sp = stats["six_percents"]
             p_worst = sp.get(1, 0.0)
             p_2     = sp.get(2, 0.0)
@@ -868,61 +706,16 @@ def get_text_to_describe_rating_distribution(aid,ratings,rating_stats, num_optio
             input("I have paused execution. there is an unexpected distribution being used. check helpers_for_ratings_and_final_activity_features.py")
     else:
         input("I have paused execution. there is an unexpected distribution being used. check helpers_for_ratings_and_final_activity_features.py")
-        # elif use_thirds and stats.get("third_percents"):
-        #     tp = stats["third_percents"]
-        #     top_p = tp.get(3, 0.0)
-        #     mid_p = tp.get(2, 0.0)
-        #     bot_p = tp.get(1, 0.0)
-        #     prompt_lines.append(
-        #         "In the historical data, the "
-        #         f"top third (best outcomes) accounts for about {int(top_p)}% of activities, "
-        #         f"the middle third for {int(mid_p)}%, and the bottom third "
-        #         f"(worst outcomes) for {int(bot_p)}%."
-        #     )
-        #     prompt_lines.append("")
-
-        # elif use_quartiles and stats.get("quartile_percents"):
-        #     qp = stats["quartile_percents"]
-        #     # quartiles: 1 = worst, 4 = best
-        #     top_q    = qp.get(4, 0.0)
-        #     second_q = qp.get(3, 0.0)
-        #     third_q  = qp.get(2, 0.0)
-        #     bottom_q = qp.get(1, 0.0)
-        #     prompt_lines.append(
-        #         "In the historical training data, the final evaluation ratings are roughly "
-        #         f"distributed as {int(top_q)}% in the top quartile (best outcomes), "
-        #         f"{int(second_q)}% in the 2nd quartile, "
-        #         f"{int(third_q)}% in the 3rd quartile, and "
-        #         f"{int(bottom_q)}% in the bottom quartile (worst outcomes)."
-        #     )
-        #     prompt_lines.append("")
-            
-            
     return prompt_lines
 
 def get_ratings_text(final_result, rating_min=None, rating_max=None, activity_id=None):
-    """
-    Given a rating_value (final_result) and optional numeric bounds (min/max),
-    return:
-        num_options: int
-        midpoint_low_text: str
-        midpoint_high_text: str
-        options_text: str   (e.g. "'1', '2', '3'")
-        final_result_for_prompt: str (the label the prompt should ultimately arrive at)
-    """
-
-    # final_result_raw = final_result
-    # v_norm = (str(final_result_raw) or "").strip().lower()
     success_measure = get_success_measure_from_rating_value_wrapped(final_result,min_rating=rating_min,max_rating=rating_max,activity_id=activity_id)
     if success_measure is None:
         return None, None, None, None, None
-    # print("success_measure")
-    # print(success_measure)
 
     integer_rating = int(round(success_measure))
 
-    idx_in_original = 5 - integer_rating # 0-> 5, 5-> 0, so the index of loca
-    # ---- Verbal scales ----
+    idx_in_original = 5 - integer_rating
     scale_options = [
         "Highly Satisfactory",
         "Satisfactory",
@@ -933,44 +726,8 @@ def get_ratings_text(final_result, rating_min=None, rating_max=None, activity_id
     ]  # best -> worst
     v_norm = scale_options[idx_in_original]
 
-    # Each entry: (options, worst_first)
-
     worst_first = False
 
-    # # AFTER the for-loop and only if we didn't find anything
-    # if scale_options is None:
-    #     lower = v_norm
-    #     # use correct indices from local6_options:
-    #     # 0: HS, 1: S, 2: MS, 3: MU, 4: U, 5: HU
-    #     if "highly unsatisfactory" in lower:
-    #         scale_options = local6_options
-    #         worst_first = False
-    #         idx_in_original = local6_options.index("Highly Unsatisfactory")
-    #     elif "unsatisfactory" in lower and "highly" not in lower and "moderately" not in lower:
-    #         scale_options = local6_options
-    #         worst_first = False
-    #         idx_in_original = local6_options.index("Unsatisfactory")
-    #     elif "moderately unsatisfactory" in lower:
-    #         scale_options = local6_options
-    #         worst_first = False
-    #         idx_in_original = local6_options.index("Moderately Unsatisfactory")
-    #     elif "moderately satisfactory" in lower:
-    #         scale_options = local6_options
-    #         worst_first = False
-    #         idx_in_original = local6_options.index("Moderately Satisfactory")
-    #     elif "satisfactory" in lower and "highly" not in lower and "moderately" not in lower:
-    #         scale_options = local6_options
-    #         worst_first = False
-    #         idx_in_original = local6_options.index("Satisfactory")
-    #     elif "highly satisfactory" in lower:
-    #         scale_options = local6_options
-    #         worst_first = False
-    #         idx_in_original = local6_options.index("Highly Satisfactory")
-
-
-    # ---------- Case 1: matched a known verbal scale ----------
-    # if scale_options is not None:
-    # Canonical worst->best ordering
     if worst_first:
         worst_to_best = list(scale_options)
     else:
@@ -979,7 +736,6 @@ def get_ratings_text(final_result, rating_min=None, rating_max=None, activity_id
     num_options = len(worst_to_best)
     final_result_for_prompt = scale_options[idx_in_original]
 
-    # Midpoint of the worst->best scale
     n = num_options
     mid_low_idx = (n - 1) // 2
     if n % 2 == 0:
@@ -998,25 +754,7 @@ def get_ratings_text(final_result, rating_min=None, rating_max=None, activity_id
     midpoint_low_text = f"{even_text_low}{midpoint_low_val} or lower"
     midpoint_high_text = f"{even_text_high}{midpoint_high_val} or higher"
 
-    # For options_text we can just show the original category labels
     options_text = ", ".join(f"'{o}'" for o in scale_options)
-    # num_options = len(worst_to_best_vals)
-
-    # midpoint_low_val = str(worst_to_best_vals[mid_low_idx])
-    # midpoint_high_val = str(worst_to_best_vals[mid_high_idx])
-
-    # # DE-1 flips the meaning of "higher/lower" being better/worse
-    # low_cmp  = "or higher" if invert else "or lower"
-    # high_cmp = "or lower"  if invert else "or higher"
-
-    # midpoint_low_text = f"{even_text_low}{midpoint_low_val} {low_cmp}"
-    # midpoint_high_text = f"{even_text_high}{midpoint_high_val} {high_cmp}"
-
-    # # options_text must be BEST -> WORST
-    # options_best_to_worst = list(reversed(worst_to_best_vals))
-    # options_text = ", ".join(f"'{x}'" for x in options_best_to_worst)
-    # print("num_options, midpoint_low_text, midpoint_high_text, options_text, final_result_for_prompt")
-    # print(num_options, midpoint_low_text, midpoint_high_text, options_text, final_result_for_prompt)
     return num_options, midpoint_low_text, midpoint_high_text, options_text, final_result_for_prompt
 
 
@@ -1044,12 +782,10 @@ def get_equivalent_score_as_fraction(scale_info: Dict[str, Any]) -> Optional[flo
     Prefer the 'fraction' field (derived from get_success_measure_from_rating_value).
     Only fall back to positional logic if 'fraction' is missing.
     """
-    # Preferred: use numeric-based fraction if present
     frac = scale_info.get("fraction")
     if frac is not None:
         return float(frac)
 
-    # Fallback: old positional logic (rarely used if you always set 'fraction').
     num_options = scale_info.get("num_options")
     options_text = scale_info.get("options_text") or ""
     final_label = (scale_info.get("final_result_for_prompt") or "").strip()
@@ -1079,19 +815,13 @@ def get_equivalent_score_as_fraction(scale_info: Dict[str, Any]) -> Optional[flo
     if num_options == 1:
         return 0.5
 
-    # IMPORTANT: If we ever use this fallback, we want
-    # 0 = worst, 1 = best. Sice options_text for the main scale is
-    # best->worst, invert the index.
-
-    worst_side_idx = num_options - 1   # HU
-    best_side_idx = 0                  # HS
+    worst_side_idx = num_options - 1
+    best_side_idx = 0
     span = worst_side_idx - best_side_idx
     if span <= 0:
         print("ERROR: span <0!")
         return 0.5
 
-    # idx = 0 → best → 1.0
-    # idx = last → worst → 0.0
     return (worst_side_idx - idx) / span
 
 
@@ -1174,7 +904,6 @@ def compute_training_distribution_by_prefix(
         sub = {aid: info for aid, info in ratings.items() if str(aid).startswith(p)}
         by_prefix[p] = compute_training_distribution_from_scales(sub) if sub else None
 
-    # pack it so call sites can choose
     return {
         "overall": overall,
         "by_prefix": by_prefix,
@@ -1191,7 +920,6 @@ def get_rating_scale_info_from_rating_object(aid: str, rating_info):
     if num_options is None:
         return None
 
-    # canonical 0–5 score using your function
     numeric_rating = get_success_measure_from_rating_value_wrapped(
         rating_value, rating_min, rating_max, activity_id=aid
     )
@@ -1213,27 +941,14 @@ def get_rating_scale_info_from_rating_object(aid: str, rating_info):
         "rating_min": rating_min,
         "rating_max": rating_max,
         "numeric_rating": numeric_rating,  # 0–5
-        "fraction": fraction,             # 0–1 or None
+        "fraction": fraction,
     }
 
-# ---------------------------------------------------------------------
-# Rating scale wrapper around get_ratings_text
-# ---------------------------------------------------------------------
-
 def get_rating_scale_info(aid: str, ratings: Dict[str, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """
-    Returns the dict described in get_rating_scale_info_from_rating_object
-    for this activity_id, or None.
-    """
     rating_info = ratings.get(aid)
     if not rating_info:
         return None
     return get_rating_scale_info_from_rating_object(aid, rating_info)
-
-
-# --------------------------------------------------------------------
-# DATA LOADERS
-# --------------------------------------------------------------------
 
 
 def load_good_overall_ids(filepath: str) -> dict:
@@ -1313,76 +1028,6 @@ def load_good_overall_ids(filepath: str) -> dict:
 
     return ids
 
-# def load_good_overall_ids(filepath):
-#     """
-#     Activities that already have a usable overall rating.
-
-#     Format of each JSONL line:
-#       {
-#         "activity_id": "...",
-#         "token_usage": {...},
-#         "model_version": "gemini-2.5-flash",
-#         "response_text": "{\"description\": \"Overall Outcome Rating\", \"rating_value\": \"Moderately Satisfactory\", ...}"
-#       }
-
-#     Heuristic for "good" rating:
-#       - response_text parses as JSON
-#       - description != "NO RATING AVAILABLE"
-#       - rating_value is non-empty
-#     """
-#     ids = {}
-#     path = Path(filepath)
-#     if not path.exists():
-#         return ids
-
-#     with path.open("r", encoding="utf-8") as f:
-#         for line in f:
-#             s = line.strip()
-#             if not s:
-#                 continue
-
-#             try:
-#                 obj = json.loads(s)
-#             except Exception:
-#                 continue
-
-#             aid = (obj.get("activity_id") or "").strip()
-#             if not aid:
-#                 continue
-
-#             rt = obj.get("response_text")
-#             if not rt:
-#                 continue
-
-#             # response_text itself is a JSON string
-#             try:
-#                 rating_obj = json.loads(rt)
-#             except Exception:
-#                 continue
-
-#             if not isinstance(rating_obj, dict):
-#                 continue
-
-#             desc = (rating_obj.get("description") or "").strip()
-#             val  = (rating_obj.get("rating_value") or "").strip()
-#             min_rating  = (rating_obj.get("min") or "").strip()
-#             max_rating  = (rating_obj.get("max") or "").strip()
-
-#             # Treat explicit NO RATING AVAILABLE or empty value as "not good"
-#             if not val:
-#                 continue
-#             if desc.upper() == "NO RATING AVAILABLE":
-#                 continue
-
-#             ids[aid] = {
-#                 "description": desc,
-#                 "rating_value": val,
-#                 "min": min_rating,
-#                 "max": max_rating,
-#             }
-
-#     return ids
-
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import json
@@ -1410,42 +1055,6 @@ def load_jsonl_text_by_activity_id(path: Path) -> Dict[str, dict]:
                 "model": obj.get("model", None),
             }
     return m
-
-
-# def load_ratings(filepath):
-#     """Load target ratings"""
-#     ratings = {}
-
-#     response_data = load_good_overall_ids(filepath)
-#     print("len(response_data)")
-#     print(len(response_data))
-#     for activity_id, response_data in response_data.items():
-#         # response_data = json.loads(data['response_text'])
-#         rating_value = response_data.get('rating_value')
-
-#         if rating_value is None:
-#             pprint.pprint("response_data")
-#             pprint.pprint(response_data)
-#             rating_value = response_data.get('from_gemini')
-#             if rating_value is None:
-#                 continue
-#         # print(response_data)
-#         # print(rating_value)
-
-#         rating_min = response_data.get('min')
-#         rating_max = response_data.get('max')
-#         numeric_rating = get_success_measure_from_rating_value_wrapped(rating_value, rating_min, rating_max, activity_id=activity_id)
-#         # print("rating_value")
-#         # print(rating_value)
-#         # print("numeric_rating")
-#         # print(numeric_rating)
-#         # numeric_rating = RATING_MAP.get(rating_value)
-#         if numeric_rating is not None:
-#             ratings[activity_id] = numeric_rating
-#             # print("rating_value, rating_min, rating_max")
-#             # print(rating_value, rating_min, rating_max)
-
-#     return pd.Series(ratings, name='rating')
 
 
 def load_ratings(filepath: str) -> pd.Series:
@@ -1591,102 +1200,9 @@ def parse_orgs(org_str: str, role_filter: str | None = None) -> Set[str]:
     return orgs
 
 
-# def add_similarity_features(data: pd.DataFrame, info_csv_path: str, NUM_ORGS_KEEP) -> tuple[pd.DataFrame, list[str]]:
-
-#     # --- IMPORTANT: use the same org notion as split_train_test_by_time ---
-#     info_df["rep_org_norm"] = info_df["reporting_orgs"].map(normalize_rep_org)
-
-#     # deterministic top-N (break ties by org name)
-#     vc = info_df["rep_org_norm"].dropna().value_counts()
-#     vc_df = vc.reset_index(name="n").rename(columns={"rep_org_norm": "rep_org"})
-#     vc_df = vc_df.sort_values(["n", "rep_org"], ascending=[False, True])
-#     top_orgs = vc_df["rep_org"].head(NUM_ORGS_KEEP).tolist()
-#     rep_org_vocab = {org: i for i, org in enumerate(top_orgs)}
-
-#     rep_org_main_idx = info_df["rep_org_norm"].map(rep_org_vocab).reindex(data.index).astype("Int64")
-#     data["rep_org_main_idx"] = rep_org_main_idx
-#     # one-hot with stable rep_org_0..rep_org_{n-1} columns
-#     rep_org_ohe = pd.get_dummies(data["rep_org_main_idx"], dtype=int)
-#     rep_org_ohe = rep_org_ohe.reindex(columns=range(len(keep_reporting_orgs)), fill_value=0)
-#     rep_org_ohe.columns = [f"rep_org_{i}" for i in range(len(keep_reporting_orgs))]
-
-#     data = pd.concat([data, rep_org_ohe], axis=1)
-#     all_rep_cols = [f"rep_org_{i}" for i in range(len(keep_reporting_orgs))]
-#     sim_feature_cols = all_rep_cols
-
-#     data["rep_org_norm"] = info_df["rep_org_norm"].reindex(data.index)
-
-#     return data, sim_feature_cols
-
-
-
-# def add_dates_to_dataframe(X,INFO_FOR_ACTIVITY_FORECASTING):
-#     print("X")
-#     print(type(X))
-#     print("len(X)")
-#     print(len(X))
-#     print(X)
-#     dates_df = pd.read_csv(
-#         INFO_FOR_ACTIVITY_FORECASTING,
-#         usecols=[
-#             "activity_id",
-#             "txn_first_date",
-#             "actual_start_date",
-#             "original_planned_start_date",
-#             "original_planned_close_date",
-#         ],
-#     )
-
-#     # parse dates
-#     for col in [
-#         "txn_first_date",
-#         "actual_start_date",
-#         "original_planned_start_date",
-#         "original_planned_close_date",
-#     ]:
-#         dates_df[col] = pd.to_datetime(dates_df[col], errors="coerce")
-
-#     # planned duration in years (float); NaN if start or end missing
-#     dates_df["planned_duration"] = (
-#         (dates_df["original_planned_close_date"] - dates_df["original_planned_start_date"])
-#         .dt.days / 365.25
-#     )
-
-#     # pick unified start_date (as before)
-#     dates_df["start_date"] = dates_df.apply(pick_start_date, axis=1)
-
-#     # keep only the columns we actually want to join
-#     dates_df = dates_df[["activity_id", "start_date", "planned_duration"]]
-    
-#     print("# rows with planned duration")
-#     print(len(dates_df.dropna(subset=["planned_duration"])))
-#     print("fraction of rows with planned duration")
-#     print(len(dates_df.dropna(subset=["planned_duration"]))/len(dates_df))
-
-#     # require start_date to exist; planned_duration can be NaN
-#     dates_df = dates_df.dropna(subset=["start_date"])
-
-#     # align to X index
-#     dates_df = dates_df.set_index("activity_id")
-#     common_ids = dates_df.index.intersection(X.index)
-
-#     print(f"len of datapoints before requiring start date {len(dates_df)}")
-#     dates_df = dates_df.loc[common_ids]
-#     print(f"len of datapoints after requiring start date {len(dates_df)}")
-#     # print("dates_df")
-#     # print(type(dates_df))
-#     # print(dates_df.columns)
-#     # print(dates_df)
-
-#     dates_df_with_all_cols = X.join(dates_df, how="inner")
-#     return dates_df_with_all_cols
-
-
-
 
 import re
 
-# Put your canonical labels here (whatever get_success_measure_from_rating_value expects)
 CANON_LABELS = [
     "Highly Satisfactory",
     "Satisfactory",
@@ -1696,13 +1212,12 @@ CANON_LABELS = [
     "Highly Unsatisfactory",
 ]
 
-# Longest-first prevents matching "Satisfactory" inside "Moderately Satisfactory"
 _LABEL_RE = re.compile(
     r"\b(" + "|".join(map(re.escape, sorted(CANON_LABELS, key=len, reverse=True))) + r")\b",
     flags=re.IGNORECASE,
 )
 
-_MD_STRIP_RE = re.compile(r"[*_`]+")  # cheap markdown marker removal
+_MD_STRIP_RE = re.compile(r"[*_`]+")
 
 
 
@@ -1725,17 +1240,11 @@ def parse_last_line_label_after_forecast(content, record=None):
 
     last = lines[-1]
 
-    # 1) strip leading numbering / bullets like:
-    #    "4. ", "4)", "4]", "- ", "* "
     line = re.sub(r'^\s*(?:[-*+]|\d+[\).\]])\s*', '', last)
 
-    # 2) remove markdown bold/italic markers
-    #    (this is aggressive, but you said you want to strip **, *, _)
     line = line.replace("**", "").replace("__", "")
     line = line.strip(" *_")
 
-    # 3) find "forecast" (case-insensitive) and capture text after it
-    #    allow optional : or dash after the word
     m = re.search(r'forecast\s*[:\-–—]?\s*(.+)$', line, flags=re.IGNORECASE)
     if not m:
         print("ERROR: last line does not contain 'FORECAST'")
@@ -1744,11 +1253,8 @@ def parse_last_line_label_after_forecast(content, record=None):
 
     label = m.group(1).strip()
 
-    # 4) strip trailing decoration/punctuation from the label
-    #    e.g. "Successful.", "Successful**", "Successful_" → "Successful"
     label = label.strip(" *.?_\"'`-")
 
-    # Optionally, get min/max from record if present
     rating_min = None
     rating_max = None
     if isinstance(record, dict):
@@ -1758,8 +1264,6 @@ def parse_last_line_label_after_forecast(content, record=None):
     activity_id = None
     if isinstance(record, dict):
         activity_id = record.get("activity_id")
-    # print("activity id")
-    # print(activity_id)
     numeric = get_success_measure_from_rating_value_wrapped(
         label,
         min_rating=rating_min,
@@ -1779,17 +1283,4 @@ def parse_last_line_label_after_forecast(content, record=None):
 
 
 
-
-
-
-
-
-
-
-
-# only run by C_run_GLM.py
-
-# ==============================================================================
-# ENHANCED UNCERTAINTY FEATURES (Strategy 8)
-# ==============================================================================
 

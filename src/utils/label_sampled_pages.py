@@ -5,7 +5,6 @@ from typing import Dict, Any, List
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 
-# Adjust if you want to inject this instead
 LOCATION_PDFS = "../../data/iati_all_pdfs"
 
 MAX_TITLE_CHARS = 40
@@ -44,13 +43,11 @@ def add_in_page_info_top_left(
     if not os.path.exists(slice_path_unedited):
         _big_error(f"SLICE_PATH_UNEDITED DOES NOT EXIST: {slice_path_unedited}")
 
-    # Sort items exactly like you did when creating the combined slice
     items_sorted: List[Dict[str, Any]] = sorted(
         items,
         key=lambda x: (x["cached_file"], int(x["page_start"]))
     )
 
-    # Read the combined slice we just created
     slice_reader = PdfReader(slice_path_unedited)
     combined_page_count = len(slice_reader.pages)
 
@@ -60,7 +57,6 @@ def add_in_page_info_top_left(
             f"NUMBER OF ITEMS ({len(items_sorted)})"
         )
 
-    # Cache original PDFs (per cached_file) so we don't reopen them every time
     original_readers: dict[str, PdfReader] = {}
     original_page_counts: dict[str, int] = {}
 
@@ -79,14 +75,11 @@ def add_in_page_info_top_left(
             original_page_counts[cached_file] = total_pages
         return original_page_counts[cached_file]
 
-    # Prepare writer for annotated pages
     writer = PdfWriter()
 
-    # For each page in the combined slice, overlay text with per-doc page info
     for idx, page in enumerate(slice_reader.pages):
         item = items_sorted[idx]
 
-        # Get dimensions for THIS specific page
         media_box = page.mediabox
         page_width = float(media_box.width)
         page_height = float(media_box.height)
@@ -99,7 +92,6 @@ def add_in_page_info_top_left(
         if not doc_title:
             _big_error(f"ITEM MISSING doc_title: {item}")
 
-        # Truncate overly long titles
         if len(doc_title) > MAX_TITLE_CHARS:
             doc_title_display = doc_title[: MAX_TITLE_CHARS - 3] + "..."
         else:
@@ -120,11 +112,9 @@ def add_in_page_info_top_left(
 
         label_text = f"{section} | {doc_title_display} | page {original_page_num}/{total_pages}"
 
-        # Make a one-page PDF in memory with the label text, same page size as THIS page
         packet = io.BytesIO()
         c = canvas.Canvas(packet, pagesize=(page_width, page_height))
         c.setFont("Helvetica-Bold", 12)
-        # small margin from top-left
         margin_x = 18
         margin_y = 18
         c.drawString(margin_x, page_height - margin_y, label_text)
@@ -134,11 +124,9 @@ def add_in_page_info_top_left(
         overlay_pdf = PdfReader(packet)
         overlay_page = overlay_pdf.pages[0]
 
-        # Merge overlay into page
         page.merge_page(overlay_page)
         writer.add_page(page)
 
-    # Write out a new labeled PDF next to the unedited slice
     if slice_path_unedited.lower().endswith(".pdf"):
         slice_path_labeled = slice_path_unedited[:-4] + "_labeled.pdf"
     else:

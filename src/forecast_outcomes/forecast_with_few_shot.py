@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from pprint import pprint
-import numpy as np 
+import numpy as np
 import random
-import pandas as pd 
+import pandas as pd
 import pprint
 import json
 import sys
@@ -13,35 +13,24 @@ from typing import Dict, Any, Iterable, List, Optional, Set
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 
+import ast
+import re
 
-# LIST_OF_ALL_RECENT_VARIANTS = ("short_well_or_badly","short_well_or_badly_add_grades", "exactly_like_halawi_et_al","choose_your_own_adventure","consider_the_knn", "adjust_based_on_random_forest")
 LIST_OF_ALL_RECENT_VARIANTS = ("short_well_or_badly", "exactly_like_halawi_et_al","choose_your_own_adventure","consider_the_knn", "adjust_based_on_random_forest","generate_rag_queries","short_well_or_badly_rag_added", "exactly_like_halawi_et_al_rag_added", "summarize_knn", "exactly_like_halawi_et_al_rag_added_no_knn_no_rag", "exactly_like_halawi_et_al_rag_added_forced_rf", "exactly_like_halawi_et_al_rag_added_no_knn_no_rag_forced_rf", "exactly_like_halawi_et_al_rag_added_forced_rf_with_explanation", "exactly_like_halawi_et_al_better_model_rag_added_forced_rf")
-
-# ---------------------------------------------------------------------
-# Imports from your utils
-# ---------------------------------------------------------------------
 
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
- 
-from get_all_pages_within_category import load_and_filter_rows
+
 from extracting_and_grading_helper_functions import (
     consolidate_rows_by_activity,
     loop_over_rows_to_call_model,
-    load_generic_jsonl_and_put_into_bundles,
 )
 from extract_pdfs_as_txt import (
     normalized_basename,
-    process_one,  # we pass our own output directory
+    process_one,
 )
-# This module name is assumed; rename if needed to wherever get_ratings_text lives
 from helpers_for_ratings_and_final_activity_features import get_ratings_text, get_rating_scale_info_from_rating_object, get_rating_scale_info, get_text_to_describe_rating_distribution, pick_start_date, compute_training_distribution_by_prefix, load_good_overall_ids
-# import C_run_GLM as stats
-
-# ---------------------------------------------------------------------
-# Paths / constants
-# ---------------------------------------------------------------------
 
 DATA_DIR = Path("../../data")
 ACTIVITY_INFO_CSV = DATA_DIR / "info_for_activity_forecasting.csv"
@@ -52,30 +41,17 @@ RISKS_JSONL = DATA_DIR / "outputs_risks.jsonl"
 INFO_FOR_ACTIVITY_FORECASTING = '../../data/info_for_activity_forecasting_with_cpia_imputed.csv'
 OUT_MISC = Path("../../data/outputs_misc.jsonl")
 
-
-# Where we store PDF→txt outputs (new folder)
 TXT_OUTPUT_DIR = DATA_DIR / "iati_all_pdfs_txt_format"
 
 FEW_SHOT_KS = [1, 7, 20]
-MAX_TARGET_CHARS = 999999999 #6000
-MAX_NEIGHBOR_CHARS = 999999999 #1500
+MAX_TARGET_CHARS = 999999999
+MAX_NEIGHBOR_CHARS = 999999999
 
-SIMILARITY_TOP_N = 1000  # how many candidates before we pick K neighbors
-# MODEL_NAME = "chatgpt"  # your gpt-3.5 wrapper
-MODEL_NAME = "gemini"  # your gpt-3.5 wrapper
-
-
-
-import ast
-import json
-import re
+SIMILARITY_TOP_N = 1000
+MODEL_NAME = "gemini"
 
 
 def format_risks_if_listlike(risks_summary: str) -> str:
-    """
-    If risks_summary looks like a serialized list of strings and parses cleanly,
-    return a human-readable bullet list. Otherwise return the original string.
-    """
     if risks_summary is None:
         return risks_summary
 
@@ -83,18 +59,15 @@ def format_risks_if_listlike(risks_summary: str) -> str:
     if not t or t == "NO RESPONSE":
         return risks_summary
 
-    # "clearly parsable format" gate: must look like a bracketed list
     if not (t.startswith("[") and t.endswith("]")):
         return risks_summary
 
     obj = None
-    # Try JSON first (double quotes)
     try:
         obj = json.loads(t)
     except Exception:
         pass
 
-    # Then try Python literal (single quotes etc.)
     if obj is None:
         try:
             obj = ast.literal_eval(t)
@@ -115,10 +88,8 @@ def format_risks_if_listlike(risks_summary: str) -> str:
     return "\n".join(f"- {x}" for x in items)
 
 
-# def load_ml_model_preds_for_prompts(path="../../data/ridge_plus_rf_predictions.csv", col="pred_rf"):
 def load_ml_model_preds_for_prompts(path="../../data/best_model_predictions.csv", col="pred_rf_llm_modded"):
     df = pd.read_csv(path, dtype={"activity_id": str})
-    # if you saved with index=activity_id, pandas will read it as a normal column unless you used index_col
     if "activity_id" not in df.columns:
         df = pd.read_csv(path, index_col=0)
         df.index = df.index.astype(str)
@@ -134,11 +105,6 @@ def load_stat_model_interpretations(path="../../data/stat_model_interpretations.
 
 
 def rf_pred_label_and_number(v: float) -> tuple[str, str]:
-    """
-    Returns (label, parenthetical detail).
-    label is the nearest discrete class label.
-    detail is '(pred=..., closer/midway ...)'.
-    """
     RATING_MAP = {
         0: "Highly Unsatisfactory",
         1: "Unsatisfactory",
@@ -171,14 +137,7 @@ def rf_pred_label_and_number(v: float) -> tuple[str, str]:
 
 
 
-# ---------------------------------------------------------------------
-# Basic loaders
-# ---------------------------------------------------------------------
 def _load_risks_summaries() -> Dict[str, str]:
-    """
-    activity_id -> risks_summary
-    Pulled from outputs_risks.jsonl (same style as other JSONLs).
-    """
     out: Dict[str, str] = {}
     if not RISKS_JSONL.exists():
         return out
@@ -194,13 +153,11 @@ def _load_risks_summaries() -> Dict[str, str]:
             if not aid:
                 continue
 
-            # Prefer a 'response' dict if present
             resp = data.get("response")
             text = ""
             if isinstance(resp, dict):
                 text = resp.get("content") or resp.get("text") or ""
 
-            # Fall back to response_text
             if not text:
                 raw = (data.get("response_text") or "").strip()
                 if raw:
@@ -210,7 +167,6 @@ def _load_risks_summaries() -> Dict[str, str]:
                         parsed = raw
 
                     if isinstance(parsed, dict):
-                        # If risks are nested in a dict, adjust this to the right key
                         text = parsed.get("risks_summary") or json.dumps(parsed)
                     else:
                         text = str(parsed)
@@ -224,10 +180,6 @@ def _load_risks_summaries() -> Dict[str, str]:
     return out
 
 def _load_chatgpt_descriptions() -> Dict[str, str]:
-    """
-    activity_id -> chatgpt_description (one-line or paragraph summary)
-    Pulled from outputs_summaries.jsonl.
-    """
     out: Dict[str, str] = {}
     if not CHATGPT_SUMMARIES_JSONL.exists():
         return out
@@ -243,15 +195,13 @@ def _load_chatgpt_descriptions() -> Dict[str, str]:
             if not aid:
                 continue
 
-            # Try to mirror your other JSONL structure:
-            # 1) if there's a 'response' dict, use its content/text
-            # 2) otherwise fallback to 'response_text'
             desc = ""
             resp = data.get("response")
             if isinstance(resp, dict):
                 desc = resp.get("content") or resp.get("text") or ""
             if not desc:
                 desc = data.get("response_text") or ""
+
 
             desc = str(desc).strip()
             if not desc:
@@ -262,7 +212,6 @@ def _load_chatgpt_descriptions() -> Dict[str, str]:
     return out
 
 def _load_activity_info() -> Dict[str, Dict[str, str]]:
-    """activity_id -> row dict from info_for_activity_forecasting.csv."""
     out: Dict[str, Dict[str, str]] = {}
     import csv
     with ACTIVITY_INFO_CSV.open("r", encoding="utf-8", newline="") as f:
@@ -270,13 +219,11 @@ def _load_activity_info() -> Dict[str, Dict[str, str]]:
             aid = (r.get("activity_id") or "").strip()
             if aid:
                 out[aid] = r
-    # merge ChatGPT descriptions into this map
     chatgpt_descriptions = _load_chatgpt_descriptions()
     for aid, desc in chatgpt_descriptions.items():
         row = out.setdefault(aid, {})
         row["chatgpt_description"] = desc
 
-    # merge risk summaries into this map
     risks_summaries = _load_risks_summaries()
     for aid, risks_text in risks_summaries.items():
         row = out.setdefault(aid, {})
@@ -285,45 +232,8 @@ def _load_activity_info() -> Dict[str, Dict[str, str]]:
     return out
 
 
-# def _load_outcome_ratings() -> Dict[str, Dict[str, Any]]:
-#     """
-#     activity_id -> {"rating_value": ..., "min": ..., "max": ...}
-#     matching your existing merged_overall_ratings.jsonl structure.
-#     """
-#     ratings: Dict[str, Dict[str, Any]] = {}
-#     with MERGED_OVERALL_RATINGS.open("r", encoding="utf-8") as f:
-#         for line in f:
-#             line = line.strip()
-#             if not line:
-#                 continue
-#             data = json.loads(line)
-#             activity_id = data.get("activity_id")
-#             if not activity_id:
-#                 continue
-#             response_text = data.get("response_text", "{}")
-#             try:
-#                 response_data = json.loads(response_text)
-#             except Exception:
-#                 continue
-#             rating_value = response_data.get("rating_value")
-#             if rating_value is None:
-#                 continue
-#             rating_min = response_data.get("min")
-#             rating_max = response_data.get("max")
-#             ratings[activity_id] = {
-#                 "rating_value": rating_value,
-#                 "min": rating_min,
-#                 "max": rating_max,
-#             }
-#     return ratings
-
 
 def load_mock_forecasts(path: Path) -> Dict[str, str]:
-    """
-    activity_id -> full mock forecast text
-    Assumes loop_over_rows_to_call_model wrote a "response" dict with "content",
-    or falls back to "response_text".
-    """
     out: Dict[str, str] = {}
     with path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -346,15 +256,7 @@ def load_mock_forecasts(path: Path) -> Dict[str, str]:
     return out
 
 
-# ---------------------------------------------------------------------
-# Text extraction for activities (from PDFs via your converter)
-# ---------------------------------------------------------------------
-
 def ensure_txt_for_pdf(pdf_path: Path, allow_ocr: bool = True) -> Path:
-    """
-    Make sure there is a .txt file for this PDF in TXT_OUTPUT_DIR.
-    Uses your process_one() helper from extract_iati_texts.
-    """
     TXT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     base = normalized_basename(pdf_path)
     txt_path = TXT_OUTPUT_DIR / f"{base}.txt"
@@ -368,343 +270,6 @@ def ensure_txt_for_pdf(pdf_path: Path, allow_ocr: bool = True) -> Path:
     return txt_path
 
 
-
-# def get_knn_neighbors(
-#     target_aid,
-#     ratings,
-#     mock_forecasts,
-#     top_n,
-#     k,
-#     rating_stats,
-#     variant: str = "",
-#     pool_size: int = 20,   # try 10 first; 20 if you want more variety
-# ) -> List[str]:
-#     pprint.pprint("target_aid")
-#     pprint.pprint(target_aid)
-#     pprint.pprint("ratings")
-#     print(len(ratings))
-#     pprint.pprint("mock_forecasts")
-#     print(len(mock_forecasts))
-#     pprint.pprint("top_n")
-#     pprint.pprint(top_n)
-#     pprint.pprint("k")
-#     pprint.pprint(k)
-#     print("rating_stats")
-#     print(len(rating_stats))
-#     pprint.pprint("variant")
-#     pprint.pprint(variant)
-#     pprint.pprint("pool_size")
-#     pprint.pprint(pool_size)
-#     """
-#     Return up to k neighbor activity_ids for target_aid that:
-#       * are in ratings
-#       * have a valid rating scale via get_ratings_text
-#       * have baseline bundles (in baseline_map)
-
-#     Neighbor selection logic:
-
-#       1. Build a similarity-ordered candidate list from df_sim (up to top_n).
-#       2. For each candidate, use rating_stats["aid_fraction"][aid] in [0,1] to
-#          put it into one of 6 equal-width bins along the scale (worst→best).
-#          (bin 1=worst, 6=best).
-#       3. Use rating_stats["six_percents"] to compute target counts per bin
-#          so that the k neighbors roughly follow the same distribution as the
-#          full training set.
-#       4. Walk candidates in similarity order, selecting neighbors to satisfy
-#          those per-bin target counts.
-#       5. If not enough neighbors have been chosen (due to missing bins, etc.),
-#          fill the remaining slots with the most similar unused candidates.
-#       6. Try to enforce at least one neighbor above and one below the midpoint
-#          (fraction 0.5), if possible.
-#     """
-
-#     def six_bin(f: float) -> int:
-#         """Map fraction f in [0,1] to a bin 1..6 (worst→best)."""
-#         f = float(f)
-#         if f < 0.0:
-#             f = 0.0
-#         elif f > 1.0:
-#             f = 1.0
-#         idx = min(5, int(f * 6))  # 0..5
-#         return idx + 1            # 1..6
-
-#     target_aid_str = str(target_aid)
-#     # If rating_stats was computed "by_prefix", select the best matching prefix
-#     if isinstance(rating_stats, dict) and "aid_fraction" not in rating_stats:
-#         byp = rating_stats.get("by_prefix")
-#         if isinstance(byp, dict):
-#             keys = [k for k in byp.keys() if target_aid_str.startswith(k)]
-#             if keys:
-#                 rating_stats = byp[max(keys, key=len)]
-#             else:
-#                 rating_stats = None
-
-#     # Deterministic per (variant, target_aid), but different across variants
-#     seed_material = f"{variant}|{target_aid_str}".encode("utf-8")
-#     seed_int = int.from_bytes(hashlib.blake2b(seed_material, digest_size=8).digest(), "big")
-#     rng = random.Random(seed_int)
-
-#     # allowed_ids: Set[str] = {
-#     #     str(aid)
-#     #     for aid in ratings.keys()
-#     #     if str(aid) != target_aid_str and str(aid) in baseline_map
-#     # }
-#     # all activities that have BOTH a rating and a mock forecast,
-#     # excluding the target itself
-#     allowed_ids: Set[str] = {
-#         str(aid)
-#         for aid in mock_forecasts.keys()
-#         if str(aid) != target_aid_str and str(aid) in ratings
-#     }
-
-#     print("allowed_ids len")
-#     print(len(allowed_ids))
-
-#     if not allowed_ids:
-#         print("no allowed ids!")
-#         return []
-
-#     results = find_similar_activities_semantic(
-#         target_aid_str,
-#         csv_path=str(ACTIVITY_INFO_CSV),
-#         top_n=top_n,
-#         allowed_ids=allowed_ids,
-#     )
-#     if len(results) < 2:
-#         print("ERROR: seems nothing was found in similarity search..")
-#         return []
-
-#     df_sim, _search_item = results
-#     print("len results")
-#     print(len(df_sim))
-
-#     # pprint.pprint("rating_stats")
-#     # pprint.pprint(rating_stats)
-#     # Fallback: no rating_stats, just take top-k similar with valid scales
-#     # if not rating_stats or "aid_fraction" not in rating_stats:
-#     #     neighbor_ids: List[str] = []
-#     #     for _, row in df_sim.iterrows():
-#     #         aid = str(row["activity_id"])
-#     #         if aid not in ratings:
-#     #             continue
-#     #         if get_rating_scale_info(aid, ratings) is None:
-#     #             continue
-#     #         # if aid not in baseline_map:
-#     #         #     continue
-#     #         neighbor_ids.append(aid)
-#     #         if len(neighbor_ids) >= k:
-#     #             break
-#     #     print("NOT RATING STATS!")
-#     #     print("len(neighbor_ids)")
-#     #     print(len(neighbor_ids))
-#     #     return neighbor_ids
-#     if not rating_stats or "aid_fraction" not in rating_stats:
-#         from collections import Counter
-#         reasons = Counter()
-#         neighbor_ids: List[str] = []
-#         for _, row in df_sim.iterrows():
-#             aid = str(row["activity_id"])
-#             if aid not in ratings:
-#                 reasons["no_rating"] += 1
-#                 continue
-#             if get_rating_scale_info(aid, ratings) is None:
-#                 reasons["bad_scale"] += 1
-#                 continue
-#             neighbor_ids.append(aid)
-#             if len(neighbor_ids) >= k:
-#                 break
-#         print("[DEBUG fallback] target:", target_aid_str, "reasons:", dict(reasons), "picked:", len(neighbor_ids))
-#         return neighbor_ids
-
-
-#     aid_fraction_map: Dict[str, float] = rating_stats.get("aid_fraction") or {}
-#     global_six_percents: Dict[int, float] = rating_stats.get("six_percents") or {}
-
-#     # Build candidate list (up to top_n, in similarity order), with frac + bin
-#     candidates: List[Dict[str, Any]] = []
-#     # for _, row in df_sim.iterrows():
-#     #     aid = str(row["activity_id"])
-#     #     if aid not in ratings:
-#     #         continue
-#     #     # if aid not in baseline_map:
-#     #     #     continue
-#     #     if get_rating_scale_info(aid, ratings) is None:
-#     #         continue
-
-#     #     frac = aid_fraction_map.get(aid)
-#     #     if frac is None:
-#     #         continue
-
-#     #     cand_bin = six_bin(frac)
-#     #     cand = {
-#     #         "aid": aid,
-#     #         "frac": frac,
-#     #         "bin": cand_bin,
-#     #         "similarity": float(row["similarity"]),
-#     #     }
-#     #     candidates.append(cand)
-#     from collections import Counter
-
-#     reasons = Counter()
-#     candidates = []
-
-#     for _, row in df_sim.iterrows():
-#         aid = str(row["activity_id"])
-
-#         if aid not in ratings:
-#             reasons["no_rating"] += 1
-#             continue
-
-#         if get_rating_scale_info(aid, ratings) is None:
-#             reasons["bad_scale"] += 1
-#             continue
-
-#         frac = aid_fraction_map.get(aid)
-#         if frac is None:
-#             reasons["no_frac"] += 1
-#             continue
-
-#         candidates.append({
-#             "aid": aid,
-#             "frac": frac,
-#             "bin": six_bin(frac),
-#             "similarity": float(row["similarity"]),
-#         })
-
-#     if not candidates:
-#         print("[DEBUG] no candidates for target:", target_aid_str)
-#         print("[DEBUG] filter reasons:", dict(reasons))
-#         print("[DEBUG] df_sim rows:", len(df_sim))
-#         return []
-
-#     if not candidates:
-#         print("ERROR: no candidates")
-#         return []
-
-#     total_k = min(k, len(candidates))
-#     if total_k <= 0:
-#         print("ERROR: negative K or negative candidates")
-#         return []
-
-#     # Candidates are currently in similarity order.
-#     # For stochasticity: shuffle only within a top window, keep the tail ordered.
-#     # If variant is empty, keep original deterministic behavior.
-#     if variant:
-#         m = min(pool_size, len(candidates))
-#         head = candidates[:m].copy()
-#         rng.shuffle(head)
-#         candidates_iter = head + candidates[m:]
-#     else:
-#         candidates_iter = candidates
-
-#     # Compute target counts per bin, proportional to global_six_percents
-#     bin_ids = [1, 2, 3, 4, 5, 6]
-#     base_counts: Dict[int, int] = {b: 0 for b in bin_ids}
-#     fractional: List[Any] = []
-#     remaining = total_k
-
-#     for b in bin_ids:
-#         pct = float(global_six_percents.get(b, 0.0))
-#         exact = total_k * pct / 100.0
-#         base = int(exact)
-#         base_counts[b] = base
-#         fractional.append((exact - base, b))
-#         remaining -= base
-
-#     # Distribute leftover slots by largest fractional part
-#     fractional.sort(reverse=True)
-#     i = 0
-#     while remaining > 0 and i < len(fractional):
-#         b = fractional[i][1]
-#         base_counts[b] += 1
-#         remaining -= 1
-#         i += 1
-
-#     selected: List[str] = []
-#     selected_set: Set[str] = set()
-#     selected_counts: Dict[int, int] = {b: 0 for b in bin_ids}
-
-#     # First pass: respect per-bin target counts in similarity order
-#     for cand in candidates_iter:
-#         if len(selected) >= total_k:
-#             break
-#         aid = cand["aid"]
-#         if aid in selected_set:
-#             continue
-#         b = cand["bin"]
-#         if selected_counts[b] < base_counts.get(b, 0):
-#             selected.append(aid)
-#             selected_set.add(aid)
-#             selected_counts[b] += 1
-
-#     # Second pass: fill remaining slots with nearest unused candidates
-#     if len(selected) < total_k:
-#         for cand in candidates_iter:
-#             if len(selected) >= total_k:
-#                 break
-#             aid = cand["aid"]
-#             if aid in selected_set:
-#                 continue
-#             selected.append(aid)
-#             selected_set.add(aid)
-
-#     # Try to enforce at least one neighbor above and one below the midpoint
-#     if aid_fraction_map and total_k >= 2:
-#         def is_above(aid_str: str) -> bool:
-#             f = aid_fraction_map.get(aid_str)
-#             return f is not None and f > 0.5
-
-#         def is_below(aid_str: str) -> bool:
-#             f = aid_fraction_map.get(aid_str)
-#             return f is not None and f < 0.5
-
-#         has_above = any(is_above(a) for a in selected)
-#         has_below = any(is_below(a) for a in selected)
-
-#         if (not has_above or not has_below) and len(selected) >= 2:
-#             # Build a quick index of candidates by aid for easy lookup
-#             cand_by_aid = {c["aid"]: c for c in candidates}
-
-#             # Try swapping from the end (least similar among chosen)
-#             for i in range(len(selected) - 1, -1, -1):
-#                 aid_to_replace = selected[i]
-
-#                 if not has_above and is_below(aid_to_replace):
-#                     replacement = None
-#                     for cand in candidates:
-#                         aid = cand["aid"]
-#                         if aid in selected_set:
-#                             continue
-#                         if is_above(aid):
-#                             replacement = aid
-#                             break
-#                     if replacement is not None:
-#                         selected_set.remove(aid_to_replace)
-#                         selected[i] = replacement
-#                         selected_set.add(replacement)
-#                         has_above = True
-#                         break
-
-#                 elif not has_below and is_above(aid_to_replace):
-#                     replacement = None
-#                     for cand in candidates:
-#                         aid = cand["aid"]
-#                         if aid in selected_set:
-#                             continue
-#                         if is_below(aid):
-#                             replacement = aid
-#                             break
-#                     if replacement is not None:
-#                         selected_set.remove(aid_to_replace)
-#                         selected[i] = replacement
-#                         selected_set.add(replacement)
-#                         has_below = True
-#                         break
-#     if variant:
-#         rng.shuffle(selected)
-#     return selected
-from typing import Dict, Any, List, Set
-
 def get_knn_neighbors(
     target_aid,
     ratings,
@@ -715,37 +280,8 @@ def get_knn_neighbors(
     similarity_fn,
     variant=None
 ) -> List[str]:
-    """
-    Prefer same-prefix rating_stats (from compute_training_distribution_by_prefix),
-    BUT if that prevents us from selecting:
-      - at least one LOW (HU/U/MU),
-      - one MID (MS),
-      - one HIGH (S/HS),
-    or prevents us from reaching k total neighbors,
-    then expand to the global/overall fraction map and fill missing buckets / remaining slots.
-
-    Selection rules:
-      1) Build similarity-ranked df_sim (already done by find_similar_activities_semantic).
-      2) Build candidate list from df_sim that:
-           - are in ratings
-           - have a valid rating scale via get_rating_scale_info
-           - have a known fraction (prefix-first, global if expanded)
-      3) Pick bucket exemplars in order LOW, MID, HIGH (most similar first).
-      4) If any bucket missing OR selected < k -> expand to global and try again for missing buckets.
-      5) Fill remaining slots up to k by most-similar unused candidates.
-
-    Debug printouts explain:
-      - how many df_sim rows we got
-      - how many prefix vs global fraction entries exist
-      - how many candidates we have under prefix-only and under global-expanded
-      - which buckets were found / missing
-      - whether we expanded
-      - final selected ids
-    """
-
     target_aid_str = str(target_aid)
 
-    # All activities that have BOTH a rating and a mock forecast, excluding the target itself
     allowed_ids: Set[str] = {
         str(aid)
         for aid in mock_forecasts.keys()
@@ -775,18 +311,10 @@ def get_knn_neighbors(
     df_sim, _search_item = results
     print(f"[KNN] {target_aid_str}: df_sim rows={len(df_sim)} (top_n={top_n})")
 
-    # ------------------------------------------------------------------
-    # Resolve prefix stats + global stats from rating_stats
-    # rating_stats can be either:
-    #   - output of compute_training_distribution_from_scales (has aid_fraction)
-    #   - output of compute_training_distribution_by_prefix (has overall/by_prefix)
-    # ------------------------------------------------------------------
-
-    primary_stats = None  # same-prefix stats (preferred)
-    overall_stats = None  # global stats (fallback/expansion)
+    primary_stats = None
+    overall_stats = None
 
     if isinstance(rating_stats, dict) and "aid_fraction" in rating_stats:
-        # Already "flat" stats
         primary_stats = rating_stats
         overall_stats = rating_stats
         print(f"[KNN] {target_aid_str}: rating_stats is flat (no by_prefix).")
@@ -794,7 +322,6 @@ def get_knn_neighbors(
         overall_stats = rating_stats.get("overall")
         byp = rating_stats.get("by_prefix")
 
-        # choose best matching prefix if possible
         if isinstance(byp, dict):
             keys = [p for p in byp.keys() if target_aid_str.startswith(p)]
             chosen_prefix = max(keys, key=len) if keys else None
@@ -811,29 +338,11 @@ def get_knn_neighbors(
         primary_stats = None
         overall_stats = None
 
-    # If no prefix-specific stats, fall back to overall stats (but keep bucket logic)
     if (not primary_stats or "aid_fraction" not in primary_stats) and overall_stats and "aid_fraction" in overall_stats:
         print(f"[KNN] {target_aid_str}: no prefix stats; using overall stats as primary")
         primary_stats = overall_stats
 
-    # # If no usable stats at all, fallback to top-k most similar with valid scales
-    # if not primary_stats or not isinstance(primary_stats, dict) or "aid_fraction" not in primary_stats:
-    #     print(f"[KNN] {target_aid_str}: WARNING no usable prefix stats; fallback = top-k most similar")
-    #     neighbor_ids: List[str] = []
-    #     for _, row in df_sim.iterrows():
-    #         aid = str(row["activity_id"])
-    #         if aid not in ratings:
-    #             continue
-    #         if get_rating_scale_info(aid, ratings) is None:
-    #             continue
-    #         neighbor_ids.append(aid)
-    #         if len(neighbor_ids) >= k:
-    #             break
-    #     print(f"[KNN] {target_aid_str}: fallback picked {len(neighbor_ids)}/{k}")
-        # return neighbor_ids
-
     if not overall_stats or not isinstance(overall_stats, dict) or "aid_fraction" not in overall_stats:
-        # We can still operate prefix-only; expansion just won't be possible.
         print(f"[KNN] {target_aid_str}: WARNING no usable overall stats; expansion disabled.")
         overall_stats = None
 
@@ -850,13 +359,7 @@ def get_knn_neighbors(
     if overall_stats:
         print(f"[KNN] {target_aid_str}: overall_aid_fraction size={len(overall_aid_fraction)}")
 
-    # ------------------------------------------------------------------
-    # Helpers: bucket logic based on fraction -> int 0..5
-    # 0=HU,1=U,2=MU,3=MS,4=S,5=HS
-    # ------------------------------------------------------------------
-
     def rating_int_from_fraction(f: float) -> int:
-        # clamp defensively
         if f < 0.0:
             f = 0.0
         elif f > 1.0:
@@ -873,11 +376,6 @@ def get_knn_neighbors(
         return rating_int_from_fraction(f) >= 4
 
     def build_candidates(use_overall: bool) -> List[Dict[str, Any]]:
-        """
-        Build candidates in similarity order.
-        If use_overall=False: only accept candidates with prefix fraction.
-        If use_overall=True: accept candidates with prefix fraction OR overall fraction.
-        """
         cands: List[Dict[str, Any]] = []
         for _, row in df_sim.iterrows():
             aid = str(row["activity_id"])
@@ -916,14 +414,9 @@ def get_knn_neighbors(
                 return aid
         return None
 
-    # ------------------------------------------------------------------
-    # 1) Prefix-only selection first
-    # ------------------------------------------------------------------
-
     cands_primary = build_candidates(use_overall=False)
     print(f"[KNN] {target_aid_str}: prefix candidates={len(cands_primary)}")
 
-    # If there are literally no prefix candidates, go straight to overall if possible
     expanded = False
     if not cands_primary and overall_stats:
         print(f"[KNN] {target_aid_str}: no prefix candidates; expanding immediately to overall")
@@ -940,7 +433,6 @@ def get_knn_neighbors(
 
     got_low = got_mid = got_high = False
 
-    # Pick LOW, MID, HIGH from prefix-only candidates (or overall if we already expanded)
     for name, pred in (("LOW", is_low_from_fraction), ("MID", is_mid_from_fraction), ("HIGH", is_high_from_fraction)):
         aid = pick_first(cands_primary, pred, selected_set)
         if aid:
@@ -953,7 +445,6 @@ def get_knn_neighbors(
         else:
             print(f"[KNN] {target_aid_str}: missing {name} in prefix candidates")
 
-    # Decide if we need to expand
     need_bucket_fix = not (got_low and got_mid and got_high)
     need_fill_k = len(selected) < min(k, len(cands_primary))
     need_expand = (not expanded) and overall_stats and (need_bucket_fix or len(selected) < min(3, k) or len(selected) < k)
@@ -997,7 +488,6 @@ def get_knn_neighbors(
         print(f"[KNN] {target_aid_str}: selected ids={selected}")
         return selected
 
-    # If we did not expand, we still may want to fill to k using prefix candidates
     target_total = min(k, len(cands_primary))
     while len(selected) < target_total:
         aid = pick_any(cands_primary, selected_set)
@@ -1013,279 +503,6 @@ def get_knn_neighbors(
     return selected
 
 
-# def get_knn_neighbors(
-#     target_aid,
-#     ratings,
-#     mock_forecasts,
-#     top_n,
-#     k,
-#     rating_stats,
-#     variant=None
-# ) -> List[str]:
-#     """
-#     Return up to k neighbor activity_ids for target_aid that:
-#       * are in ratings
-#       * have a valid rating scale via get_ratings_text
-#       * have baseline bundles (in baseline_map)
-
-#     Neighbor selection logic:
-
-#       1. Build a similarity-ordered candidate list from df_sim (up to top_n).
-#       2. For each candidate, use rating_stats["aid_fraction"][aid] in [0,1] to
-#          put it into one of 6 equal-width bins along the scale (worst→best).
-#          (bin 1=worst, 6=best).
-#       3. Use rating_stats["six_percents"] to compute target counts per bin
-#          so that the k neighbors roughly follow the same distribution as the
-#          full training set.
-#       4. Walk candidates in similarity order, selecting neighbors to satisfy
-#          those per-bin target counts.
-#       5. If not enough neighbors have been chosen (due to missing bins, etc.),
-#          fill the remaining slots with the most similar unused candidates.
-#       6. Try to enforce at least one neighbor above and one below the midpoint
-#          (fraction 0.5), if possible.
-#     """
-
-#     def six_bin(f: float) -> int:
-#         """Map fraction f in [0,1] to a bin 1..6 (worst→best)."""
-#         f = float(f)
-#         if f < 0.0:
-#             f = 0.0
-#         elif f > 1.0:
-#             f = 1.0
-#         idx = min(5, int(f * 6))  # 0..5
-#         return idx + 1            # 1..6
-
-#     target_aid_str = str(target_aid)
-
-#     # allowed_ids: Set[str] = {
-#     #     str(aid)
-#     #     for aid in ratings.keys()
-#     #     if str(aid) != target_aid_str and str(aid) in baseline_map
-#     # }
-#     # all activities that have BOTH a rating and a mock forecast,
-#     # excluding the target itself
-#     allowed_ids: Set[str] = {
-#         str(aid)
-#         for aid in mock_forecasts.keys()
-#         if str(aid) != target_aid_str and str(aid) in ratings
-#     }
-
-#     if not allowed_ids:
-#         print("no allowed ids!")
-#         return []
-#     try:
-#         results = find_similar_activities_semantic(
-#             target_aid_str,
-#             csv_path=str(ACTIVITY_INFO_CSV),
-#             top_n=top_n,
-#             allowed_ids=allowed_ids,
-#         )
-#     except ValueError as e:
-#         if "not found in embeddings file" in str(e):
-#             print("WARNING: failure to find activity id in embeddings file!")
-#             return []
-#         else:
-#             raise
-
-
-#     if len(results) < 2:
-#         print("ERROR: seems nothing was found in similarity search..")
-#         return []
-
-#     df_sim, _search_item = results
-
-#     print("len results")
-#     print(len(df_sim))
-
-
-#     # Fallback: no rating_stats, just take top-k similar with valid scales
-#     if not rating_stats or "aid_fraction" not in rating_stats:
-#         neighbor_ids: List[str] = []
-#         for _, row in df_sim.iterrows():
-#             aid = str(row["activity_id"])
-#             if aid not in ratings:
-#                 continue
-#             if get_rating_scale_info(aid, ratings) is None:
-#                 continue
-#             # if aid not in baseline_map:
-#             #     continue
-#             neighbor_ids.append(aid)
-#             if len(neighbor_ids) >= k:
-#                 break
-#         return neighbor_ids
-
-#     aid_fraction_map: Dict[str, float] = rating_stats.get("aid_fraction") or {}
-#     global_six_percents: Dict[int, float] = rating_stats.get("six_percents") or {}
-
-#     # Build candidate list (up to top_n, in similarity order), with frac + bin
-#     candidates: List[Dict[str, Any]] = []
-#     for _, row in df_sim.iterrows():
-#         aid = str(row["activity_id"])
-#         if aid not in ratings:
-#             continue
-#         # if aid not in baseline_map:
-#         #     continue
-#         if get_rating_scale_info(aid, ratings) is None:
-#             continue
-
-#         frac = aid_fraction_map.get(aid)
-#         if frac is None:
-#             continue
-
-#         cand_bin = six_bin(frac)
-#         cand = {
-#             "aid": aid,
-#             "frac": frac,
-#             "bin": cand_bin,
-#             "similarity": float(row["similarity"]),
-#         }
-#         candidates.append(cand)
-
-#     if not candidates:
-#         print("ERROR: no candidates")
-#         return []
-
-#     total_k = min(k, len(candidates))
-#     if total_k <= 0:
-#         print("ERROR: negative K or negative candidates")
-#         return []
-
-#     # Compute target counts per bin, proportional to global_six_percents
-#     bin_ids = [1, 2, 3, 4, 5, 6]
-#     base_counts: Dict[int, int] = {b: 0 for b in bin_ids}
-#     fractional: List[Any] = []
-#     remaining = total_k
-
-#     for b in bin_ids:
-#         pct = float(global_six_percents.get(b, 0.0))
-#         exact = total_k * pct / 100.0
-#         base = int(exact)
-#         base_counts[b] = base
-#         fractional.append((exact - base, b))
-#         remaining -= base
-
-#     # Distribute leftover slots by largest fractional part
-#     fractional.sort(reverse=True)
-#     i = 0
-#     while remaining > 0 and i < len(fractional):
-#         b = fractional[i][1]
-#         base_counts[b] += 1
-#         remaining -= 1
-#         i += 1
-
-#     selected: List[str] = []
-#     selected_set: Set[str] = set()
-#     selected_counts: Dict[int, int] = {b: 0 for b in bin_ids}
-
-#     # First pass: respect per-bin target counts in similarity order
-#     for cand in candidates:
-#         if len(selected) >= total_k:
-#             break
-#         aid = cand["aid"]
-#         if aid in selected_set:
-#             continue
-#         b = cand["bin"]
-#         if selected_counts[b] < base_counts.get(b, 0):
-#             selected.append(aid)
-#             selected_set.add(aid)
-#             selected_counts[b] += 1
-
-#     # Second pass: fill remaining slots with nearest unused candidates
-#     if len(selected) < total_k:
-#         for cand in candidates:
-#             if len(selected) >= total_k:
-#                 break
-#             aid = cand["aid"]
-#             if aid in selected_set:
-#                 continue
-#             selected.append(aid)
-#             selected_set.add(aid)
-
-
-
-#     # Enforce coverage of key rating regions without shrinking the rating range
-#     if aid_fraction_map and total_k >= 2:
-
-#         def rating_int(aid_str: str) -> int | None:
-#             f = aid_fraction_map.get(aid_str)
-#             return None if f is None else int(round(f * 5))  # 0..5
-
-#         def is_mu_or_worse(aid_str: str) -> bool:
-#             r = rating_int(aid_str)
-#             return r is not None and r <= 2  # Moderately Unsatisfactory or worse
-
-#         def is_ms_or_worse(aid_str: str) -> bool:
-#             r = rating_int(aid_str)
-#             return r is not None and r <= 3  # Moderately Satisfactory or worse
-
-#         def is_s_or_better(aid_str: str) -> bool:
-#             r = rating_int(aid_str)
-#             return r is not None and r >= 4  # Satisfactory or Highly Satisfactory
-
-#         def current_range(sel: list[str]) -> int:
-#             rs = [rating_int(a) for a in sel]
-#             rs = [r for r in rs if r is not None]
-#             if not rs:
-#                 return 0
-#             return max(rs) - min(rs)
-
-#         def try_inject(
-#             *,
-#             missing_pred,
-#             replacement_pred,
-#             replaceable_pred,
-#         ) -> None:
-#             nonlocal selected, selected_set
-
-#             if any(missing_pred(a) for a in selected):
-#                 return  # already represented
-
-#             # find best (most similar) candidate of desired type not already selected
-#             replacement = None
-#             for cand in candidates:  # candidates are in similarity order
-#                 aid = cand["aid"]
-#                 if aid in selected_set:
-#                     continue
-#                 if replacement_pred(aid):
-#                     replacement = aid
-#                     break
-#             if replacement is None:
-#                 return  # no suitable candidate exists
-
-#             base_range = current_range(selected)
-
-#             # replace from the end (least similar among chosen), but only if range doesn't shrink
-#             for i in range(len(selected) - 1, -1, -1):
-#                 to_replace = selected[i]
-#                 if not replaceable_pred(to_replace):
-#                     continue
-
-#                 new_sel = selected[:]
-#                 new_sel[i] = replacement
-
-#                 if current_range(new_sel) >= base_range:
-#                     selected_set.remove(to_replace)
-#                     selected[i] = replacement
-#                     selected_set.add(replacement)
-#                     return
-
-#         # 1) If MU-or-worse is missing, inject one (replace anything if needed, but don't shrink range)
-#         try_inject(
-#             missing_pred=is_mu_or_worse,
-#             replacement_pred=is_mu_or_worse,
-#             replaceable_pred=lambda a: True,
-#         )
-
-#         # 2) If S-or-better is missing, inject one by replacing MS-or-worse,
-#         #    but only if it doesn't shrink the range.
-#         try_inject(
-#             missing_pred=is_s_or_better,
-#             replacement_pred=is_s_or_better,
-#             replaceable_pred=is_ms_or_worse,
-#         )
-
-#     return selected
-    
 def build_few_shot_block(
     neighbor_ids: List[str],
     baseline_map: Dict[str, Dict[str, Any]],
@@ -1294,23 +511,13 @@ def build_few_shot_block(
     mock_forecasts: Dict[str, str],
     include_mock_forecast: bool = True,
 ) -> str:
-    """
-    Build the few-shot examples block:
-    - basic meta (title, locations, scope)
-    - optional ChatGPT description + risks_summary
-    - optional full mock forecast text
-    - final evaluation rating as a label.
-    """
     lines: List[str] = []
     few_shot_actual = 0
     for idx, aid in enumerate(neighbor_ids, start=1):
-        # bundle = baseline_map[aid]
         meta = activity_info.get(aid, {})
         title = (meta.get("activity_title") or "").strip()
         locations = (meta.get("country_location") or "").strip()
         scope = (meta.get("activity_scope") or "").strip()
-        # chatgpt_description = (meta.get("chatgpt_description") or "").strip()
-        # Prefer ChatGPT summary; if missing, fall back to activity_description from the CSV
         chatgpt_description = (
             meta.get("chatgpt_description")
             or meta.get("activity_description")
@@ -1331,13 +538,6 @@ def build_few_shot_block(
         lines.append(f"\nEXAMPLE {idx}:")
         if title:
             lines.append(f"ACTIVITY TITLE: {title}")
-        # if variant == "A":
-        #     if locations:
-        #         lines.append(f"ACTIVITY LOCATIONS: {locations}")
-        # # if scope:
-        # #     lines.append(f"ACTIVITY SCOPE: {scope}")
-        #     if chatgpt_description:
-        #         lines.append(f"ACTIVITY SUMMARY: {chatgpt_description}")
         if risks_summary and risks_summary != "NO RESPONSE":
             formatted = format_risks_if_listlike(risks_summary)
             if "\n" in formatted:
@@ -1354,15 +554,8 @@ def build_few_shot_block(
             lines.append(f"FINAL EVALUATION OUTCOME FOR EXAMPLE FORECAST: {final_result_for_prompt}")
         lines.append("")
         few_shot_actual += 1
-    # print("few_shot_actual")
-    # print(few_shot_actual)
     return "\n".join(lines).strip()
 
-
-# ---------------------------------------------------------------------
-# Prompt builder (actual forecast, using the same structure as mock forecasts,
-# but now with KNN few-shot examples injected)
-# ---------------------------------------------------------------------
 
 def make_scratchpad_methods(
     num_options: int,
@@ -1409,17 +602,12 @@ def build_prompts_with_few_shot(
 
     print("in build prompts, len ratings")
     print(len(ratings))
-    # variant = variant + "_" + str(call_idx)
-    # variant_base = variant.split("_aid_")[0]
     variant = variant_base + "_idx_" + str(call_idx)
     baseline_map = {str(b["activity_id"]): b for b in baseline_bundles}
     prompts: Dict[str, Dict[str, str]] = {}
 
 
-    # decide per-variant switches
     include_mock_forecast = variant_base in LIST_OF_ALL_RECENT_VARIANTS
-    # include_mock_forecast = variant_base == "B" or variant_base in LIST_OF_ALL_RECENT_VARIANTS
-    # use_random_scratchpad = (variant == "A")
     use_random_scratchpad = False
 
     planned_by_aid: Dict[str, float] = {}
@@ -1458,13 +646,8 @@ def build_prompts_with_few_shot(
                 print("Error: unhandled no response condition")
                 return
 
-        # print("variant_base")
-        # print(variant_base)
-        # quit()
         is_rag_variant = (variant_base == "generate_rag_queries")
         is_knn_summary = (variant_base == "summarize_knn")
-        # print("is_knn_summary")
-        # print(is_knn_summary)
         early_only = (str(aid)[:5] == "DE-1-") or (str(aid)[:4] == "DE-1")  # robust-ish
 
         prev_by_stage = prev_by_stage or {}
@@ -1472,8 +655,6 @@ def build_prompts_with_few_shot(
         s2_text = (prev_by_stage.get("s2", {}).get(aid) or "").strip()
         s3_text = (prev_by_stage.get("s3", {}).get(aid) or "").strip()
 
-        # print("ratings")
-        # print(ratings)
         rating_scale = get_rating_scale_info(aid, ratings)
 
         if rating_scale is None:
@@ -1491,50 +672,23 @@ def build_prompts_with_few_shot(
 
         text_to_describe_rating_distribution = get_text_to_describe_rating_distribution(aid,ratings,rating_stats,num_options)
 
-        # print("len(set(ratings))")
-        # print(len(set(ratings)))
-        # print("len(set(mock_forecasts))")
-        # print(len(set(mock_forecasts)))
-        # print("len(set(mock_forecasts) & set(ratings))")
-        # print(len(set(mock_forecasts) & set(ratings)))
-        # Build KNN neighbors for this activity
-
         get_fewshot_directly_instead_of_knn_summary = False
         if knn_summary_by_aid and (knn_summary_by_aid.get(str(aid)) or "").strip() == "":
             # in this case, we're trying to insert knn summary by aid, but this one didn't have any few-shot to get.
             get_fewshot_directly_instead_of_knn_summary = True
             if few_shot_k > 0:
-                # print("WARNING: in this case, we're trying to insert knn summary by aid, but this one didn't have any few-shot summary to get, so we insert directly.")
                 print("WARNING: knn_summary had empty text for this aid (but attempted few-shot). Falling back to direct few-shot.")
                 n_knn_empty += 1
-        # get_fewshot_directly_instead_of_knn_summary = False
-
-        # if knn_summary_by_aid is not None:
-        #     knn_txt = (knn_summary_by_aid.get(aid) or "").strip()
-
-        #     # only treat as "missing summary" if the file had an entry for this aid
-        #     if aid in knn_summary_by_aid and knn_txt == "":
-        #         get_fewshot_directly_instead_of_knn_summary = True
-        #         if few_shot_k > 0:
-        #             print("WARNING: knn_summary had empty text for this aid. Falling back to direct few-shot.")
-        #             n_knn_empty += 1
-        # else:
-        #     knn_txt = ""
 
         add_in_fewshot_examples = False
         if few_shot_k == 0:
-            # if ther's nothing to get, then definitely don't insert anything.
             add_in_fewshot_examples = False
             if is_knn_summary:
                 print("WARNING: could not insert knn summary: few shot k was set to zero.")
                 continue
         elif get_fewshot_directly_instead_of_knn_summary:
-            # if we passed in a summarized knn, then we definitely want the example fewshot in there
-            # (as long as there are some to get)
             add_in_fewshot_examples = True
         elif is_knn_summary:
-            # there are examples, but we didn't try to insert a summary. 
-            # The only case we want to insert examples summary is if we're trying to summarize it.
             add_in_fewshot_examples = True
 
         if not add_in_fewshot_examples:
@@ -1616,9 +770,7 @@ def build_prompts_with_few_shot(
 
             elif stage == "s3":
                 rating_text_dist = '\n'.join(text_to_describe_rating_distribution)
-                # Check if this is the forced_rf variant - if so, override s3 behavior
                 if "forced_rf" in variant_base:
-                    # Get the RF prediction for this activity
                     rf_pred_value = rf_preds.get(str(aid))
                     if rf_pred_value is None:
                         print(f"WARNING: No RF prediction found for {aid}, skipping")
@@ -1642,11 +794,9 @@ On the very last line of your response, write 'FORECAST: {rf_pred_label}'"""
                 elif s1_text == "" or s2_text == "":
                     scratchpad_method = f"""{rating_text_dist}\nYOUR TASK:\n Aggregate the your considerations above. Think like a superforecaster (e.g. Nate Silver). On the very last line of your response, write 'FORECAST: ' followed by exactly one option from this rating scale with no extra words: {options_text}.""".strip()
                 else:
-                    # scratchpad_method = f"""{rating_text_dist}Here are a few reasons that you said the answer might be \"Moderately Satisfactory\" or worse:\n{s1_text}\nHere are a few reasons that you said the answer might be \"Satisfactory\" or better:\n{s2_text}\n\nYOUR TASK:\n Aggregate the your considerations above. Think like a superforecaster (e.g. Nate Silver). Output an initial forecast on this rating scale: {options_text}.""".strip()
                     scratchpad_method = f"""{rating_text_dist}Here are a few reasons that you said the answer might be \"Moderately Satisfactory\" or worse:\n{s1_text}\nHere are a few reasons that you said the answer might be \"Satisfactory\" or better:\n{s2_text}\n\nYOUR TASK:\n Aggregate the your considerations above. Think like a superforecaster (e.g. Nate Silver). On the very last line of your response, write 'FORECAST: ' followed by exactly one option from this rating scale with no extra words: {options_text}.""".strip()
             elif stage == "final":
                 rating_text_dist = '\n'.join(text_to_describe_rating_distribution)
-                # scratchpad_method = f"""{rating_text_dist}Here are a few reasons that you said the answer might be \"Moderately Satisfactory\" or worse:\n{s1_text}\n Here are a few reasons that you said the answer might be \"Satisfactory\" or better:\n{s2_text}\n Next, aggregating your considerations and thinking like a superforecaster (e.g. Nate Silver), your first forecast attempt at a forecast went as follows: {s3_text}.\n\nYOUR TASK:\n Evaluate whether your forecast is too extreme, or not extreme enough (whether "moderately", no modifier, or "highly" is the best choice), or if you chose "Moderately Satisfactory", whether in fact the forecast should really be "Moderately Unsatisfactory". Also, consider anything else that might affect the forecast that you did not before consider. On the very last line of your response, write 'FORECAST: ' followed by exactly one option from this rating scale with no extra words: {options_text}."""
                 scratchpad_method = f"""{rating_text_dist}Here are a few reasons that you said the answer might be \"Moderately Satisfactory\" or worse:\n{s1_text}\n Here are a few reasons that you said the answer might be \"Satisfactory\" or better:\n{s2_text}\n Next, aggregating your considerations and thinking like a superforecaster (e.g. Nate Silver), your first forecast attempt at a forecast went as follows: {s3_text}.\n\nYOUR TASK:\n Consider anything else that might affect the forecast that you did not before consider. On the very last line of your response, write 'FORECAST: ' followed by exactly one option from this rating scale with no extra words: {options_text}."""
             else:
                 print("ERROR, unknown stage!")
@@ -1672,7 +822,6 @@ On the very last line of your response, write 'FORECAST: {rf_pred_label}'"""
             6. At the very end, on the last line of your response, write 'FORECAST: ' followed by exactly one option from this rating scale, with no extra words.""".strip()
 
         else:
-            # Scratchpad instructions: random style for A, fixed for B/C
             if use_random_scratchpad:
                 scratchpad_options = make_scratchpad_methods(
                     num_options=num_options,
@@ -1680,11 +829,9 @@ On the very last line of your response, write 'FORECAST: {rf_pred_label}'"""
                     midpoint_high_text=midpoint_high_text,
                     final_result_for_prompt=final_result_for_prompt,
                 )
-                # scratchpad_method = random.choice(scratchpad_options)
                 rating_text_dist = '\n'.join(text_to_describe_rating_distribution)
                 scratchpad_method = rating_text_dist + "\nProvide the following format for your response:\n" + scratchpad_options[0]
             else:
-                # fixed, simple instruction: mimic examples, end with FORECAST:
                 rating_text_dist = '\n'.join(text_to_describe_rating_distribution)
                 scratchpad_method = f"""{rating_text_dist}\nProvide the following format for your response:\n1. Carefully reason about the likely outcome{', using the style of reasoning shown in the example forecasts above' if few_shot_block else ''}.
 2. Explicitly weigh reasons for lower outcomes versus reasons for higher outcomes on this rating scale: {options_text}.
@@ -1723,14 +870,6 @@ Your job is to identify missing-but-important information from activity informat
 
             prompt_lines.append("### ACTIVITY TO FORECAST ###")
 
-            # prompt_text = "\n".join(prompt_lines)
-
-            # prompts[aid] = {
-            #     "system_msg": system_msg,
-            #     "prompt": prompt_text,
-            #     "prompt_type": f"fewshot_k{few_shot_k}_variant_{variant}",
-            # }
-            # continue  # IMPORTANT: skip the rest of the forecast-building logic
         elif is_knn_summary:
             system_msg = (
                 "You are an experienced international aid decision maker with a quantitative mindset. "
@@ -1744,11 +883,6 @@ Your job is to identify missing-but-important information from activity informat
             if not few_shot_block:
                 print("WARNING: NO FEW SHOT BLOCK IN KNN SUMMARY. SKIPPING")
                 continue
-            #     prompt_lines.append("### EXAMPLE ACTIVITIES ###")
-            #     prompt_lines.append(few_shot_block)
-            #     prompt_lines.append("### END EXAMPLE ACTIVITIES ###\n")
-            # else:
-            # prompt_lines.append("### NEW ACTIVITY TO FORECAST ###")
 
         else:
             if stage in ("final","s3"):
@@ -1769,21 +903,12 @@ Your job is to identify missing-but-important information from activity informat
                 prompt_lines.append(
                     "You are considering the likely outcomes of this activity."
                 )
-            # elif stage in ("s3",):
-            #     system_msg = (
-            #         "You are an experienced international aid decision maker with a quantitative mindset. "
-            #         f"Provide a thorough, thoughtful response."
-            #     )
-            #     prompt_lines: List[str] = []
-            #     prompt_lines.append(
-            #         "You are considering the likely outcomes of this activity."
-            #     )
 
-        if variant_base == "summarize_knn": # (previously we skipped if no neighbor ids)
+        if variant_base == "summarize_knn":
             prompt_lines.append("### EXAMPLE ACTIVITIES ###")
             prompt_lines.append(few_shot_block)
             prompt_lines.append("### END EXAMPLE ACTIVITIES ###\n")
-        elif knn_summary_provided and "_no_knn" not in variant_base:  # ADD CHECK HERE:
+        elif knn_summary_provided and "_no_knn" not in variant_base:
             if knn_txt:
                 prompt_lines.append("\n### Lessons from similar activities ###")
                 prompt_lines.append(knn_txt)
@@ -1793,26 +918,7 @@ Your job is to identify missing-but-important information from activity informat
                 prompt_lines.append(few_shot_block)
                 prompt_lines.append("### END EXAMPLE ACTIVITIES ###\n")
 
-        # if knn_txt:
-        #     prompt_lines.append("\n### Lessons from similar activities ###")
-        #     prompt_lines.append(knn_txt)
-        #     prompt_lines.append("### End lessons ###\n")
-        # elif few_shot_block:
-        #     prompt_lines.append("\n### EXAMPLE ACTIVITIES ###")
-        #     prompt_lines.append(few_shot_block)
-        #     prompt_lines.append("### END EXAMPLE ACTIVITIES ###\n")
-
-
-        # prompt_lines.append(
-        #     "Your response will be balanced and comprehensive, including consideration of the "
-        #     "information from the uploaded activity documents and the example forecasts for "
-        #     "similar activities shown below."
-        # )
         prompt_lines.append("")
-        # prompt_lines.append(
-        #     f"First, study the following {len(neighbor_ids)} forecast(s), each paired with its final evaluation outcome:"
-        # )
-        # prompt_lines.append("")
         prompt_lines.append(f"ACTIVITY ID: {aid}")
         if variant_base != "onlysummary_no_knn_no_rag":
             if title:
@@ -1821,32 +927,6 @@ Your job is to identify missing-but-important information from activity informat
                 prompt_lines.append(f"ORIGINAL PLANNED START DATE: {planned_start_date}")
             if planned_end_date:
                 prompt_lines.append(f"ORIGINAL PLANNED END DATE: {planned_end_date}")
-        # if scope:
-        #     prompt_lines.append(f"ACTIVITY SCOPE: {scope}")
-        # if locations:
-        #     prompt_lines.append(f"ACTIVITY LOCATION(S): {locations}")
-        # if gdp_percap:
-        #     try:
-        #         prompt_lines.append(
-        #             f"LOCATION GDP PER CAPITA, USD: {int(float(gdp_percap))}"
-        #         )
-        #     except Exception:
-        #         prompt_lines.append(f"LOCATION GDP PER CAPITA, USD: {gdp_percap}")
-        # if orgs:
-        #     prompt_lines.append(f"PARTICIPATING ORGANIZATIONS: {orgs}")
-        # if implementing_org_type:
-        #     prompt_lines.append(
-        #         f"IMPLEMENTING ORGANIZATION CATEGORY: {implementing_org_type}"
-        #     )
-
-        # if variant_base == "A" or variant == "B":
-
-        #     if chatgpt_description:
-        #         prompt_lines.append(f"ACTIVITY DESCRIPTION: {chatgpt_description}")
-
-        #     if risks_summary:
-        #         prompt_lines.append(f"ACTIVITY RISKS: {risks_summary}")
-
 
         if variant_base in LIST_OF_ALL_RECENT_VARIANTS:
 
@@ -1885,24 +965,12 @@ Your job is to identify missing-but-important information from activity informat
             targets_grade_text = (bundle.get('targets_grade_text') or "").strip()
             risks_grade_text = (bundle.get('risks_grade_text') or "").strip()
 
-            # pprint.pprint("bundle")
-            # pprint.pprint(bundle)
-
-            # prompt_lines.append(f"""\nACTIVITY TITLE: {title}""")
-            # if planned_start_date != "" and planned_start_date is not None and planned_start_date != "NO RESPONSE":
-            #     prompt_lines.append(f"\nPLANNED START DATE: {planned_start_date}")
-            # if planned_end_date != "" and planned_end_date is not None and planned_end_date != "NO RESPONSE":
-            #     prompt_lines.append(f"\nPLANNED END DATE: {planned_end_date}")
             if activity_scope != "" and activity_scope is not None and activity_scope != "NO RESPONSE":
                 prompt_lines.append(f"\nACTIVITY SCOPE: {activity_scope}")
             planned_exp = planned_by_aid.get(aid)
             if planned_exp is not None:
                 planned_usd = float(np.exp(planned_exp))
                 prompt_lines.append(f"\nPLANNED TOTAL DISBURSEMENT (USD): {planned_usd:,.0f}")
-                # prompt_lines.append(f"\nPLANNED TOTAL DISBURSEMENT: {disbursement_total} {disbursement_units}")
-            # if disbursement_total != "" and (disbursement_total != "NO RESPONSE"):
-            # if loan_total != "" and (loan_total != "NO RESPONSE"):
-            #     prompt_lines.append(f"\nPLANNED TOTAL LOANS AND CREDIT: {loan_total} {loan_units}")
             if locations != "" and locations is not None and locations != "NO RESPONSE":
                 prompt_lines.append(f"\nACTIVITY LOCATION(S): {locations}")
             if gdp_percap != "" and gdp_percap is not None and gdp_percap != "NO RESPONSE":
@@ -1911,7 +979,6 @@ Your job is to identify missing-but-important information from activity informat
                     prompt_lines.append(f"\nLOCATION GDP PER CAPITA, USD: {gdp_int}")
                 except ValueError:
                     prompt_lines.append(f"\nLOCATION GDP PER CAPITA, USD: {gdp_percap}")
-                # prompt_lines.append(f"\nLOCATION GDP PER CAPITA, USD: {int(float(gdp_percap))}")
             if orgs != "" and orgs is not None and orgs != "NO RESPONSE":
                 prompt_lines.append(f"\nPARTICIPATING ORGANIZATIONS: {orgs}")
             if implementing_org_type != "" and implementing_org_type is not None and implementing_org_type != "NO RESPONSE" and implementing_org_type.lower() != "other":
@@ -1930,8 +997,6 @@ Your job is to identify missing-but-important information from activity informat
                 prompt_lines.append(f"\nACTIVITY COMPLEXITY: {complexity_details}")
             if how_integrated_description != "" and how_integrated_description is not None and how_integrated_description != "NO RESPONSE":
                 prompt_lines.append(f"\nACTIVITY INTEGRATEDNESS: {how_integrated_description}")
-            # if finance_summary != "" and finance_summary is not None and finance_summary != "NO RESPONSE":
-            #     prompt_lines.append(f"\nFINANCING DETAILS: {finance_summary}")
             if finance_summary and finance_summary != "NO RESPONSE":
                 formatted = format_risks_if_listlike(finance_summary)
                 prompt_lines.append("\nFINANCING DETAILS: " + formatted)
@@ -1985,25 +1050,14 @@ Your job is to identify missing-but-important information from activity informat
                     prompt_lines.append(f"IMPLEMENTER PERFORMANCE {implementer_performance_grade_text}")
                 if ok_grade(targets_grade_text):
                     prompt_lines.append(f"TARGETS {targets_grade_text}")
-                # if ok_grade(risks_grade_text):
-                #     prompt_lines.append(f"RISKS {risks_grade_text}")
-            # --- Inject KNN-summary (if available) into forecast prompts ---
-            # print("WARNING:only knn summaries are getting fewshot, might want to alter later")
-            # if knn_summary_by_aid:
-            #     knn_txt = (knn_summary_by_aid.get(str(aid)) or "").strip()
-            #     if knn_txt and knn_txt != "NO RESPONSE":
-            #         prompt_lines.append("\n### Lessons from similar activities ###")
-            #         prompt_lines.append(knn_txt)
-            #         prompt_lines.append("### End KNN summary ###\n")
 
         if variant_base == "onlysummary_no_knn_no_rag":
             if chatgpt_description and chatgpt_description != "NO RESPONSE":
                 prompt_lines.append(f"\nACTIVITY DESCRIPTION: {chatgpt_description}")
 
-        if ("rag_added" in variant_base and "_no_rag" not in variant_base):  # SIMPLIFIED CHECK
+        if ("rag_added" in variant_base and "_no_rag" not in variant_base):
             if not rag_answers_by_aid:
                     print(f"WARNING: there was no rag info injected for {aid}! skipping")
-                    # continue 
             else:
                 inserted_context = (rag_answers_by_aid.get(str(aid)) or "").strip()
                 if not inserted_context:
@@ -2014,22 +1068,6 @@ Your job is to identify missing-but-important information from activity informat
                         prompt_lines.append(inserted_context)
                         prompt_lines.append("\n### End of additional information you summarized ###")
 
-
-            # target_text = collapse_activity_items_to_text(
-            #     bundle,
-            #     max_chars=MAX_TARGET_CHARS,
-            #     allow_ocr=True,
-            # )
-
-            # prompt_lines.append("")
-            # prompt_lines.append("### START DETAILED INFORMATION ON ACTIVITY TO FORECAST ###")
-            # prompt_lines.append("")
-            # prompt_lines.append(target_text.strip())
-            # prompt_lines.append("")
-            # prompt_lines.append("### END DETAILED INFORMATION ON ACTIVITY TO FORECAST ###")
-            # prompt_lines.append("")
-
-        # Convert 6-category scale to numeric
         RATING_MAP = {
             'Highly Unsatisfactory': 0,
             'Unsatisfactory': 1,
@@ -2091,11 +1129,6 @@ Your job is to identify missing-but-important information from activity informat
             "knn_neighbor_ids": list(neighbor_ids),
         }
 
-        # print("\n\nprompts[aid]")
-        # print(prompts[aid])
-        # input()
-
-        # break
     print("n_knn_empty:")
     print(n_knn_empty)
     print("")

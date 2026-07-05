@@ -325,34 +325,3 @@ def make_string(dictionary):
     for key, value in dictionary.items():
         final_string += "    " + key + ": " + value + "\n"
     return final_string
-
-
-def main():
-    print("Loading finance / budget pages...")
-
-    rows_financial = load_and_filter_rows(
-        section="Baseline",
-        subcategory_a=["financing_details", "budget_and_legal"],
-        subcategory_b=["financing_details", "budget_and_legal"],
-        min_score=7,
-        top_k_per_activity=5,
-        get_surrounding_if_not_enough=True,
-        get_at_least_top_k=True,
-    )
-
-    print(f"Loaded {len(rows_financial)} rows")
-
-    if not rows_financial:
-        print("No rows found, exiting.")
-        return
-
-    # Optional: quick coverage sanity check
-    activity_ids = {r.get("activity_id") for r in rows_financial if r.get("activity_id")}
-    print(f"Unique activities covered: {len(activity_ids)}")
-
-    # This opens Evince with page slices + metadata overlays
-    view_rows_as_pdf(rows_financial)
-
-
-if __name__ == "__main__":
-    main()
