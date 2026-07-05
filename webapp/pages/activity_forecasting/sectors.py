@@ -163,9 +163,9 @@ def render_sector_allocation_subsection(model_metadata: dict, training_data, _sh
 
     col_norm, col_reset = st.columns(2)
     with col_norm:
-        st.button("Normalize to 100%", on_click=normalize_sectors, key="normalize_sectors_btn", use_container_width=True)
+        st.button("Normalize to 100%", on_click=normalize_sectors, key="normalize_sectors_btn", width='stretch')
     with col_reset:
-        st.button("Set all to 0", on_click=reset_sectors_to_zero, key="reset_sectors_btn", use_container_width=True)
+        st.button("Set all to 0", on_click=reset_sectors_to_zero, key="reset_sectors_btn", width='stretch')
 
     # Sector allocation visualization
     st.markdown("---")

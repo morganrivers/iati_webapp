@@ -32,7 +32,7 @@ Your feedback helps us make it better!
                 help="Maximum 2000 characters"
             )
 
-            submitted = st.form_submit_button("Send Feedback", use_container_width=True)
+            submitted = st.form_submit_button("Send Feedback", width='stretch')
 
             if submitted:
                 if not name or not feedback:

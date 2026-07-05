@@ -172,7 +172,7 @@ def _tag_section_chart(section: dict, preds: dict, tag_data: dict) -> None:
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     # Descriptions in grey beneath the chart
     for lbl, defn, prob in zip(labels, defs, probs):

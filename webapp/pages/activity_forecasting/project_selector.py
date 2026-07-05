@@ -189,7 +189,7 @@ def render_project_selector(_llm_running: bool) -> None:
     if st.session_state.creating_new_project:
         col_create, col_spacer = st.columns([1, 3])
         with col_create:
-            if st.button("Save New Activity", type="primary", use_container_width=True, disabled=_llm_running):
+            if st.button("Save New Activity", type="primary", width='stretch', disabled=_llm_running):
                 if not st.session_state.pending_project_name or st.session_state.pending_project_name.strip() == "":
                     st.error("❌ Please enter an activity name")
                 else:
@@ -232,12 +232,12 @@ def render_project_selector(_llm_running: bool) -> None:
 
         with col_delete:
             st.write("")  # vertical spacer to align with status text
-            if st.button("🗑️ Delete Activity", type="secondary", use_container_width=True):
+            if st.button("🗑️ Delete Activity", type="secondary", width='stretch'):
                 st.session_state.confirm_delete = True
 
         with col_save:
             st.write("")  # vertical spacer to align with status text
-            if st.button("Save Activity State", type="primary", use_container_width=True, disabled=_llm_running):
+            if st.button("Save Activity State", type="primary", width='stretch', disabled=_llm_running):
                 logger.info("DEBUG SAVE BUTTON CLICKED")
                 logger.info(f"Time: {datetime.now().isoformat()}")
                 logger.info(f"Project: {st.session_state.selected_project_folder}")
@@ -261,7 +261,7 @@ def render_project_selector(_llm_running: bool) -> None:
                         data=_f.read(),
                         file_name=f"{st.session_state.project_name or 'activity'}.pdf",
                         mime="application/pdf",
-                        use_container_width=True,
+                        width='stretch',
                     )
 
         # Confirmation dialog for delete
@@ -269,7 +269,7 @@ def render_project_selector(_llm_running: bool) -> None:
             st.warning(f"⚠️ Are you sure you want to delete **{st.session_state.project_name}**? This cannot be undone!")
             col_yes, col_no, col_space = st.columns([1, 1, 3])
             with col_yes:
-                if st.button("Yes, delete it", type="primary", use_container_width=True):
+                if st.button("Yes, delete it", type="primary", width='stretch'):
                     folder_to_delete = st.session_state.selected_project_folder
                     project_name_deleted = st.session_state.project_name
                     if delete_project(folder_to_delete):
@@ -287,7 +287,7 @@ def render_project_selector(_llm_running: bool) -> None:
                     else:
                         st.session_state.confirm_delete = False
             with col_no:
-                if st.button("Cancel", use_container_width=True):
+                if st.button("Cancel", width='stretch'):
                     st.session_state.confirm_delete = False
                     st.rerun()
 

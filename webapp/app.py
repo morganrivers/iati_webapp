@@ -142,7 +142,7 @@ if "previous_page" not in st.session_state:
 
 for _key in _PAGE_KEYS:
     _is_active = st.session_state.current_page == _key
-    if st.sidebar.button(_key, use_container_width=True, type="primary" if _is_active else "secondary"):
+    if st.sidebar.button(_key, width='stretch', type="primary" if _is_active else "secondary"):
         # Auto-save temp state if leaving Activity Forecasting page
         if (st.session_state.current_page == "🏠 Activity Forecasting" and
             _key != "🏠 Activity Forecasting" and

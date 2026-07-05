@@ -249,7 +249,7 @@ def render_rag_forecast_page():
         st.warning("🔒 LLM access required — authenticate on the Activity Forecasting page to generate forecasts.")
     col_btn, col_status = st.columns([1, 3])
     with col_btn:
-        run_clicked = st.button("▶ Generate Forecasts", type="primary", use_container_width=True,
+        run_clicked = st.button("▶ Generate Forecasts", type="primary", width='stretch',
                                 disabled=not st.session_state.get('llm_authenticated', False))
     with col_status:
         last_status = st.session_state.get("rag_last_status", "")

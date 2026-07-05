@@ -62,7 +62,7 @@ def render_targets_embeddings_subsection(model_metadata: dict, training_data, _s
         with col1:
             st.markdown(f"**Targets text available:** {len(targets_text.strip())} characters")
         with col2:
-            if st.button(" 🛠️ Recompute Embeddings", help="Force recalculation of embeddings from targets text", use_container_width=True):
+            if st.button(" 🛠️ Recompute Embeddings", help="Force recalculation of embeddings from targets text", width='stretch'):
                 st.session_state.force_embedding_recompute = True
                 st.session_state.embedding_results = {}  # Clear cached results
                 st.rerun()
