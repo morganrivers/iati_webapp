@@ -1,13 +1,6 @@
 """Predict outcome tag probabilities for a single activity.
 
-Works with the pkl produced by D_train_tag_predictors.py.
-Each tag entry in models contains one of:
-  - {"base_rate": float}                                  → const_base
-  - {"rf": clf, "extra": clf, "feature_cols": [...]}      → RF+ET ensemble
-  - {"rf": clf, "extra": clf, "ridge": Pipeline,
-     "ridge_feat": [...], "feature_cols": [...]}          → RF+ET+Ridge average
-  - {"ridge": Pipeline, "feature_cols": [...]}            → Ridge only
-  - {"rf": clf, "feature_cols": [...]}                    → RF only (no ET)
+Works with the pkl produced for outcome tag forecasting.
 """
 
 from __future__ import annotations

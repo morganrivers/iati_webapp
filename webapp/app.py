@@ -5,8 +5,10 @@ import warnings
 from logging_config import setup_logging
 
 setup_logging()
+logger = logging.getLogger(__name__)
 
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
 warnings.filterwarnings('ignore', message=".*force_all_finite.*", category=FutureWarning)
@@ -75,6 +77,66 @@ st.markdown("""<style>
         font-weight: 600;
     }
 </style>""", unsafe_allow_html=True)
+
+components.html("""
+<script>
+(function() {
+    var parent = window.parent;
+    var doc = parent.document;
+
+    // ── Scroll preservation ──────────────────────────────────────────────────
+    var SCROLL_KEY = 'iati_scroll_y';
+    var mainEl = doc.querySelector('[data-testid="stAppViewContainer"] > .main');
+    if (mainEl) {
+        var savedScroll = parent.sessionStorage.getItem(SCROLL_KEY);
+        if (savedScroll !== null) {
+            mainEl.scrollTop = parseInt(savedScroll, 10);
+        }
+        if (!mainEl._iatiScrollListener) {
+            mainEl.addEventListener('scroll', function() {
+                parent.sessionStorage.setItem(SCROLL_KEY, mainEl.scrollTop.toString());
+            }, { passive: true });
+            mainEl._iatiScrollListener = true;
+        }
+    }
+
+    // ── Expander state persistence ───────────────────────────────────────────
+    // Expanders reset to closed on every st.rerun() because there is no key param.
+    // We save/restore open state via sessionStorage.
+    var EXPANDER_LABELS = {
+        'iati_activity_info_expanded': 'Edit or View Activity Information'
+    };
+
+    function setupExpanders() {
+        var summaries = doc.querySelectorAll('details summary');
+        Object.keys(EXPANDER_LABELS).forEach(function(storageKey) {
+            var labelText = EXPANDER_LABELS[storageKey];
+            summaries.forEach(function(summary) {
+                if (summary._iatiSetup) return;
+                if (!summary.textContent.includes(labelText)) return;
+                var details = summary.closest('details');
+                if (!details) return;
+                summary._iatiSetup = true;
+
+                // Restore saved state
+                var saved = parent.sessionStorage.getItem(storageKey);
+                if (saved === 'open' && !details.open) {
+                    details.open = true;
+                }
+
+                // Save state on user interaction
+                details.addEventListener('toggle', function() {
+                    parent.sessionStorage.setItem(storageKey, details.open ? 'open' : 'closed');
+                });
+            });
+        });
+    }
+
+    setupExpanders();
+    setTimeout(setupExpanders, 80);
+})();
+</script>
+""", height=0)
 
 _loading_slot = st.empty()
 if '_app_initialized' not in st.session_state:
