@@ -25,7 +25,7 @@ The app **never imports the research code at runtime for the model**; it consume
 ```mermaid
 flowchart TD
     U[User: upload PDF or manual entry] --> P[Extraction Pipeline<br/>webapp/modules/webapp_pipeline.py]
-    P --> F[Structured features<br/>extracted_pdf_data/*]
+    P --> F[Structured features<br/>projects/*]
     F --> M[Forecasting Model<br/>rf_predictor.py]
     M --> R[0-5 success rating]
     F --> N[Narrative Forecast RAG<br/>run_rag_forecast.py]

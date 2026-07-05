@@ -8,7 +8,7 @@ script only defines the webapp's own stage bands and colours.
 Stages (top → bottom):
   I  input    – app.py host + PDF upload + model_loader
   X  extract  – process_uploaded_pdf's 5 Gemini phases
-  D  files    – extracted_pdf_data/{activity_id}/ jsonl
+  D  files    – projects/{activity_id}/ jsonl
   P  predict  – feature grading, UMAP embeddings, RF + ExtraTrees ensemble, tags, SHAP
   R  narrative – RAG retrieval + LLM forecast
   U  ui       – Streamlit pages
@@ -71,7 +71,7 @@ EK = {'handoff': 'strokeColor=#2e8b57;', 'loader': 'strokeColor=#3d72b4;dashed=1
 # stage banding (label + tag colour), ordered top → bottom
 BANDS = ['I', 'X', 'D', 'P', 'R', 'U']
 STLAB = {'I': 'INPUT · app + upload', 'X': 'EXTRACT · Gemini pipeline (per PDF)',
-         'D': 'extracted_pdf_data/{activity_id}/', 'P': 'PREDICT · Random Forest + explain',
+         'D': 'projects/{activity_id}/', 'P': 'PREDICT · Random Forest + explain',
          'R': 'NARRATIVE · RAG forecast', 'U': 'UI · Streamlit pages'}
 STCOL = {'I': '#6b7f96', 'X': '#5a9367', 'D': '#8493a4', 'P': '#8a5fb0',
          'R': '#c17a3a', 'U': '#4f9b95'}

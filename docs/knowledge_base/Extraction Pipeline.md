@@ -7,7 +7,7 @@ tags: [pipeline, extraction, llm]
 
 Back to [[Home]] · related: [[Forecasting Model]], [[Data and Artifacts]].
 
-Orchestrated by `webapp/modules/webapp_pipeline.py`, function `process_uploaded_pdf()`. Turns one uploaded PDF into the structured features the [[Forecasting Model]] needs. Every phase writes its output to `webapp/extracted_pdf_data/{activity_id}/` and is skipped on re-run if a valid cached file exists.
+Orchestrated by `webapp/modules/webapp_pipeline.py`, function `process_uploaded_pdf()`. Turns one uploaded PDF into the structured features the [[Forecasting Model]] needs. Every phase writes its output to `projects/{activity_id}/` and is skipped on re-run if a valid cached file exists.
 
 ## Activity ID and caching
 

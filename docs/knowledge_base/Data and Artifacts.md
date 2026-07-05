@@ -50,7 +50,7 @@ Built by `webapp/scripts/build_webapp_db.py`:
 
 ## App-generated data
 
-- `webapp/extracted_pdf_data/{activity_id}/` — per-PDF extraction cache from the [[Extraction Pipeline]], plus `uploaded.pdf` and `app_state.json`.
+- `projects/{activity_id}/` — per-project folder: PDF extraction cache from the [[Extraction Pipeline]], plus `uploaded.pdf`, `app_state.json`, and any user edits.
 - `webapp/llm_forecasts/` — narrative forecast outputs, RAG indexes, and PDF text.
 
 ## Large-file handling

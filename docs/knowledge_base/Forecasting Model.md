@@ -29,13 +29,13 @@ flowchart TD
     ET --> D
     B[per_org_baseline lookup] --> S[clip base + ens_delta to 0..5]
     D --> S
-    S --> Y[+ intercept + slope * start_year]
+    S --> Y[add intercept + slope × start_year]
     Y --> P[Final 0-5 rating]
 ```
 
 ## Three components
 
-1. **Per-organization baseline** — the modal historical rating for the activity's reporting organization, with an `__overall__` fallback. Reporting org is one-hot encoded as `rep_org_0/1/2`.
+1. **Per-organization baseline** — the modal historical rating for the activity's reporting organization, with an `__overall__` fallback. Four reporting orgs are supported (BMZ, FCDO, Asian Development Bank, World Bank), one-hot encoded as `rep_org_0/1/2` with BMZ as the reference category (all three dummies zero).
 2. **Ensemble delta** — a Random Forest and an ExtraTrees regressor, each trained on the residual from the baseline, then averaged.
 3. **Start-year correction** — a single Ridge fit (`intercept`, `slope`) that absorbs linear temporal drift by activity start year. Default start year is 2020 when unknown.
 
