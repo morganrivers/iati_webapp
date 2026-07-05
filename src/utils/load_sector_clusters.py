@@ -9,15 +9,11 @@ Returns DataFrame with:
 - sector_cluster_{special_sector}: direct allocation for special non-clustered sectors
 - n_sectors: number of sectors per activity
 """
-from debug_utils import _print_ram
-
-_print_ram("before standard load_sector_clusters imports")
 import json
 import pickle
 from pathlib import Path
 import numpy as np
 import pandas as pd
-_print_ram("after standard load_sector_clusters imports")
 
 
 # Special sectors that get their own columns and are NOT embedded/clustered

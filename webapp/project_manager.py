@@ -8,7 +8,6 @@ import secrets
 
 # Import state management utilities
 from state_manager import validate_and_sync_field_edited, clear_project_state
-from debug_utils import _loc_debug, _gdp_debug
 
 import logging
 
@@ -401,8 +400,6 @@ def save_project_state_temp(project_folder: str):
                     try:
                         json.dumps(val)
                         widget_state[key] = val
-                        if key == 'input_gdp_percap':
-                            _gdp_debug(f"save_project_state_temp saving input_gdp_percap={val!r}")
                     except (TypeError, ValueError):
                         pass
 
@@ -563,7 +560,6 @@ def load_project_state(project_folder: str):
         st.session_state.features = state.get('features', {})
         st.session_state.sector_percentages = state.get('sector_percentages', {})
         st.session_state.location_countries = state.get('location_countries', [])
-        _loc_debug(f"load_project_state PERM {project_folder}: location_countries={st.session_state.location_countries!r}")
         st.session_state.phases_0_3_complete = state.get('phases_0_3_complete', False)
         st.session_state.ready_for_phase_4 = state.get('ready_for_phase_4', False)
         st.session_state.confirmed_metadata = state.get('confirmed_metadata', {})
@@ -594,9 +590,6 @@ def load_project_state(project_folder: str):
                 if key in _GRADE_KEYS:
                     prev = st.session_state.get(key, '<unset>')
                     # print(f"[SLIDER_DEBUG] load_project_state widget_state: {key} = {val}  (was {prev})")
-                if key == 'input_gdp_percap':
-                    _gdp_debug(f"load_project_state PERM restoring input_gdp_percap={val!r} "
-                               f"(was {st.session_state.get(key, '<unset>')!r})")
                 st.session_state[key] = val
             except Exception as e:
                 logger.warning(f"Could not restore widget key {key}: {e}")
@@ -620,9 +613,6 @@ def load_project_state(project_folder: str):
                 temp_session_id = temp_state.get('session_id')
                 current_session_id = st.session_state.get('session_id')
 
-                _loc_debug(f"load_project_state TEMP {project_folder}: temp_exists=True "
-                           f"temp_session={temp_session_id!r} current_session={current_session_id!r} match={temp_session_id == current_session_id} "
-                           f"temp_location_countries={temp_state.get('location_countries')!r}")
                 if temp_session_id == current_session_id:
                     # Restore widget state from temp (in-session changes not yet saved)
                     temp_widget_state = temp_state.get('widget_state', {})
@@ -639,9 +629,6 @@ def load_project_state(project_folder: str):
                             if key in _GRADE_KEYS:
                                 prev = st.session_state.get(key, '<unset>')
                                 # print(f"[SLIDER_DEBUG] load_project_state temp_widget_state: {key} = {val}  (was {prev})")
-                            if key == 'input_gdp_percap':
-                                _gdp_debug(f"load_project_state TEMP restoring input_gdp_percap={val!r} "
-                                           f"(was {st.session_state.get(key, '<unset>')!r})")
                             st.session_state[key] = val
                         except Exception as e:
                             logger.warning(f"Could not restore temp widget {key}: {e}")

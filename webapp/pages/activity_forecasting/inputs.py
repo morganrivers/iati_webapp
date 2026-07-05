@@ -5,7 +5,6 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-from debug_utils import _loc_debug, _gdp_debug
 from utils import COUNTRY_NAMES, _COUNTRY_OPTIONS, parse_location_string, build_location_string
 from ui_components import get_field_indicator, render_histogram, render_shap_annotation
 from location_features import extract_features_from_location, KEEP_REPORTING_ORGS, get_org_dummies
@@ -40,8 +39,6 @@ def render_location_input(_llm_running: bool, _shap_sum) -> str:
     # the Streamlit frontend showing the previous project's country even though
     # the server-side value is correct. A fresh key forces a fresh widget.
     _loc_nonce = st.session_state.get('loc_widget_nonce', 0)
-    _loc_debug(f"render_location_input entry: project={st.session_state.get('selected_project_folder')!r} "
-               f"nonce={_loc_nonce} location_countries={st.session_state.location_countries!r}")
 
     # Render existing country rows
     _countries_changed = False
@@ -526,11 +523,6 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
             st.session_state.field_edited['cpia_score'] = True
         if location_features.get('governance_composite') is not None:
             st.session_state.field_edited['governance_composite'] = True
-        _gdp_debug(f"extraction wrote extracted_values['gdp_percap']="
-                   f"{st.session_state.extracted_values.get('gdp_percap')!r}  "
-                   f"field_edited['gdp_percap']={st.session_state.field_edited.get('gdp_percap')!r}  "
-                   f"input_gdp_percap in ss={'input_gdp_percap' in st.session_state} "
-                   f"(={st.session_state.get('input_gdp_percap', '<unset>')!r})")
         # Get user's region allocation
         user_regions = {
             region_names[i]: location_features.get(region_cols[i], 0.0)
@@ -980,12 +972,7 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             if 'input_gdp_percap' not in st.session_state:
                 _extracted_gdp = st.session_state.extracted_values.get('gdp_percap')
                 _default_gdp = float(_extracted_gdp) if _extracted_gdp is not None else float(_train_median_gdp)
-                _gdp_debug(f"[WIDGET-INIT] input_gdp_percap not in ss → setting to {_default_gdp!r} (extracted={_extracted_gdp!r})")
                 st.session_state['input_gdp_percap'] = _default_gdp
-            else:
-                _gdp_debug(f"[WIDGET-INIT] input_gdp_percap already in ss = {st.session_state['input_gdp_percap']!r} — skipping init "
-                           f"(extracted_values['gdp_percap']={st.session_state.extracted_values.get('gdp_percap')!r}, "
-                           f"field_edited={st.session_state.field_edited.get('gdp_percap')!r})")
 
             def on_gdp_percap_change():
                 val = st.session_state.get('input_gdp_percap', _train_median_gdp)
@@ -1045,10 +1032,7 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             _extracted_cpia = st.session_state.extracted_values.get('cpia_score')
             if 'input_cpia_score' not in st.session_state:
                 _default_cpia = float(_extracted_cpia) if _extracted_cpia is not None else float(_train_median_cpia)
-                _gdp_debug(f"[WIDGET-INIT] input_cpia_score not in ss → setting to {_default_cpia!r} (extracted={_extracted_cpia!r})")
                 st.session_state['input_cpia_score'] = _default_cpia
-            else:
-                _gdp_debug(f"[WIDGET-INIT] input_cpia_score already in ss = {st.session_state['input_cpia_score']!r} — skipping init")
 
             def on_cpia_score_change():
                 val = st.session_state.get('input_cpia_score', _train_median_cpia)
@@ -1107,10 +1091,7 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
             if 'input_governance_composite' not in st.session_state:
                 _extracted_gov = st.session_state.extracted_values.get('governance_composite')
                 _default_gov = float(_extracted_gov) if _extracted_gov is not None else float(_train_median_gov)
-                _gdp_debug(f"[WIDGET-INIT] input_governance_composite not in ss → setting to {_default_gov!r} (extracted={_extracted_gov!r})")
                 st.session_state['input_governance_composite'] = _default_gov
-            else:
-                _gdp_debug(f"[WIDGET-INIT] input_governance_composite already in ss = {st.session_state['input_governance_composite']!r} — skipping init")
 
             def on_governance_composite_change():
                 val = st.session_state.get('input_governance_composite', _train_median_gov)

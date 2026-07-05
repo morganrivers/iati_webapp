@@ -2,23 +2,11 @@
 """
 Standalone script: run the full LLM forecast pipeline for a single webapp-extracted activity.
 
-Mirrors B_generate_rag_forecasts.py closely, using the same imports (forecast_with_few_shot
-as knn) but with:
-  - A single activity bundle built from extracted_pdf_data/{activity_id}/ JSONLs
-  - All stages run (s1, s2, s3) — nothing loaded from pre-existing Gemini files
-  - All intermediate outputs (KNN summary, phrasegen, RAG synthesis, s1, s2, s3)
-    saved to webapp/llm_forecasts/
-  - The RAG synthesis uses the uploaded PDF directly (override_pdf_paths)
-  - RF prediction passed via extra_rf_preds argument (no monkey-patching)
-  - default_rating_scale used so the webapp activity isn't skipped by build_prompts_with_few_shot
-
 Usage:
     python run_rag_forecast.py [path/to/extracted_pdf_data/webapp_XXXXXXXX]
 
 If no argument given, uses the most recently modified subdirectory of extracted_pdf_data/.
 """
-from debug_utils import _print_ram
-_print_ram("before basic imports run_rag_forecast")  # ← catches knn, _gsa, etc.
 
 # ── KNN similarity backend ────────────────────────────────────────────────────
 # False → BM25 over outputs_summaries.jsonl text (no embeddings file, low RAM).
@@ -35,7 +23,6 @@ import pandas as pd
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
-_print_ram("after basic imports run_rag_forecast")  # ← catches knn, _gsa, etc.
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 WEBAPP_DIR = Path(__file__).resolve().parent
@@ -47,19 +34,13 @@ for p in [str(C_FORECAST_DIR), str(UTILS_DIR), str(MODULES_DIR)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-_print_ram("before src imports run_rag_forecast")  # ← catches knn, _gsa, etc.
 # ── Core imports (same as B_generate_rag_forecasts.py) ───────────────────────
 
 import forecast_with_few_shot as knn
-_print_ram("after import forecast_with_few_shot as knn")
 from rag_bm25 import build_synthesis_prompt_from_phrasegen_text
-_print_ram("after from rag_bm25 import build_synthesis_prompt_from_phrasegen_text")
 from location_features import extract_features_from_location, get_org_dummies
-_print_ram("after from location_features import extract_features_from_location, get_org_dummies")
 from rf_predictor import impute_and_run_statistical_model
-_print_ram("after from rf_predictor import impute_and_run_statistical_model")
 import get_similar_activities as _gsa
-_print_ram("after import get_similar_activities as _gsa")
 # forecast_with_few_shot uses relative paths (designed to run from src/forecast_outcomes/).
 # Override them here so they resolve correctly when run_rag_forecast.py is the entry point.
 from webapp_paths import DATA_DIR as _DATA_DIR, MODEL_DIR
@@ -71,7 +52,6 @@ knn.CHATGPT_SUMMARIES_JSONL = _DATA_DIR / "outputs_summaries.jsonl"
 knn.RISKS_JSONL = _DATA_DIR / "outputs_risks.jsonl"
 knn.OUT_MISC = _DATA_DIR / "outputs_misc.jsonl"
 knn.INFO_FOR_ACTIVITY_FORECASTING = str(_DATA_DIR / "info_for_activity_forecasting_old_transaction_types.csv")
-_print_ram("after src imports run_rag_forecast")  # ← catches knn, _gsa, etc.
 
 # ── SQLite loaders: replace CSV+JSONL loaders with lightweight SQLite loaders ─
 _DB_PATH = _DATA_DIR / "webapp.db"
@@ -83,7 +63,6 @@ from sqlite_loaders import (
     load_bm25_corpus_sqlite,
     load_activity_dataframe_sqlite,
 )
-_print_ram("after import sqlite_loaders")
 
 def _load_activity_info_sqlite_patched():
     return load_activity_info_sqlite(_DB_PATH)
@@ -93,7 +72,6 @@ def _load_mock_forecasts_sqlite_patched(path=None):
     return make_lazy_mock_forecasts(_DB_PATH)
 knn.load_mock_forecasts = _load_mock_forecasts_sqlite_patched
 
-_print_ram("after sqlite patches")
 
 # load_ml_model_preds_for_prompts is called with a hardcoded relative path inside
 # build_prompts_with_few_shot; wrap it to rewrite the path to absolute.
@@ -102,7 +80,6 @@ def _load_ml_model_preds_abs(path="../../data/best_model_predictions.csv", col="
     abs_path = str(_DATA_DIR / Path(path).name)
     return _orig_load_ml(abs_path, col=col)
 knn.load_ml_model_preds_for_prompts = _load_ml_model_preds_abs
-_print_ram("after knn.load_ml_model_preds_for_prompts")  # ← catches knn, _gsa, etc.
 
 # get_similar_activities also uses relative paths; patch them too.
 _gsa.EMBEDDINGS_PATH = _DATA_DIR / "activity_text_embeddings_gemini.jsonl"
@@ -110,7 +87,6 @@ _gsa.BM25_SUMMARIES_PATH = _DATA_DIR / "outputs_summaries.jsonl"
 _gsa.CSV_PATH = str(knn.ACTIVITY_INFO_CSV)
 
 
-_print_ram("after basic imports run_rag_forecast")  # ← catches knn, _gsa, etc.
 
 
 def _compute_gemini_embedding(text: str) -> np.ndarray:
@@ -160,7 +136,6 @@ def _build_activity_dataframe(activity_id: str, app_state: dict) -> pd.DataFrame
 
 def _load_embeddings_with_webapp(activity_id: str, activity_text: str) -> dict:
     """Load Gemini embeddings and ensure the webapp activity has a vector."""
-    _print_ram("before load_activity_embeddings")
     import sqlite3 as _sqlite3
     with _sqlite3.connect(str(_DB_PATH)) as _c:
         _db_has_embeddings = bool(
@@ -174,7 +149,6 @@ def _load_embeddings_with_webapp(activity_id: str, activity_text: str) -> dict:
     else:
         embs = _gsa.load_activity_embeddings(_gsa.EMBEDDINGS_PATH)
         print(f"[KNN] Loaded {len(embs)} embeddings from JSONL.")
-    _print_ram("after load_activity_embeddings")
 
     if activity_id not in embs:
         if activity_text:
@@ -392,7 +366,6 @@ def build_webapp_activity_info(activity_dir: Path, activity_id: str, app_state: 
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────
 # After imports load (before main() body starts)
-_print_ram("after module imports 1")  # ← catches knn, _gsa, etc.
 
 def main(activity_dir_override=None):
     """Run the full LLM forecast pipeline.
@@ -403,7 +376,6 @@ def main(activity_dir_override=None):
         When called in-process from the webapp, pass the Path to the activity
         directory directly instead of relying on sys.argv.
     """
-    _print_ram("main(): entry")
 
     print("="*80, flush=True)
     print("NARRATIVE FORECAST PIPELINE STARTING", flush=True)
@@ -448,18 +420,13 @@ def main(activity_dir_override=None):
     print(f"[STAGE 1/7] LOADING REFERENCE DATA", flush=True)
     print(f"[STAGE 1/7] Estimated time: ~10 seconds", flush=True)
     print(f"{'='*80}", flush=True)
-    _print_ram("before _load_activity_info")
     activity_info = knn._load_activity_info()
-    _print_ram("after _load_activity_info")
     print(f"[STAGE 1/7] ✓ Loaded {len(activity_info)} activities", flush=True)
     ratings = knn.load_good_overall_ids(knn.MERGED_OVERALL_RATINGS)
-    _print_ram("after load_good_overall_ids")
     print(f"[STAGE 1/7] ✓ Loaded {len(ratings)} ratings", flush=True)
     mock_forecasts = knn.load_mock_forecasts(knn.RETROSPECTIVE_FORECAST_JSONL)
-    _print_ram("after load_mock_forecasts")
     print(f"[STAGE 1/7] ✓ Loaded {len(mock_forecasts)} mock forecasts", flush=True)
     rating_stats = knn.compute_training_distribution_by_prefix(ratings)
-    _print_ram("after compute_training_distribution")
     print(f"[STAGE 1/7] ✓ Computed rating statistics", flush=True)
 
     # ── Inject webapp activity into activity_info ─────────────────────────────
@@ -476,13 +443,10 @@ def main(activity_dir_override=None):
     print(f"[STAGE 2/7] Estimated time: ~2 seconds", flush=True)
     print(f"{'='*80}", flush=True)
     _base_path = MODEL_DIR
-    _print_ram("before model.pkl load")
     with open(_base_path / "model.pkl", "rb") as f:
         _rf_model = pickle.load(f)
-    _print_ram("after model.pkl load")
     with open(_base_path / "extra_model.pkl", "rb") as f:
         _extra_model = pickle.load(f)
-    _print_ram("after extra_model.pkl load")
     with open(_base_path / "per_org_baseline.json") as f:
         _per_org_baseline = json.load(f)
     with open(_base_path / "start_year_correction.json") as f:
@@ -508,12 +472,10 @@ def main(activity_dir_override=None):
     _location_features = extract_features_from_location(_location_str, start_date=_start_date_str) if _location_str else {}
     _reporting_org = _widget.get("select_reporting_org", "World Bank")
     _gdp_percap_input = _widget.get("input_gdp_percap", 0)
-    _print_ram("before impute_and_run_statistical_model")
-    _, _, _, _, rf_pred = impute_and_run_statistical_model(
+    _, _, _, _, rf_pred, _ = impute_and_run_statistical_model(
         _rf_model, _extra_model, _per_org_baseline, _start_year_correction, _model_metadata,
         _reporting_org, _gdp_percap_input,
         app_state.get("field_edited", {}), _session_state_values, _location_features)
-    _print_ram("after impute_and_run_statistical_model")
     print(f"[STAGE 2/7] ✓ RF prediction: {rf_pred:.3f}", flush=True)
     extra_rf_preds = {activity_id: rf_pred}
 
@@ -545,7 +507,6 @@ def main(activity_dir_override=None):
                 call_idx=call_idx + 1,
                 default_rating_scale=DEFAULT_RATING_SCALE,
             )
-            _print_ram("after knn_summary_prompts build")
             dump_prompts_jsonl(
                 LLM_FORECASTS_DIR / f"dryrun_knn_summary_{tag}_call_{call_idx+1}.jsonl",
                 knn_summary_prompts,
@@ -553,12 +514,10 @@ def main(activity_dir_override=None):
             rows_for_knn = [b for b in rows if b["activity_id"] in knn_summary_prompts]
             for attempt in range(2):
                 print(f"[STAGE 3/7] 🌐 API CALL {attempt+1}/2: Calling DeepSeek Reasoner for KNN summary...", flush=True)
-                _print_ram(f"before knn_summary API call {attempt+1}")
                 asyncio.run(knn.loop_over_rows_to_call_model(
                     str(out_knn_summary), rows_for_knn, knn_summary_prompts,
                     response_schema=None, execpool=execpool, model="deepseek-reasoner",
                 ))
-                _print_ram(f"after knn_summary API call {attempt+1}")
                 print(f"[STAGE 3/7] ✓ API call {attempt+1}/2 completed", flush=True)
 
             knn_summary_by_aid = read_outputs_jsonl(out_knn_summary)
@@ -585,7 +544,6 @@ def main(activity_dir_override=None):
                 knn_summary_by_aid=knn_summary_by_aid,
                 default_rating_scale=DEFAULT_RATING_SCALE,
             )
-            _print_ram("after phrasegen_prompts build")
             dump_prompts_jsonl(
                 LLM_FORECASTS_DIR / f"dryrun_phrasegen_{variant}_{tag}_call_{call_idx+1}.jsonl",
                 phrasegen_prompts,
@@ -593,12 +551,10 @@ def main(activity_dir_override=None):
             rows_for_phrasegen = [b for b in rows if b["activity_id"] in phrasegen_prompts]
             for attempt in range(2):
                 print(f"[STAGE 4/7] 🌐 API CALL {attempt+1}/2: Calling DeepSeek Reasoner for phrase generation...", flush=True)
-                _print_ram(f"before phrasegen API call {attempt+1}")
                 asyncio.run(knn.loop_over_rows_to_call_model(
                     str(out_phrasegen), rows_for_phrasegen, phrasegen_prompts,
                     response_schema=None, execpool=execpool, model="deepseek-reasoner",
                 ))
-                _print_ram(f"after phrasegen API call {attempt+1}")
                 print(f"[STAGE 4/7] ✓ API call {attempt+1}/2 completed", flush=True)
 
             phrasegen_by_aid = read_outputs_jsonl(out_phrasegen)
@@ -633,7 +589,6 @@ def main(activity_dir_override=None):
                     top_k=6,
                     override_pdf_paths=[pdf_path],
                 )
-                _print_ram(f"after build_synthesis_prompt_from_phrasegen_text for {aid}")
                 if not sysmsg or not usermsg:
                     print(f"WARNING: RAG synthesis prompt empty for {aid} (no docs or parse fail); skipping")
                     continue
@@ -649,12 +604,10 @@ def main(activity_dir_override=None):
             print(f"[STAGE 5/7] ✓ Saved {len(synth_prompts)} synthesis prompts", flush=True)
             for attempt in range(2):
                 print(f"[STAGE 5/7] 🌐 API CALL {attempt+1}/2: Calling DeepSeek Reasoner for RAG synthesis...", flush=True)
-                _print_ram(f"before rag_synthesis API call {attempt+1}")
                 asyncio.run(knn.loop_over_rows_to_call_model(
                     str(out_raganswers), synth_rows, synth_prompts,
                     response_schema=None, execpool=execpool, model="deepseek-reasoner",
                 ))
-                _print_ram(f"after rag_synthesis API call {attempt+1}")
                 print(f"[STAGE 5/7] ✓ API call {attempt+1}/2 completed", flush=True)
 
             rag_answers_by_aid = read_outputs_jsonl(out_raganswers)
@@ -673,7 +626,6 @@ def main(activity_dir_override=None):
                 print(f"[STAGE {stage_num}/8] Estimated time: ~20-40 seconds", flush=True)
                 print(f"{'='*80}", flush=True)
 
-                _print_ram(f"before build_prompts_with_few_shot stage={stage}")
                 stage_prompts = knn.build_prompts_with_few_shot(
                     baseline_bundles=rows_current,
                     activity_info=activity_info,
@@ -710,12 +662,10 @@ def main(activity_dir_override=None):
                 print(f"[STAGE {stage_num}/8] Processing {len(rows_for_stage)} activities with model={model_for_stage}", flush=True)
                 for attempt in range(2):
                     print(f"[STAGE {stage_num}/8] 🌐 API CALL {attempt+1}/2: Calling DeepSeek Reasoner for {stage}...", flush=True)
-                    _print_ram(f"before {stage} API call {attempt+1}")
                     asyncio.run(knn.loop_over_rows_to_call_model(
                         str(out_stage), rows_for_stage, stage_prompts,
                         response_schema=None, execpool=execpool, model=model_for_stage,
                     ))
-                    _print_ram(f"after {stage} API call {attempt+1}")
                     print(f"[STAGE {stage_num}/8] ✓ API call {attempt+1}/2 completed", flush=True)
                 print(f"[STAGE {stage_num}/8] ✓ Wrote {stage} outputs: {out_stage.name}", flush=True)
 

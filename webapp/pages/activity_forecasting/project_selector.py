@@ -3,7 +3,6 @@ from datetime import datetime
 
 import streamlit as st
 
-from debug_utils import _loc_debug
 from project_manager import (get_available_projects, load_project_name,
                              load_project_state, save_project_state,
                              create_new_project, delete_project, get_state_hash)
@@ -93,13 +92,10 @@ def render_project_selector(_llm_running: bool) -> None:
             st.session_state.pending_project_name = None
             folder = name_to_folder.get(sel)
             if folder and st.session_state.selected_project_folder != folder:
-                _loc_debug(f"SWITCH: {st.session_state.selected_project_folder!r} -> {folder!r} ({sel!r})")
                 clear_project_state()
                 st.session_state.selected_project_folder = folder
                 st.session_state.project_name = sel
                 load_project_state(folder)
-                _loc_debug(f"after load: location_countries={st.session_state.location_countries!r} "
-                           f"remaining_loc_widget_keys={[k for k in st.session_state.keys() if k.startswith(('loc_country_','loc_pct_'))]!r}")
 
         selected_display = st.selectbox(
             "Select or create an activity:",

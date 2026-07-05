@@ -1,6 +1,3 @@
-from debug_utils import _print_ram
-
-_print_ram("before all extracting_and_grading_imports ")
 import contextlib
 
 import io
@@ -20,9 +17,7 @@ try:
     from openai import OpenAI
 except ImportError:
     OpenAI = None
-_print_ram("before import genai extracting_and_grading_imports ")
 from google import genai          # loads the package once
-_print_ram("after import genai extracting_and_grading_imports ")
 
 
 import traceback  # <-- add this
@@ -32,7 +27,6 @@ import re
 
 
 
-_print_ram("other random import genai extracting_and_grading_imports ")
 import os
 import asyncio
 import tempfile
@@ -44,27 +38,20 @@ try:
 except ImportError:
     PdfReader = None
     PdfWriter = None
-_print_ram("after other random import genai extracting_and_grading_imports ")
 
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
 
-_print_ram("before some more genai extracting_and_grading_imports ")
-
 from label_sampled_pages import add_in_page_info_top_left
-_print_ram("after label_sampled_pages")
 from prompt_bundle_pdf import open_with_evince
-_print_ram("after prompt_bundle")
 
 
 from get_all_pages_within_category import load_and_filter_rows
-_print_ram("after load_and_filter_rows")
 # from score_page_relevance import load_docs, load_acts_map, load_activity_counts, filter_usable, make_genai_client, activity_title, iter_page_batches, write_pdf_slice, desc, activity_title
 
 # NEW: at top
 from concurrent.futures import ThreadPoolExecutor
-_print_ram("after some more genai extracting_and_grading_imports ")
 
 # NEW: pass an execpool down (don’t rely on the loop’s default one)
 def make_executor() -> ThreadPoolExecutor:

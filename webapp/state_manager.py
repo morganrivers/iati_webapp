@@ -2,7 +2,6 @@ import json
 import math
 import streamlit as st
 
-from debug_utils import _loc_debug, _gdp_debug
 from webapp_paths import TRAIN_MEDIANS_PATH
 
 
@@ -165,10 +164,6 @@ def validate_and_sync_field_edited(train_medians: dict):
             continue
 
         currently_marked = st.session_state.field_edited.get(feature_name, False)
-        if feature_name == 'gdp_percap':
-            _gdp_debug(f"validate_and_sync gdp_percap: widget(raw)={current_value!r} "
-                       f"median(as-stored)={float(median_value)!r} is_different={is_different} "
-                       f"currently_marked={currently_marked}")
         if currently_marked != is_different:
             st.session_state.field_edited[feature_name] = is_different
             logger.info(f"Fixed {feature_name}: widget={current_value:.3f}, median={float(median_value):.3f} edited={is_different}")
@@ -245,9 +240,6 @@ def clear_project_state():
 
     with open(TRAIN_MEDIANS_PATH, 'r') as f:
         _train_medians = json.load(f)
-
-    _loc_debug(f"clear_project_state: will clear location widget keys "
-               f"{[k for k in keys_to_clear if k.startswith(('loc_country_', 'loc_pct_')) or k in ('loc_new_country', 'loc_new_pct')]!r}")
 
     cleared_count = 0
     for key in keys_to_clear:

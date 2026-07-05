@@ -1,7 +1,3 @@
-from debug_utils import _print_ram
-
-
-_print_ram("before standard imports helpers_for_ratings_and_final_activity_features")
 from collections import Counter
 import re
 import unicodedata
@@ -10,18 +6,9 @@ from typing import Dict, Any, Iterable, List, Optional, Set
 from pathlib import Path
 import json
 import glob
-_print_ram("after stdlib imports (collections/re/json/glob/pathlib)")
-
-_print_ram("after sklearn.metrics import")
 
 import numpy as np
-_print_ram("after numpy import")
 import pandas as pd
-_print_ram("after pandas import")
-
-
-_print_ram("before load_sector_clusters imports helpers_for_ratings_and_final_activity_features")
-_print_ram("after load_sector_clusters imports helpers_for_ratings_and_final_activity_features")
 
 
 ACTIVITY_SCOPES = {
