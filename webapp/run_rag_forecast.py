@@ -64,23 +64,6 @@ from sqlite_loaders import (
     load_activity_dataframe_sqlite,
 )
 
-def _load_activity_info_sqlite_patched():
-    return load_activity_info_sqlite(_DB_PATH)
-knn._load_activity_info = _load_activity_info_sqlite_patched
-
-def _load_mock_forecasts_sqlite_patched(path=None):
-    return make_lazy_mock_forecasts(_DB_PATH)
-knn.load_mock_forecasts = _load_mock_forecasts_sqlite_patched
-
-
-# load_ml_model_preds_for_prompts is called with a hardcoded relative path inside
-# build_prompts_with_few_shot; wrap it to rewrite the path to absolute.
-_orig_load_ml = knn.load_ml_model_preds_for_prompts
-def _load_ml_model_preds_abs(path="../../data/best_model_predictions.csv", col="pred_rf_llm_modded"):
-    abs_path = str(_DATA_DIR / Path(path).name)
-    return _orig_load_ml(abs_path, col=col)
-knn.load_ml_model_preds_for_prompts = _load_ml_model_preds_abs
-
 # get_similar_activities also uses relative paths; patch them too.
 _gsa.EMBEDDINGS_PATH = _DATA_DIR / "activity_text_embeddings_gemini.jsonl"
 _gsa.BM25_SUMMARIES_PATH = _DATA_DIR / "outputs_summaries.jsonl"
@@ -422,11 +405,11 @@ def main(activity_dir_override=None):
     print(f"[STAGE 1/7] LOADING REFERENCE DATA", flush=True)
     print(f"[STAGE 1/7] Estimated time: ~10 seconds", flush=True)
     print(f"{'='*80}", flush=True)
-    activity_info = knn._load_activity_info()
+    activity_info = load_activity_info_sqlite(_DB_PATH)
     print(f"[STAGE 1/7] ✓ Loaded {len(activity_info)} activities", flush=True)
     ratings = knn.load_good_overall_ids(knn.MERGED_OVERALL_RATINGS)
     print(f"[STAGE 1/7] ✓ Loaded {len(ratings)} ratings", flush=True)
-    mock_forecasts = knn.load_mock_forecasts(knn.RETROSPECTIVE_FORECAST_JSONL)
+    mock_forecasts = make_lazy_mock_forecasts(_DB_PATH)
     print(f"[STAGE 1/7] ✓ Loaded {len(mock_forecasts)} mock forecasts", flush=True)
     rating_stats = knn.compute_training_distribution_by_prefix(ratings)
     print(f"[STAGE 1/7] ✓ Computed rating statistics", flush=True)

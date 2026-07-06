@@ -88,7 +88,8 @@ def format_risks_if_listlike(risks_summary: str) -> str:
     return "\n".join(f"- {x}" for x in items)
 
 
-def load_ml_model_preds_for_prompts(path="../../data/best_model_predictions.csv", col="pred_rf_llm_modded"):
+def load_ml_model_preds_for_prompts(col="pred_rf_llm_modded"):
+    path = DATA_DIR / "best_model_predictions.csv"
     df = pd.read_csv(path, dtype={"activity_id": str})
     if "activity_id" not in df.columns:
         df = pd.read_csv(path, index_col=0)
@@ -621,10 +622,10 @@ def build_prompts_with_few_shot(
 
     n_knn_empty = 0
     if variant_base == "adjust_based_on_random_forest":
-        rf_preds = load_ml_model_preds_for_prompts("../../data/best_model_predictions.csv", col="pred_rf_llm_modded")
+        rf_preds = load_ml_model_preds_for_prompts(col="pred_rf_llm_modded")
 
     if "forced_rf" in variant_base:
-        rf_preds = load_ml_model_preds_for_prompts("../../data/best_model_predictions.csv", col="pred_rf_llm_modded")
+        rf_preds = load_ml_model_preds_for_prompts(col="pred_rf_llm_modded")
         if extra_rf_preds:
             rf_preds.update(extra_rf_preds)
 

@@ -30,6 +30,18 @@ _TAG_META = {
     "tag_private_sector_engagement_success":               {"label": "Private Sector Engagement",                 "definition": "Success in attracting private sector investment or improving the business environment was achieved at or above targets."},
 }
 
+# Tags whose trained models did not beat baseline; shown only in the
+# database-prevalence section, never in the chart sections above.
+_PREVALENCE_ONLY_TAGS = {
+    "tag_high_disbursement",
+    "tag_improved_financial_performance",
+    "tag_capacity_building_delivered_success",
+    "tag_high_beneficiary_satisfaction_or_reach_success",
+    "tag_gender_equitable_outcomes_success",
+    "tag_policy_regulatory_reforms_success_success",
+    "tag_private_sector_engagement_success",
+}
+
 # 4 sections: only model-predicted tags appear in charts; const_base shown at bottom
 _TAG_SECTIONS = [
     {
@@ -37,8 +49,6 @@ _TAG_SECTIONS = [
         "tags": [
             "tag_funds_cancelled_or_unutilized",
             "tag_funds_reallocated",
-            "tag_high_disbursement",
-            "tag_improved_financial_performance",
             "tag_over_budget_success",
         ],
         "positive": False,  # higher prob = potential issue (amber/red)
@@ -59,24 +69,27 @@ _TAG_SECTIONS = [
         "tags": [
             "tag_infrastructure_completed_success",
             "tag_energy_sector_improvements_success",
-            "tag_capacity_building_delivered_success",
             "tag_improved_service_delivery_success",
-            "tag_policy_regulatory_reforms_success_success",
         ],
         "positive": True,  # higher prob = good (green)
     },
     {
         "title": "Beneficiary Reach and Livelihood Outcomes",
         "tags": [
-            "tag_high_beneficiary_satisfaction_or_reach_success",
             "tag_improved_livelihoods_success",
             "tag_targets_met_or_exceeded_success",
-            "tag_gender_equitable_outcomes_success",
-            "tag_private_sector_engagement_success",
         ],
         "positive": True,
     },
 ]
+
+assert _PREVALENCE_ONLY_TAGS.issubset(_TAG_META), (
+    "Prevalence-only tags must have metadata for the database prevalence display."
+)
+for _section in _TAG_SECTIONS:
+    assert not (set(_section["tags"]) & _PREVALENCE_ONLY_TAGS), (
+        f"Section '{_section['title']}' still lists a prevalence-only tag."
+    )
 
 
 def _is_model_predicted(model_dict: dict) -> bool:
@@ -213,7 +226,10 @@ def render_tag_predictions() -> None:
 
     const_base_tags = [
         t for t in _TAG_META
-        if t in preds and not _is_model_predicted(models.get(t, {}))
+        if t in preds and (
+            t in _PREVALENCE_ONLY_TAGS
+            or not _is_model_predicted(models.get(t, {}))
+        )
     ]
 
     if const_base_tags:
