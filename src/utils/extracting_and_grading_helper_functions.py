@@ -20,19 +20,11 @@ except ImportError:
 from google import genai          # loads the package once
 
 
-import traceback  # <-- add this
-
-
 import re
 
 
-
-import os
-import asyncio
 import tempfile
 from collections import defaultdict
-from typing import List, Dict, Any, Tuple
-from functools import partial  # <-- add this
 try:
     from pypdf import PdfReader, PdfWriter
 except ImportError:
@@ -545,7 +537,6 @@ async def loop_over_rows_to_call_model(output_jsonl, rows, prompts, response_sch
     is_gemini = (model == "gemini" or "gemini" in model.lower() or model.startswith("projects/"))
     is_deepseek = model.startswith("deepseek-")
 
-    # is_gemini = (model == "gemini" or "gemini" in model.lower() or model.startswith("projects/"))
     if not execpool:
         execpool = make_executor()
 
