@@ -172,6 +172,8 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
             # ---- REFACTOR → render_sector_allocation_subsection(model_metadata, training_data)
             #         -> sector_percentages ----
 
+        with st.expander("LLM Feature Grades & Embeddings", expanded=False):
+
             finance, integratedness, implementer_performance, targets, context, risks, complexity = render_confirm_and_poll_phase4(_llm_running, model_metadata, training_data, _shap)
             # ---- REFACTOR → render_confirm_and_poll_phase4(_llm_running) ----
             #   (wraps the confirm button, the grading poll, and phase-4 thread launch)
@@ -180,51 +182,43 @@ def render_activity_forecasting_page(rf_model, extra_model, per_org_baseline, st
 
                 umap3_x, umap3_y, umap3_z, sector_distance, country_distance = render_targets_embeddings_subsection(model_metadata, training_data, _shap, start_date)
 
-                # ---- REFACTOR → render_missingness_indicators(location_features,
-                #         sector_percentages, training_data) -> None ----
-                # ============================================================================
-                # MISSINGNESS INDICATORS
-                # ============================================================================
+                st.markdown("#### 🔍 Missing Indicators Distribution")
+                st.markdown("See how your data completeness compares to the database.")
 
-                with st.expander("🔍 Missing Indicators Distribution", expanded=False):
-                    st.markdown("See how your data completeness compares to the database.")
+                current_cpia_missing = 1.0 if location_features.get('cpia_score') is None else 0.0
+                current_gdp_missing = 1.0 if location_features.get('gdp_percap') is None else 0.0
+                current_planned_exp_missing = 0.0
+                current_planned_dur_missing = 0.0
+                current_sector_missing = 1.0 if sum(sector_percentages.values()) == 0 else 0.0
+                current_umap_missing = 0.0
+                current_wgi_missing = 1.0 if location_features.get('wgi_any_missing') else 0.0
+                current_gov_missing_count = (5 if location_features.get('wgi_any_missing') else 0) if location_features.get('wgi_any_missing') is not None else 5
 
-                    # Compute missingness indicators from current inputs
-                    current_cpia_missing = 1.0 if location_features.get('cpia_score') is None else 0.0
-                    current_gdp_missing = 1.0 if location_features.get('gdp_percap') is None else 0.0
-                    current_planned_exp_missing = 0.0  # Always provided
-                    current_planned_dur_missing = 0.0  # Always provided
-                    current_sector_missing = 1.0 if sum(sector_percentages.values()) == 0 else 0.0
-                    current_umap_missing = 0.0  # Always use median
-                    current_wgi_missing = 1.0 if location_features.get('wgi_any_missing') else 0.0
-                    current_gov_missing_count = (5 if location_features.get('wgi_any_missing') else 0) if location_features.get('wgi_any_missing') is not None else 5
+                missing_features = [
+                    ("cpia_missing", current_cpia_missing),
+                    ("gdp_percap_missing", current_gdp_missing),
+                    ("planned_expenditure_missing", current_planned_exp_missing),
+                    ("planned_duration_missing", current_planned_dur_missing),
+                    ("sector_clusters_missing", current_sector_missing),
+                    ("umap_missing", current_umap_missing),
+                    ("wgi_any_missing", current_wgi_missing),
+                    ("governance_missing_count", current_gov_missing_count),
+                ]
 
-                    # Show histograms for missing indicators
-                    missing_features = [
-                        ("cpia_missing", current_cpia_missing),
-                        ("gdp_percap_missing", current_gdp_missing),
-                        ("planned_expenditure_missing", current_planned_exp_missing),
-                        ("planned_duration_missing", current_planned_dur_missing),
-                        ("sector_clusters_missing", current_sector_missing),
-                        ("umap_missing", current_umap_missing),
-                        ("wgi_any_missing", current_wgi_missing),
-                        ("governance_missing_count", current_gov_missing_count),
-                    ]
-
-                    cols = st.columns(3)
-                    for idx, (feat_name, current_val) in enumerate(missing_features):
-                        with cols[idx % 3]:
-                            if feat_name in training_data.columns:
-                                train_data_col = training_data[feat_name].dropna()
-                                fig = render_histogram(
-                                    feat_name,
-                                    train_data_col,
-                                    current_val,
-                                    show_marker=st.session_state.show_distribution_markers,
-                                    height=200
-                                )
-                                if fig:
-                                    st.plotly_chart(fig, width='stretch', key=f"hist_{feat_name}")
+                cols = st.columns(3)
+                for idx, (feat_name, current_val) in enumerate(missing_features):
+                    with cols[idx % 3]:
+                        if feat_name in training_data.columns:
+                            train_data_col = training_data[feat_name].dropna()
+                            fig = render_histogram(
+                                feat_name,
+                                train_data_col,
+                                current_val,
+                                show_marker=st.session_state.show_distribution_markers,
+                                height=200
+                            )
+                            if fig:
+                                st.plotly_chart(fig, width='stretch', key=f"hist_{feat_name}")
 
                 # ============================================================================
                 # PREDICTION SECTION

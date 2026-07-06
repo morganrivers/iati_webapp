@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from shap_explainer import get_sorted_contributions
+from ui_components import add_glossary_hover_bar, render_world_bank_rating_headline
 
 
 def render_analysis_section() -> None:
@@ -13,6 +14,8 @@ def render_analysis_section() -> None:
 
     if "prediction" not in st.session_state:
         return
+
+    render_world_bank_rating_headline(st.session_state.prediction)
 
     # Show baseline, adjustment, and final prediction
     col1, col2, col3, col4 = st.columns(4)
@@ -82,22 +85,31 @@ def render_analysis_section() -> None:
                       for x in sorted_contrib['shap_values']]
 
         fig_shap = go.Figure()
+        hover = add_glossary_hover_bar(
+            fig_shap,
+            sorted_contrib['feature_names'],
+            sorted_contrib['shap_values'],
+            x_label='Contribution',
+        )
+
         fig_shap.add_trace(go.Bar(
             x=sorted_contrib['shap_values'],
             y=sorted_contrib['feature_names'],
             orientation='h',
             marker_color=bar_colors,
-            hovertemplate='<b>%{y}</b><br>Contribution: %{x:.3f}<br>Value: %{customdata:.3f}<extra></extra>',
-            customdata=sorted_contrib['feature_values']
+            hovertemplate=hover['hover_template'],
+            customdata=hover['customdata'],
         ))
 
         num_features = len(sorted_contrib['feature_names'])
         fig_shap.update_layout(
+            barmode='overlay',
             xaxis=dict(
                 title="SHAP Value (Contribution to Prediction)",
                 zeroline=True,
                 zerolinewidth=2,
-                zerolinecolor='gray'
+                zerolinecolor='gray',
+                range=[hover['x_lo'], hover['x_hi']],
             ),
             yaxis=dict(
                 title="Feature",
@@ -108,7 +120,8 @@ def render_analysis_section() -> None:
             ),
             height=max(600, num_features * 25),
             margin=dict(l=20, r=20, t=40, b=40),
-            showlegend=False
+            showlegend=False,
+            hovermode='closest',
         )
 
         st.plotly_chart(fig_shap, width='stretch')

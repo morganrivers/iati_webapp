@@ -323,6 +323,7 @@ def poll_extraction_phases_0_3() -> None:
                     # Redirect the extraction result to the existing project folder
                     result['activity_id'] = _prev_folder
                     result['output_dir'] = _old_dir
+                    result['pdf_path'] = os.path.join(_old_dir, "uploaded.pdf")
                     st.session_state.extraction_result = result
                     activity_id = _prev_folder
                     logger.info(f"selected_project_folder stays = {_prev_folder!r}")
@@ -341,6 +342,7 @@ def poll_extraction_phases_0_3() -> None:
                 if _extracted_title and not st.session_state.field_locks.get('project_name', False):
                     st.session_state.project_name = _extracted_title
                     st.session_state.project_name_source = 'llm'
+                    st.session_state.project_name_needs_widget_sync = True
                     save_project_name(activity_id, _extracted_title)
                 st.session_state.creating_new_project = False
                 save_project_state(activity_id)

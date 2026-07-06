@@ -11,7 +11,7 @@ from location_features import extract_features_from_location, KEEP_REPORTING_ORG
 from project_manager import save_project_state_temp
 
 from .common import (SCOPE_LABELS, _ensure_project_folder, _save_and_rerun,
-                     _compute_org_counts, _compute_region_totals)
+                     _save_state, _compute_org_counts, _compute_region_totals)
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +260,7 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
                     st.session_state.pop(_wkey, None)
                 logger.info(f"[START-DATE-CB]   {_wkey}: locked={locked}, was_present={was_present}, popped={not locked and was_present}")
             _recompute_duration_from_dates()
-            _save_and_rerun()
+            _save_state()
 
         badge = get_field_indicator('start_date') if st.session_state.field_edited.get('start_date', False) else ''
         st.markdown(f"<b>Planned Start Date</b> {badge}", unsafe_allow_html=True)
@@ -311,7 +311,7 @@ def render_basic_info_subsection(model_metadata: dict, training_data,
             st.session_state.field_edited['planned_end_date'] = True
             st.session_state.shap_stale_fields.add('planned_duration')
             _recompute_duration_from_dates()
-            _save_and_rerun()
+            _save_state()
 
         badge = get_field_indicator('planned_end_date') if st.session_state.field_edited.get('planned_end_date', False) else ''
         st.markdown(f"<b>Planned End Date</b> {badge}", unsafe_allow_html=True)
@@ -471,13 +471,10 @@ def render_activity_features_subsection(model_metadata: dict, training_data,
                                         _llm_running: bool, _shap, _shap_sum,
                                         location_features: dict):
     _raw_pe_median = model_metadata["train_medians"]["planned_expenditure"]
-    logger.info(f"[DEBUG] train_medians['planned_expenditure'] = {_raw_pe_median:.4g}  (expecting raw USD ~52M, not log ~17)")
     if _raw_pe_median > 1000:
         default_planned_expenditure = _raw_pe_median
     else:
-        logger.warning(f"[DEBUG] WARNING: planned_expenditure median looks like log-USD ({_raw_pe_median:.2f}), doing np.exp()")
         default_planned_expenditure = np.exp(_raw_pe_median)
-    logger.info(f"[DEBUG] default_planned_expenditure (USD) = {default_planned_expenditure:.4g}")
     default_planned_duration = model_metadata["train_medians"]["planned_duration"]
     default_activity_scope = int(model_metadata["train_medians"]["activity_scope"])
     default_finance_is_loan = int(model_metadata["train_medians"]["finance_is_loan"])

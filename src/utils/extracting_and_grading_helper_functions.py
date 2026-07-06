@@ -37,7 +37,7 @@ if str(UTILS_DIR) not in sys.path:
 
 from label_sampled_pages import add_in_page_info_top_left
 from prompt_bundle_pdf import open_with_evince
-from llm_tracing import wrap_openai_client
+from llm_tracing import wrap_openai_client, run_with_tracing_context
 from genai_client import make_genai_client
 
 
@@ -352,7 +352,7 @@ async def run_one_row(response_schema, prompt, row, client, seen_keys, output_js
                 config=gen_config,
             )
 
-        fut = loop.run_in_executor(execpool, _sync_call)
+        fut = run_with_tracing_context(loop, execpool, _sync_call)
         response = await asyncio.wait_for(fut, timeout=TIMEOUT_SECONDS)
     except asyncio.TimeoutError:
         obj["ERROR"] = "asyncio.exceptions.TimeoutError"
@@ -448,7 +448,7 @@ async def run_one_row_openai(prompt, row, client, seen_keys, output_jsonl, execp
                 pprint.pprint("resp")
                 pprint.pprint(resp)
             return resp #.choices[0].message.content.strip()
-        fut = loop.run_in_executor(execpool, _sync_call)
+        fut = run_with_tracing_context(loop, execpool, _sync_call)
         response = await asyncio.wait_for(fut, timeout=TIMEOUT_SECONDS)
     except asyncio.TimeoutError:
         obj["ERROR"] = "asyncio.exceptions.TimeoutError"

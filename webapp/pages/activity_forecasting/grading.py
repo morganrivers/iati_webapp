@@ -19,7 +19,6 @@ def render_confirm_and_poll_phase4(_llm_running: bool, model_metadata: dict, tra
     # CONFIRMATION BUTTON FOR PHASE 4
     # ====================================================================
     if st.session_state.ready_for_phase_4:
-        st.markdown("---")
         st.markdown("### Ready to Extract Feature Grades?")
 
         # Check if grades already exist
@@ -34,14 +33,14 @@ def render_confirm_and_poll_phase4(_llm_running: bool, model_metadata: dict, tra
         else:
             st.info("📋 Review the auto-filled fields above. You can edit any values or lock fields to prevent changes.")
 
-    _has_features = bool(st.session_state.get('extraction_result') and
-                         st.session_state.extraction_result.get('features'))
-    if not _has_features:
-        st.warning("⚠️ No extracted features available — upload and extract a PDF first.")
+    _has_extraction = bool(st.session_state.get('extraction_result') and
+                           st.session_state.extraction_result.get('metadata'))
+    if not _has_extraction:
+        st.warning("⚠️ No extraction results available — upload and extract a PDF first.")
     if not st.session_state.get('llm_authenticated', False):
         st.warning("🔒 LLM access required — authenticate above to extract feature grades.")
     if st.button("✅ Confirm and Extract Feature Grades", type="primary", width='stretch',
-                 disabled=not _has_features or not st.session_state.get('llm_authenticated', False)):
+                 disabled=not _has_extraction or not st.session_state.get('llm_authenticated', False)):
         st.session_state.ready_for_phase_4 = False
         st.session_state.extract_phase_4_now = True
         st.rerun()

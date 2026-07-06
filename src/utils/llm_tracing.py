@@ -132,6 +132,19 @@ def thread_scope(thread_id, **extra_metadata):
         yield
 
 
+def run_with_tracing_context(loop, executor, fn, *args):
+    """Dispatch fn(*args) to executor with the current tracing context copied in.
+
+    loop.run_in_executor does NOT propagate contextvars to executor threads, so
+    LangSmith metadata set by thread_scope / activity_phase_scope on the calling
+    thread is invisible when the actual LLM call runs in a pool worker. Copy
+    the current context and re-enter it inside the worker so wrap_openai /
+    traceable wrappers see the parent thread_id.
+    """
+    ctx = contextvars.copy_context()
+    return loop.run_in_executor(executor, ctx.run, fn, *args)
+
+
 @contextlib.contextmanager
 def activity_phase_scope(activity_id, phase):
     """Thread scope keyed by one processing phase for a single activity.

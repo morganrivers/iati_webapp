@@ -568,6 +568,11 @@ def load_project_state(project_folder: str):
             st.session_state.feature_table = state['feature_table']
         st.session_state.feature_grades = state.get('feature_grades', {})
         st.session_state.extraction_result = state.get('extraction_result')
+        er = st.session_state.extraction_result
+        if er:
+            er['activity_id'] = project_folder
+            er['output_dir'] = str(project_path)
+            er['pdf_path'] = str(project_path / "uploaded.pdf")
 
         _GRADE_KEYS = {'input_finance', 'input_integratedness', 'input_implementer_performance',
                        'input_targets', 'input_context', 'input_risks', 'input_complexity'}

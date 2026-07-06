@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from model_loader import BASE_PATH
+from ui_components import add_glossary_hover_bar
 
 
 def render_model_performance_page(training_data, model_metadata):
@@ -36,17 +37,25 @@ def render_model_performance_page(training_data, model_metadata):
     """)
 
     fig_tree = go.Figure()
-
+    _tree_hover = add_glossary_hover_bar(
+        fig_tree,
+        importance_df_sorted["feature"].tolist(),
+        importance_df_sorted["importance"].tolist(),
+        x_label='Tree Importance',
+        x_format='.4f',
+    )
     fig_tree.add_trace(go.Bar(
         x=importance_df_sorted["importance"],
         y=importance_df_sorted["feature"],
         orientation='h',
         marker_color='coral',
-        hovertemplate='%{y}<br>Tree Importance: %{x:.4f}<extra></extra>'
+        hovertemplate=_tree_hover['hover_template'],
+        customdata=_tree_hover['customdata'],
     ))
 
     fig_tree.update_layout(
-        xaxis_title="Tree Importance",
+        barmode='overlay',
+        xaxis=dict(title="Tree Importance", range=[_tree_hover['x_lo'], _tree_hover['x_hi']]),
         yaxis=dict(
             title="Feature",
             showgrid=True,
@@ -55,7 +64,8 @@ def render_model_performance_page(training_data, model_metadata):
         ),
         height=chart_height,
         showlegend=False,
-        margin=dict(l=20, r=20, t=40, b=40)
+        margin=dict(l=20, r=20, t=40, b=40),
+        hovermode='closest',
     )
 
     st.plotly_chart(fig_tree, width='stretch')
@@ -76,20 +86,29 @@ def render_model_performance_page(training_data, model_metadata):
     bar_colors_abs = ['crimson' if x < 0 else 'mediumseagreen'
                      for x in importance_df_sorted["delta_pred_1sd"]]
 
+    _delta_abs_hover = add_glossary_hover_bar(
+        fig_delta_abs,
+        importance_df_sorted["feature"].tolist(),
+        importance_df_sorted["delta_pred_1sd"].tolist(),
+        x_label='Δ Prediction',
+    )
     fig_delta_abs.add_trace(go.Bar(
         x=importance_df_sorted["delta_pred_1sd"],
         y=importance_df_sorted["feature"],
         orientation='h',
         marker_color=bar_colors_abs,
-        hovertemplate='%{y}<br>Δ Prediction: %{x:.3f}<extra></extra>'
+        hovertemplate=_delta_abs_hover['hover_template'],
+        customdata=_delta_abs_hover['customdata'],
     ))
 
     fig_delta_abs.update_layout(
+        barmode='overlay',
         xaxis=dict(
             title="Δ Prediction (1 SD shift)",
             zeroline=True,
             zerolinewidth=2,
-            zerolinecolor='gray'
+            zerolinecolor='gray',
+            range=[_delta_abs_hover['x_lo'], _delta_abs_hover['x_hi']],
         ),
         yaxis=dict(
             title="Feature",
@@ -99,7 +118,8 @@ def render_model_performance_page(training_data, model_metadata):
         ),
         height=chart_height,
         showlegend=False,
-        margin=dict(l=20, r=20, t=40, b=40)
+        margin=dict(l=20, r=20, t=40, b=40),
+        hovermode='closest',
     )
 
     st.plotly_chart(fig_delta_abs, width='stretch')
@@ -126,20 +146,29 @@ def render_model_performance_page(training_data, model_metadata):
     bar_colors = ['crimson' if x < 0 else 'mediumseagreen'
                  for x in importance_df_delta_sorted["delta_pred_1sd"]]
 
+    _delta_hover = add_glossary_hover_bar(
+        fig_delta,
+        importance_df_delta_sorted["feature"].tolist(),
+        importance_df_delta_sorted["delta_pred_1sd"].tolist(),
+        x_label='Δ Prediction',
+    )
     fig_delta.add_trace(go.Bar(
         x=importance_df_delta_sorted["delta_pred_1sd"],
         y=importance_df_delta_sorted["feature"],
         orientation='h',
         marker_color=bar_colors,
-        hovertemplate='%{y}<br>Δ Prediction: %{x:.3f}<extra></extra>'
+        hovertemplate=_delta_hover['hover_template'],
+        customdata=_delta_hover['customdata'],
     ))
 
     fig_delta.update_layout(
+        barmode='overlay',
         xaxis=dict(
             title="Δ Prediction (1 SD shift)",
             zeroline=True,
             zerolinewidth=2,
-            zerolinecolor='gray'
+            zerolinecolor='gray',
+            range=[_delta_hover['x_lo'], _delta_hover['x_hi']],
         ),
         yaxis=dict(
             title="Feature",
@@ -149,7 +178,8 @@ def render_model_performance_page(training_data, model_metadata):
         ),
         height=chart_height,
         margin=dict(l=20, r=20, t=40, b=40),
-        showlegend=False
+        showlegend=False,
+        hovermode='closest',
     )
 
     st.plotly_chart(fig_delta, width='stretch')

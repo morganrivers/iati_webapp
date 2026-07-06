@@ -3,10 +3,104 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+from feature_glossary import get_feature_description
+
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def add_glossary_hover_bar(fig, feature_names, x_values, x_label, x_format='.3f'):
+    """Add an invisible full-width bar behind a horizontal feature-importance
+    chart so hovering anywhere across a feature's row shows the feature name,
+    its glossary description, and its value.
+
+    Callers should:
+        1. Call this BEFORE adding their visible bar trace.
+        2. Reuse the returned ``hover_template`` / ``customdata`` on the visible
+           bar (so hovering the bar itself also shows the description).
+        3. Set ``barmode='overlay'`` in ``fig.update_layout``.
+        4. Set the xaxis range to ``[x_lo, x_hi]`` from the returned values so
+           the invisible bar isn't clipped.
+
+    Returns dict with ``hover_template``, ``customdata``, ``x_lo``, ``x_hi``.
+    """
+    assert len(feature_names) == len(x_values), "feature_names / x_values length mismatch"
+
+    descriptions = [get_feature_description(n) for n in feature_names]
+    customdata = list(zip([float(v) for v in x_values], descriptions))
+
+    if len(x_values) == 0:
+        x_lo, x_hi = -1.0, 1.0
+    else:
+        _min = min(0.0, float(np.min(x_values)))
+        _max = max(0.0, float(np.max(x_values)))
+        _span = _max - _min
+        _padding = _span * 0.05 if _span > 0 else 1.0
+        x_lo = _min - _padding
+        x_hi = _max + _padding
+
+    hover_template = (
+        '<b>%{y}</b><br>'
+        '<i>%{customdata[1]}</i><br>'
+        + x_label + ': %{customdata[0]:' + x_format + '}'
+        '<extra></extra>'
+    )
+
+    fig.add_trace(go.Bar(
+        x=[x_hi - x_lo] * len(feature_names),
+        base=[x_lo] * len(feature_names),
+        y=feature_names,
+        orientation='h',
+        marker=dict(color='rgba(0,0,0,0)'),
+        hovertemplate=hover_template,
+        customdata=customdata,
+        showlegend=False,
+        hoverlabel=dict(bgcolor='white'),
+    ))
+
+    return {
+        'hover_template': hover_template,
+        'customdata': customdata,
+        'x_lo': x_lo,
+        'x_hi': x_hi,
+    }
+
+
+WORLD_BANK_RATING_LABELS = {
+    1: "Highly Unsatisfactory",
+    2: "Unsatisfactory",
+    3: "Moderately Satisfactory",
+    4: "Satisfactory",
+    5: "Highly Satisfactory",
+}
+
+
+def world_bank_rating_label(value: float) -> str:
+    assert value is not None, "value required"
+    bucket = int(np.clip(round(float(value)), 1, 5))
+    return WORLD_BANK_RATING_LABELS[bucket]
+
+
+def render_world_bank_rating_headline(value: float) -> None:
+    label = world_bank_rating_label(value)
+    color = {
+        "Highly Unsatisfactory": "#8b0000",
+        "Unsatisfactory": "#c0392b",
+        "Moderately Satisfactory": "#d68910",
+        "Satisfactory": "#1e8449",
+        "Highly Satisfactory": "#0b5345",
+    }[label]
+    st.markdown(
+        f'<div style="text-align:center; margin:12px 0 20px 0;">'
+        f'<div style="font-size:0.95em; color:#555;">Overall Rating</div>'
+        f'<div style="font-size:2.8em; font-weight:800; color:{color}; line-height:1.1;">{label}</div>'
+        f'<div style="font-size:1.0em; color:#666;">(score {value:.2f} / 5)</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
 
 def render_shap_annotation(shap_contribution: float | None, label: str = None):
     """Render a small inline SHAP contribution badge below a widget."""
@@ -54,31 +148,21 @@ def get_field_indicator(field_name: str) -> str:
 def render_llm_feature_slider(feature_name: str, display_name: str, default_value: float, help_text: str, training_data_col: str = None, training_data=None, shap_contribution: float = None):
     """Render a single LLM feature slider with lock and indicator badge."""
 
-    # Define callback to track edits (runs BEFORE page renders)
     def on_slider_change():
         try:
-            import traceback
             value = st.session_state.get(f"input_{feature_name}", default_value)
-            # print(f"[SLIDER_DEBUG] on_slider_change: input_{feature_name} = {value}  (default={default_value})")
-            # print(f"[SLIDER_DEBUG] on_slider_change caller stack:")
-            traceback.print_stack(limit=8)
             if abs(value - default_value) > 0.01:
                 st.session_state.field_edited[feature_name] = True
             else:
                 st.session_state.field_edited[feature_name] = False
             st.session_state.shap_stale_fields.add(feature_name)
-        except Exception as e:
-            # Print errors during state transitions for debugging
-            import traceback
+        except Exception:
             logger.exception(f"ERROR during state transition (on_value_change for {feature_name}):")
 
     def on_lock_change():
         try:
-            # Store the lock state
             st.session_state.field_locks[feature_name] = st.session_state[f"lock_{feature_name}"]
-        except Exception as e:
-            # Print errors during state transitions for debugging
-            import traceback
+        except Exception:
             logger.exception(f"ERROR during state transition (on_lock_change for {feature_name}):")
 
     col_input, col_hist = st.columns([1, 1])

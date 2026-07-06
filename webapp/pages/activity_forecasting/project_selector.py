@@ -156,11 +156,14 @@ def render_project_selector(_llm_running: bool) -> None:
                     on_change=_on_name_lock_change,
                 )
             with col_input:
+                _widget_key = f"project_name_input_{st.session_state.selected_project_folder}"
+                if st.session_state.pop('project_name_needs_widget_sync', False):
+                    st.session_state[_widget_key] = st.session_state.project_name
                 new_name = st.text_input(
                     "Activity Name",
                     value=st.session_state.project_name,
                     help="Edit the activity name (auto-saves on change)",
-                    key=f"project_name_input_{st.session_state.selected_project_folder}",
+                    key=_widget_key,
                     disabled=st.session_state.field_locks.get('project_name', False) or _llm_running,
                     label_visibility="collapsed"
                 )
