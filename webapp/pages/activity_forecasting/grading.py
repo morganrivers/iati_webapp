@@ -78,6 +78,21 @@ def render_confirm_and_poll_phase4(_llm_running: bool, model_metadata: dict, tra
                     st.session_state[f"input_{feature}"] = grade
                 else:
                     pass
+
+            _GRADE_FEATURES = {'finance', 'integratedness', 'implementer_performance',
+                               'targets', 'context', 'risks', 'complexity'}
+            _train_medians = model_metadata["train_medians"]
+            for feature in _GRADE_FEATURES:
+                if feature in feature_grades:
+                    continue
+                if st.session_state.field_locks.get(feature, False):
+                    continue
+                assert feature in _train_medians, f"train_medians missing {feature!r}"
+                median_value = float(_train_medians[feature])
+                st.session_state[f"input_{feature}"] = median_value
+                st.session_state.features.pop(feature, None)
+                st.session_state.field_edited[feature] = False
+
             result = st.session_state.extraction_result
             result['features'] = gs.get('features')
             result['status'] = 'complete'

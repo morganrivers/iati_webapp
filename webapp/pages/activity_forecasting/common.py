@@ -158,6 +158,7 @@ def _run_phase4_background(snapshot: dict, grading_state: dict) -> None:
                     chatgpt_description=result['summary'],
                     features=features,
                     metadata=snapshot['confirmed_metadata'],
+                    output_dir=Path(result['output_dir']),
                     model="gemini-2.5-flash",
                     log_callback=log_cb,
                 )

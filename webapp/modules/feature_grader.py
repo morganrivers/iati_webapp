@@ -5,10 +5,10 @@ Grades extracted features using LLM prompts
 """
 
 import sys
+import json
+import re
 from pathlib import Path
 from typing import Dict, Optional, Any
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import csv
 from functools import lru_cache
 
@@ -21,9 +21,12 @@ logger = logging.getLogger(__name__)
 from webapp_paths import ensure_src_paths
 ensure_src_paths()
 
-from extracting_and_grading_helper_functions import loop_over_rows_to_call_model, AIRPLANE_MODE
+from extracting_and_grading_helper_functions import (
+    loop_over_rows_to_call_model,
+    make_executor,
+    AIRPLANE_MODE,
+)
 from dummy_response_text_generator import DUMMY_GRADE_RESPONSE
-from llm_tracing import wrap_genai_client
 
 ACTIVITY_INFO_CSV = Path(__file__).resolve().parent.parent.parent / "data" / "info_for_activity_forecasting.csv"
 
@@ -313,30 +316,24 @@ ACTIVITY TITLE: {title}"""
 def parse_grade_response(response_text: str) -> Optional[float]:
     """
     Extract numeric grade from LLM response.
-    Expected format: "GRADE: 75" or just "75"
+    Expected format: "GRADE: 75" — prompt asks for this exact shape.
+    Falls back to first-number-in-string for tolerant parses.
     """
     if not response_text:
         return None
 
-    # Remove "GRADE:" prefix if present
     text = response_text.strip()
-    if text.upper().startswith("GRADE:"):
-        text = text[6:].strip()
 
-    # Handle "NO RESPONSE"
     if "NO RESPONSE" in text.upper():
         return None
 
-    # Try to extract first number
-    import re
-    numbers = re.findall(r'\d+\.?\d*', text)
+    m = re.search(r'GRADE\s*:\s*(\d+(?:\.\d+)?)', text, flags=re.IGNORECASE)
+    if m:
+        return max(0.0, min(100.0, float(m.group(1))))
+
+    numbers = re.findall(r'\d+(?:\.\d+)?', text)
     if numbers:
-        try:
-            grade = float(numbers[0])
-            # Clamp to 0-100
-            return max(0.0, min(100.0, grade))
-        except ValueError:
-            pass
+        return max(0.0, min(100.0, float(numbers[0])))
 
     return None
 
@@ -347,128 +344,144 @@ async def grade_features_with_llm(
     chatgpt_description: str,
     features: Dict[str, str],
     metadata: Dict[str, Any],
+    output_dir: Path,
     model: str = "gemini-2.5-flash",
-    log_callback = None
+    log_callback=None,
 ) -> Dict[str, float]:
     """
-    Grade extracted features using LLM prompts.
+    Grade extracted features via the shared loop_over_rows_to_call_model helper.
 
-    Args:
-        activity_id: IATI activity ID
-        title: Activity title
-        chatgpt_description: LLM-generated activity description
-        features: Dict of extracted feature summaries from feature_extractor
-        metadata: Activity metadata (location, dates, orgs, etc.)
-        model: LLM model to use
-        log_callback: Optional callback for logging
-
-    Returns:
-        Dict mapping feature names to grades (0-100)
+    Runs all seven grading calls concurrently through the same code path as
+    baseline extraction (retries, tracing, timeout/circuit-breaker included).
     """
-    grades = {}
-
-    # Map of feature names to prompt generators
-    # Note: feature_extractor returns keys like 'implementer_performance', 'targets', etc.
-    # with the actual summary text as values
     prompt_generators = {
         "implementer_performance": lambda: get_implementer_performance_prompt(
             activity_id, title, chatgpt_description,
-            features.get("implementer_performance", ""),  # The summary text itself
-            metadata
+            features.get("implementer_performance", ""),
+            metadata,
         ),
         "finance": lambda: get_finance_prompt(
             activity_id, title, chatgpt_description,
-            features.get("finance", ""),  # The summary text itself
+            features.get("finance", ""),
             metadata,
             features.get("total_loans", ""),
             features.get("units_loans", ""),
             features.get("total_disbursement", ""),
-            features.get("units_disbursement", "")
+            features.get("units_disbursement", ""),
         ),
         "integratedness": lambda: get_integratedness_prompt(
             activity_id, title, chatgpt_description,
-            features.get("integratedness", ""),  # The summary text itself
-            metadata
+            features.get("integratedness", ""),
+            metadata,
         ),
         "targets": lambda: get_target_outcomes_prompt(
             activity_id, title, chatgpt_description,
-            features.get("targets", ""),  # The summary text itself
-            metadata
+            features.get("targets", ""),
+            metadata,
         ),
         "context": lambda: get_context_prompt(
             activity_id, title, chatgpt_description,
-            features.get("context", ""),  # The summary text itself
-            metadata
+            features.get("context", ""),
+            metadata,
         ),
         "risks": lambda: get_risks_prompt(
             activity_id, title, chatgpt_description,
-            features.get("risks", ""),  # The summary text itself
+            features.get("risks", ""),
             metadata,
-            features.get("possibilities", "")  # If this exists
+            features.get("possibilities", ""),
         ),
         "complexity": lambda: get_complexity_prompt(
             activity_id, title, chatgpt_description,
-            features.get("complexity", ""),  # The summary text itself
-            metadata
+            features.get("complexity", ""),
+            metadata,
         ),
     }
 
-    # Generate prompts and call LLM
+    rows = []
+    prompts_dict: Dict[str, str] = {}
+    key_to_feature: Dict[str, str] = {}
     for feature_name, prompt_gen in prompt_generators.items():
         try:
             prompt = prompt_gen()
-            if prompt is None:
-                if log_callback:
-                    log_callback(f"⚠️ Skipping {feature_name}: insufficient data")
-                continue
-
-            if log_callback:
-                log_callback(f"🔍 Grading {feature_name}...")
-
-            # Create a simple bundle for loop_over_rows_to_call_model
-            bundle = [{
-                "activity_id": activity_id,
-                "prompt": prompt
-            }]
-            prompts_dict = {activity_id: prompt}
-
-            # Generate response
-            if AIRPLANE_MODE:
-                response_text = DUMMY_GRADE_RESPONSE
-            else:
-                from google import genai
-                import os
-
-                api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-                if not api_key:
-                    raise ValueError("GEMINI_API_KEY not found in environment")
-
-                client = wrap_genai_client(genai.Client(api_key=api_key))
-
-                response = await asyncio.to_thread(
-                    client.models.generate_content,
-                    model=model,
-                    contents=prompt
-                )
-                response_text = response.text if hasattr(response, 'text') else str(response)
-
-            # Parse grade
-            grade = parse_grade_response(response_text)
-            if grade is not None:
-                grades[feature_name] = grade
-                if log_callback:
-                    log_callback(f"✅ {feature_name}: {grade:.1f}")
-            else:
-                if log_callback:
-                    log_callback(f"⚠️ {feature_name}: could not parse grade from response")
-
         except Exception as e:
-            import traceback
-            error_trace = traceback.format_exc()
-            logger.exception(f"ERROR grading {feature_name}:")
+            logger.exception(f"ERROR building prompt for {feature_name}:")
             if log_callback:
-                log_callback(f"❌ Error grading {feature_name}: {str(e)}")
-                log_callback(f"Traceback: {error_trace}")
+                log_callback(f"❌ Error building prompt for {feature_name}: {e}")
             continue
+        if prompt is None:
+            if log_callback:
+                log_callback(f"⚠️ Skipping {feature_name}: insufficient data")
+            continue
+        row_key = f"{activity_id}__{feature_name}"
+        assert row_key not in prompts_dict, f"duplicate grading key {row_key!r}"
+        prompts_dict[row_key] = prompt
+        rows.append({"activity_id": row_key})
+        key_to_feature[row_key] = feature_name
+
+    if not rows:
+        if log_callback:
+            log_callback("⚠️ No gradeable features (all prompts skipped)")
+        return {}
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_jsonl = output_dir / "feature_grades_raw.jsonl"
+    if output_jsonl.exists():
+        output_jsonl.unlink()
+
+    if log_callback:
+        log_callback(f"🔍 Grading {len(rows)} features in parallel...")
+
+    if AIRPLANE_MODE:
+        with output_jsonl.open("w", encoding="utf-8") as f:
+            for row_key in prompts_dict:
+                f.write(json.dumps({"activity_id": row_key,
+                                    "response_text": DUMMY_GRADE_RESPONSE}) + "\n")
+    else:
+        execpool = make_executor()
+        try:
+            await loop_over_rows_to_call_model(
+                str(output_jsonl),
+                rows,
+                prompts_dict,
+                None,
+                execpool,
+                model,
+            )
+        finally:
+            execpool.shutdown(wait=False, cancel_futures=True)
+
+    grades: Dict[str, float] = {}
+    if output_jsonl.exists():
+        with output_jsonl.open("r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if obj.get("ERROR"):
+                    continue
+                feature_name = key_to_feature.get(obj.get("activity_id"))
+                if not feature_name or feature_name in grades:
+                    continue
+                response_text = obj.get("response_text") or ""
+                grade = parse_grade_response(response_text)
+                if grade is not None:
+                    grades[feature_name] = grade
+                    if log_callback:
+                        log_callback(f"✅ {feature_name}: {grade:.1f}")
+                else:
+                    logger.warning(
+                        f"{feature_name}: could not parse grade from response: {response_text[:200]!r}"
+                    )
+                    if log_callback:
+                        log_callback(f"⚠️ {feature_name}: could not parse grade from response")
+
+    for feature_name in key_to_feature.values():
+        if feature_name not in grades and log_callback:
+            log_callback(f"⚠️ {feature_name}: no grade produced (see logs for reason)")
 
     return grades
