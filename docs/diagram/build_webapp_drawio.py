@@ -27,6 +27,61 @@ OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(__file_
 G = json.load(open(SRC))
 edges = G['edges']
 
+GITHUB_BASE = 'https://github.com/morganrivers/iati_webapp'
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+def gh_link(path):
+    """Return a GitHub URL for a real repo path, or '' when the 'file' field is
+    a template ({activity_id}), an in-memory reference (st.session_state[...]),
+    or otherwise not a checked-in file. Directories map to /tree/main/, files
+    to /blob/main/."""
+    if not path:
+        return ''
+    if any(c in path for c in '{[\''):
+        return ''
+    trimmed = path.rstrip('/')
+    kind = 'tree' if path.endswith('/') or '.' not in os.path.basename(trimmed) else 'blob'
+    return f'{GITHUB_BASE}/{kind}/main/{trimmed}'
+
+# Filename → repo-relative path manifest for auto-linking edge labels. Scans the
+# demo activity + data/ so an edge with label "metadata.json" resolves to the
+# real projects/webapp_39a1625529b1/metadata.json in git. Demo activity wins
+# over generic data/ locations for artifact filenames.
+import re
+DEMO_ACTIVITY = 'projects/webapp_39a1625529b1'
+FILE_LOCATIONS = {}
+for base in [DEMO_ACTIVITY, 'data/rating_model_outputs', 'data']:
+    d = os.path.join(REPO_ROOT, base)
+    if os.path.isdir(d):
+        for f in os.listdir(d):
+            fp = os.path.join(base, f)
+            if os.path.isfile(os.path.join(REPO_ROOT, fp)):
+                FILE_LOCATIONS.setdefault(f, fp)
+
+def edge_link(label):
+    """If the edge label names an actual repo data file, return its GitHub URL;
+    else ''. Only single, unambiguous filenames are linked - control-flow
+    labels ('startup', 'prediction') and pure variable names have no target."""
+    if not label:
+        return ''
+    for m in re.finditer(r'([\w.-]+\.(jsonl|json|csv|pdf|pkl|db))', label):
+        f = m.group(1)
+        if f in FILE_LOCATIONS:
+            return f'{GITHUB_BASE}/blob/main/{FILE_LOCATIONS[f]}'
+    return ''
+
+for n in G['nodes']:
+    if n.get('link'):                       # explicit JSON override wins
+        continue
+    link = gh_link(n.get('file', ''))
+    if link:
+        n['link'] = link
+for e in edges:
+    if e.get('link'):
+        continue
+    link = edge_link(e.get('label', ''))
+    if link:
+        e['link'] = link
+
 # ---------- node sizing (label-driven, so Graphviz reserves real footprint) --
 def size(n):
     lines = n['lbl'].split('\n')
