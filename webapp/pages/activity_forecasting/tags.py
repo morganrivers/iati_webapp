@@ -216,19 +216,25 @@ def render_tag_predictions() -> None:
     except Exception:
         _tag_data = None
 
+    models_dict = (_tag_data.get("models", {}) if _tag_data else {})
     for section in _TAG_SECTIONS:
+        has_predicted = any(
+            t in preds and _is_model_predicted(models_dict.get(t, {}))
+            for t in section["tags"]
+        )
+        if not has_predicted:
+            continue
         st.subheader(section["title"])
         _tag_section_chart(section, preds, _tag_data)
 
     # ---- Database prevalence for const_base tags ----
-    models = (_tag_data.get("models", {}) if _tag_data else {})
     base_rates = (_tag_data.get("tag_base_rates", {}) if _tag_data else {})
 
     const_base_tags = [
         t for t in _TAG_META
         if t in preds and (
             t in _PREVALENCE_ONLY_TAGS
-            or not _is_model_predicted(models.get(t, {}))
+            or not _is_model_predicted(models_dict.get(t, {}))
         )
     ]
 
