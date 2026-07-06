@@ -45,6 +45,8 @@ if str(UTILS_DIR) not in sys.path:
 
 from label_sampled_pages import add_in_page_info_top_left
 from prompt_bundle_pdf import open_with_evince
+from llm_tracing import wrap_openai_client
+from genai_client import make_genai_client
 
 
 from get_all_pages_within_category import load_and_filter_rows
@@ -73,12 +75,6 @@ TIMEOUT_SECONDS = 300
 
 def get_key(row):
     return row.get("activity_id")
-
-def make_genai_client() -> genai.Client:
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GOOGLE_API_KEY_GEMINI")
-    if not api_key:
-        raise RuntimeError("Missing GOOGLE_API_KEY (or GOOGLE_API_KEY_GEMINI).")
-    return genai.Client(api_key=api_key)
 
 def wait_file_active(client, uploaded, *, timeout=60, interval=1.0):
     """Poll the uploaded file until ACTIVE, or raise on FAILED/timeout."""
@@ -113,14 +109,6 @@ async def assemble_and_upload_activity_pdf(bundle: Dict[str, Any], client, execu
                 page_idx0 = int(item["page_start"]) - 1
                 reader = PdfReader(abs_path)
                 writer.add_page(reader.pages[page_idx0])
-
-
-            # for item in bundle["items"]:
-            #     abs_path = os.path.join(LOCATION_PDFS, item["cached_file"])
-            #     page_idx0 = int(item["page_start"]) - 1
-            #     reader = PdfReader(abs_path)
-            #     writer.add_page(reader.pages[page_idx0])
-
 
             with open(slice_path_unedited, "wb") as fout:
                 writer.write(fout)
@@ -477,13 +465,6 @@ async def run_one_row_openai(prompt, row, client, seen_keys, output_jsonl, execp
         obj["ERROR"] = f"{type(e).__name__}: {e}"
         return obj
 
-    # pprint.pprint("obj")
-    # pprint.pprint(obj)
-    # geshdsga
-    # quit()
-    # optional: keep a couple of handy IDs alongside usage
-    # obj["model_version"] = "gpt-3.5"
-
     # --- serialize only what you want ---
     c0 = response.choices[0]
     msg = c0.message
@@ -502,12 +483,6 @@ async def run_one_row_openai(prompt, row, client, seen_keys, output_jsonl, execp
     # remove Nones to keep it tidy
     obj["response"]["usage"] = {k: v for k, v in obj["response"]["usage"].items() if v is not None}
 
-    # pprint.pprint("response")
-    # pprint.pprint(response)
-    # obj["response_text"] = response
-
-    # pprint.pprint("obj")
-    # pprint.pprint(obj)
     return obj
 
 
@@ -566,19 +541,6 @@ def read_last_success_row(output_jsonl_path) -> Dict[str, Any]:
     return success
 
 
-# async def loop_over_rows_to_call_model(output_jsonl, rows, prompts, response_schema=None,execpool=None,model="gemini"):
-#     # quit()
-#     if not execpool:
-#         execpool = make_executor()
-#     output_jsonl_path = Path(output_jsonl)
-#     output_jsonl_path.parent.mkdir(parents=True, exist_ok=True)
-#     if model == "gemini" or "gemini" in model.lower():
-#         client = make_genai_client()
-#     elif model == "chatgpt" or "gpt" in model.lower():
-#         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-#     else:
-#         print("error: can only call gemini or chatgpt")
-#         quit()
 async def loop_over_rows_to_call_model(output_jsonl, rows, prompts, response_schema=None, execpool=None, model="gemini"):
     is_gemini = (model == "gemini" or "gemini" in model.lower() or model.startswith("projects/"))
     is_deepseek = model.startswith("deepseek-")
@@ -598,22 +560,17 @@ async def loop_over_rows_to_call_model(output_jsonl, rows, prompts, response_sch
             model = MODEL_NAME if model == "gemini" else model
 
         elif is_deepseek:
-            client = OpenAI(
+            client = wrap_openai_client(OpenAI(
                 api_key=os.environ["DEEPSEEK_API_KEY"],
                 base_url="https://api.deepseek.com",
-            )
+            ))
 
         elif model == "chatgpt" or "gpt" in model.lower():
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            client = wrap_openai_client(OpenAI(api_key=os.getenv("OPENAI_API_KEY")))
 
         else:
             print("error: can only call gemini, deepseek-*, or chatgpt/gpt")
             quit()
-
-
-    # we may want transaction bounds for later.
-    # txn_bounds = load_txn_bounds()
-    # act_bounds = load_activity_bounds_from_subset()
 
 
     MAX_ATTEMPTS = 2
@@ -814,20 +771,10 @@ def load_generic_jsonl_and_put_into_bundles(
             if not line.strip():
                 continue
             obj = json.loads(line)
-            # pprint.pprint("obj")
-            # pprint.pprint(obj)
-            # print("key_to_add_in")
-            # print(key_to_add_in)
             if "activity_id" in obj:
                 if "ERROR" in obj.keys():
                     continue
-                # pprint.pprint("obj")
-                # pprint.pprint(obj)
-                # print("getting rid of printouts..")
-                # break
                 aid = str(obj["activity_id"])
-                # print("obj keys")
-                # print(obj.keys())
                 if key_to_add_in != "response_text":
                     response_obj = json.loads(obj["response_text"])
 
@@ -840,11 +787,7 @@ def load_generic_jsonl_and_put_into_bundles(
                         response = obj["response_text"]
                     else:
                         response = obj["response"]["content"]
-                    # if key_to_add_in != "response_text":
 
-                # response = str(obj[key_to_add_in])
-                # val = next((str(obj[k]) for k in text_keys if k in obj and obj[k] is not None), None)
-                # if val is not None:
                 summaries[aid] = response
 
     for b in bundles:
@@ -1166,11 +1109,6 @@ def add_fallback_rows_for_missing_activities_strict_baseline(
             skip_missing_file += 1
             continue
 
-        # try:
-        #     reader = PdfReader(str(pdf_path))
-        #     pages_total = len(reader.pages)
-        # except Exception:
-        #     continue
 
         pages_total = d.get("pages")
 
@@ -1201,7 +1139,4 @@ def add_fallback_rows_for_missing_activities_strict_baseline(
     print(skip_de1)
     script_dir = Path(__file__).resolve().parent
     
-    # keep only rated from the rows you already have # commented out bc do this earlier; faster
-    # fallback_rows = [r for r in fallback_rows if str(r.get("activity_id","")).strip() in ids_rated]
-
     return rows_summary + fallback_rows

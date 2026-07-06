@@ -251,7 +251,8 @@ def process_new_activity(
 
     # Use the google.genai.Client API (same as generate_targets_embeddings.py)
     from google import genai as genai_client
-    client = genai_client.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    from llm_tracing import wrap_genai_client
+    client = wrap_genai_client(genai_client.Client(api_key=os.getenv("GEMINI_API_KEY")))
 
     result = client.models.embed_content(
         model="gemini-embedding-001",

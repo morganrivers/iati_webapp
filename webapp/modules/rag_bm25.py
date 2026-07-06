@@ -234,8 +234,9 @@ def _gemini_retrieve(
     try:
         import numpy as np
         from google import genai as _genai
+        from llm_tracing import wrap_genai_client
 
-        client = _genai.Client(api_key=api_key)
+        client = wrap_genai_client(_genai.Client(api_key=api_key))
         model = "gemini-embedding-001"
 
         def _embed(texts: List[str]) -> "np.ndarray":

@@ -14,6 +14,9 @@ google-genai>=0.3.0
 # OpenAI-compatible client (used for DeepSeek API calls)
 openai>=1.0.0
 
+# LangSmith tracing for LLM calls (opt-in via LANGSMITH_API_KEY)
+langsmith>=0.1.0
+
 # Feature contributions for model explanations
 treeinterpreter>=0.2.3
 setuptools

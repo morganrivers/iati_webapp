@@ -93,7 +93,8 @@ def _compute_gemini_embedding(text: str) -> np.ndarray:
     """Return an L2-normalised Gemini embedding vector for text (768-dim)."""
     from google import genai as _genai
     from google.genai import types as _genai_types
-    client = _genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    from llm_tracing import wrap_genai_client
+    client = wrap_genai_client(_genai.Client(api_key=os.getenv("GEMINI_API_KEY")))
     result = client.models.embed_content(
         model="gemini-embedding-001",
         contents=text,

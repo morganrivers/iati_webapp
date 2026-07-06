@@ -336,13 +336,6 @@ def iter_page_batches(pages_total: int, batch_size: int) -> Iterable[Tuple[int, 
         yield (i, j)
         i = j
 
-# ---------- Gemini client & structured schemas ----------
-def make_genai_client() -> genai.Client:
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GOOGLE_API_KEY_GEMINI")
-    if not api_key:
-        raise RuntimeError("Missing GOOGLE_API_KEY (or GOOGLE_API_KEY_GEMINI).")
-    return genai.Client(api_key=api_key)
-
 # ---------- Structured JSON schema builders (top-level with scratchpad + pages[1..3]) ----------
 def make_page_schema_for_baseline() -> dict:
     # Each item = Intervention scores for a single page

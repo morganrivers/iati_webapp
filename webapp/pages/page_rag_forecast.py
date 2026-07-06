@@ -11,6 +11,7 @@ from pathlib import Path
 
 import streamlit as st
 from utils import notify_telegram, LLM_SESSION_CAP
+from llm_tracing import activity_phase_scope
 
 WEBAPP_DIR = Path(__file__).resolve().parent.parent
 
@@ -74,7 +75,8 @@ def _run_rag_inprocess(activity_dir: Path, forecast_state: dict):
     capture = _LineCapture(forecast_state['logs'], original_stdout=old_stdout, on_line=_on_line)
     sys.stdout = capture
     try:
-        _rrm.main(activity_dir_override=activity_dir)
+        with activity_phase_scope(activity_dir.name, "forecast"):
+            _rrm.main(activity_dir_override=activity_dir)
         forecast_state['returncode'] = 0
     except RuntimeError as e:
         forecast_state['error'] = str(e)

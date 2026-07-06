@@ -8,10 +8,11 @@ from datetime import datetime
 import streamlit as st
 
 from project_manager import create_new_project, save_project_state_temp
-from webapp_pipeline import process_uploaded_pdf
+from webapp_pipeline import process_uploaded_pdf, generate_activity_id_from_content
 from location_features import KEEP_REPORTING_ORGS, ORG_NAME_TO_DUMMY
 from modules.feature_grader import grade_features_with_llm
 from modules.feature_extractor import extract_baseline_features
+from llm_tracing import activity_phase_scope
 
 logger = logging.getLogger(__name__)
 
@@ -96,16 +97,18 @@ def _run_phases_0_3_background(snapshot: dict, extraction_state: dict) -> None:
 
     try:
         pdf_file = _NamedBytesIO(snapshot['pdf_bytes'], snapshot['filename'])
-        result = process_uploaded_pdf(
-            pdf_file=pdf_file,
-            output_base_dir=snapshot['output_base_dir'],
-            model="gemini-2.5-flash",
-            skip_if_exists=USE_CACHED_PDFS,
-            progress_callback=progress_cb,
-            log_callback=log_cb,
-            partial_result_callback=lambda partial: extraction_state.update({'partial_result': dict(partial)}),
-            stop_after_phase_3=False,
-        )
+        activity_id = generate_activity_id_from_content(snapshot['pdf_bytes'])
+        with activity_phase_scope(activity_id, "extract"):
+            result = process_uploaded_pdf(
+                pdf_file=pdf_file,
+                output_base_dir=snapshot['output_base_dir'],
+                model="gemini-2.5-flash",
+                skip_if_exists=USE_CACHED_PDFS,
+                progress_callback=progress_cb,
+                log_callback=log_cb,
+                partial_result_callback=lambda partial: extraction_state.update({'partial_result': dict(partial)}),
+                stop_after_phase_3=True,
+            )
         result['status'] = 'phases_0_3_complete'
         extraction_state['result'] = result
         extraction_state['done'] = True
@@ -133,30 +136,32 @@ def _run_phase4_background(snapshot: dict, grading_state: dict) -> None:
         logger.info(f"result output_dir  = {(result or {}).get('output_dir', '<None>')!r}")
 
         log_cb("Starting feature extraction...")
-        features = extract_baseline_features(
-            pdf_path=result['pdf_path'],
-            activity_id=result['activity_id'],
-            metadata_dict=snapshot['confirmed_metadata'],
-            chatgpt_description=result['summary'],
-            page_categories=result['page_categories'],
-            output_dir=Path(result['output_dir']),
-            model="gemini-2.5-flash",
-            log_callback=log_cb,
-        )
-        grading_state['features'] = features
-        log_cb("Starting LLM grading of features...")
-
-        feature_grades = asyncio.run(
-            grade_features_with_llm(
+        with activity_phase_scope(result['activity_id'], "extract"):
+            features = extract_baseline_features(
+                pdf_path=result['pdf_path'],
                 activity_id=result['activity_id'],
-                title=snapshot['title'],
+                metadata_dict=snapshot['confirmed_metadata'],
                 chatgpt_description=result['summary'],
-                features=features,
-                metadata=snapshot['confirmed_metadata'],
+                page_categories=result['page_categories'],
+                output_dir=Path(result['output_dir']),
                 model="gemini-2.5-flash",
                 log_callback=log_cb,
             )
-        )
+        grading_state['features'] = features
+        log_cb("Starting LLM grading of features...")
+
+        with activity_phase_scope(result['activity_id'], "grade"):
+            feature_grades = asyncio.run(
+                grade_features_with_llm(
+                    activity_id=result['activity_id'],
+                    title=snapshot['title'],
+                    chatgpt_description=result['summary'],
+                    features=features,
+                    metadata=snapshot['confirmed_metadata'],
+                    model="gemini-2.5-flash",
+                    log_callback=log_cb,
+                )
+            )
 
         log_cb(f"✅ Grading complete! Received {len(feature_grades)} grades")
 
@@ -186,10 +191,14 @@ def _ensure_project_folder():
         st.session_state.creating_new_project = False
         st.session_state.pending_project_name = None
 
-def _save_and_rerun():
+def _save_state():
     _ensure_project_folder()
     if st.session_state.get('selected_project_folder'):
         save_project_state_temp(st.session_state.selected_project_folder)
+
+
+def _save_and_rerun():
+    _save_state()
     st.rerun()
 
 

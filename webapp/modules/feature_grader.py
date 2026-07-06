@@ -23,6 +23,7 @@ ensure_src_paths()
 
 from extracting_and_grading_helper_functions import loop_over_rows_to_call_model, AIRPLANE_MODE
 from dummy_response_text_generator import DUMMY_GRADE_RESPONSE
+from llm_tracing import wrap_genai_client
 
 ACTIVITY_INFO_CSV = Path(__file__).resolve().parent.parent.parent / "data" / "info_for_activity_forecasting.csv"
 
@@ -442,7 +443,7 @@ async def grade_features_with_llm(
                 if not api_key:
                     raise ValueError("GEMINI_API_KEY not found in environment")
 
-                client = genai.Client(api_key=api_key)
+                client = wrap_genai_client(genai.Client(api_key=api_key))
 
                 response = await asyncio.to_thread(
                     client.models.generate_content,
