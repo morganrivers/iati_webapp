@@ -6,9 +6,6 @@ __pycache__/
 venv/
 *.log
 
-# Exceeds GitHub's 100 MB per-file limit; app boots without it
-data/outcome_tags/tag_models.pkl
-
 # Local scratch
 projects/*
 !projects/webapp_038385943901/
